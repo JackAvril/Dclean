@@ -1,0 +1,4172 @@
+{
+  "schema": {
+    "row_indexing": "0-based (header not counted)",
+    "columns": [
+      "ProviderNumber",
+      "HospitalName",
+      "Address1",
+      "Address2",
+      "Address3",
+      "City",
+      "State",
+      "ZipCode",
+      "CountyName",
+      "PhoneNumber",
+      "HospitalType",
+      "HospitalOwner",
+      "EmergencyService",
+      "Condition",
+      "MeasureCode",
+      "MeasureName",
+      "Score",
+      "Sample",
+      "Stateavg"
+    ]
+  },
+  "rules": {
+    "FD": [
+      {
+        "id": "FD1",
+        "text": "HospitalName -> ZipCode"
+      },
+      {
+        "id": "FD2",
+        "text": "HospitalName -> PhoneNumber"
+      },
+      {
+        "id": "FD3",
+        "text": "MeasureCode -> MeasureName"
+      },
+      {
+        "id": "FD4",
+        "text": "MeasureCode -> Stateavg"
+      },
+      {
+        "id": "FD5",
+        "text": "ProviderNumber -> HospitalName"
+      },
+      {
+        "id": "FD6",
+        "text": "MeasureCode -> Condition"
+      },
+      {
+        "id": "FD7",
+        "text": "HospitalName -> Address1"
+      },
+      {
+        "id": "FD8",
+        "text": "HospitalName -> HospitalOwner"
+      },
+      {
+        "id": "FD9",
+        "text": "HospitalName -> ProviderNumber"
+      },
+      {
+        "id": "FD10",
+        "text": "City -> CountyName"
+      },
+      {
+        "id": "FD11",
+        "text": "ZipCode -> EmergencyService"
+      },
+      {
+        "id": "FD12",
+        "text": "HospitalName -> City"
+      },
+      {
+        "id": "FD13",
+        "text": "MeasureName -> MeasureCode"
+      }
+    ],
+    "CFD": [
+      {
+        "id": "CFD1",
+        "text": "Condition,MeasureName -> HospitalType"
+      },
+      {
+        "id": "CFD2",
+        "text": "HospitalName,PhoneNumber,HospitalOwner -> State"
+      }
+    ]
+  },
+  "errors": [
+    {
+      "row_index": 0,
+      "column": "MeasureName",
+      "original_value_in_clean": "surgery patients who were taking heart drugs called beta blockers before coming to the hospital who were kept on the beta blockers during the period just before and after their surgery",
+      "wrong_value_in_dirty": "surgery patients who were taking heart drugs caxxed beta bxockers before coming to the hospitax who were kept on the beta bxockers during the period just before and after their surgery",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 3,
+      "column": "City",
+      "original_value_in_clean": "birmingham",
+      "wrong_value_in_dirty": "birminghxm",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 7,
+      "column": "City",
+      "original_value_in_clean": "birmingham",
+      "wrong_value_in_dirty": "birmingxam",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 10,
+      "column": "City",
+      "original_value_in_clean": "sheffield",
+      "wrong_value_in_dirty": "sheffxeld",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 13,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10019",
+      "wrong_value_in_dirty": "1xx19",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 16,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acuxe care hospixals",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 17,
+      "column": "Sample",
+      "original_value_in_clean": "37 patients",
+      "wrong_value_in_dirty": "3x patients",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 21,
+      "column": "Condition",
+      "original_value_in_clean": "heart attack",
+      "wrong_value_in_dirty": "heart attaxk",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 22,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "government - hospital district or authority",
+      "wrong_value_in_dirty": "government - hospxtal dxstrxct or authorxty",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 22,
+      "column": "Condition",
+      "original_value_in_clean": "heart attack",
+      "wrong_value_in_dirty": "hearx axxack",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 24,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "3347938701",
+      "wrong_value_in_dirty": "334793870x",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 24,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "yxs",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 26,
+      "column": "HospitalName",
+      "original_value_in_clean": "southeast alabama medical center",
+      "wrong_value_in_dirty": "southeast alabama medxcal center",
+      "violated_rule_id": "FD5",
+      "violated_rule_text": "ProviderNumber -> HospitalName"
+    },
+    {
+      "row_index": 27,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "government - hospital district or authority",
+      "wrong_value_in_dirty": "government - hospital xistrict or authority",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 31,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "government - hospital district or authority",
+      "wrong_value_in_dirty": "governmenx - hospixal disxricx or auxhorixy",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 36,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "3347938701",
+      "wrong_value_in_dirty": "xx479x8701",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 39,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acxte care hospitals",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 42,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "xl",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 42,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "government - hospital district or authority",
+      "wrong_value_in_dirty": "gxvernment - hxspital district xr authxrity",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 43,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "yex",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 44,
+      "column": "ZipCode",
+      "original_value_in_clean": "35957",
+      "wrong_value_in_dirty": "x5957",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 45,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10005",
+      "wrong_value_in_dirty": "x0005",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 46,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "xl",
+      "violated_rule_id": "CFD2",
+      "violated_rule_text": "HospitalName,PhoneNumber,HospitalOwner -> State"
+    },
+    {
+      "row_index": 50,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "xl",
+      "violated_rule_id": "CFD2",
+      "violated_rule_text": "HospitalName,PhoneNumber,HospitalOwner -> State"
+    },
+    {
+      "row_index": 51,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "yxs",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 56,
+      "column": "City",
+      "original_value_in_clean": "boaz",
+      "wrong_value_in_dirty": "boxz",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 56,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_pn-3b",
+      "wrong_value_in_dirty": "al_pn-xb",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 57,
+      "column": "Address1",
+      "original_value_in_clean": "2505 u s highway 431 north",
+      "wrong_value_in_dirty": "2505xuxsxhighwayx431xnorth",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 57,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "2565938310",
+      "wrong_value_in_dirty": "2x6x938310",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 60,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "2565938310",
+      "wrong_value_in_dirty": "2x6x938310",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 63,
+      "column": "ZipCode",
+      "original_value_in_clean": "35957",
+      "wrong_value_in_dirty": "3595x",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 65,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "2565938310",
+      "wrong_value_in_dirty": "2565x38310",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 67,
+      "column": "CountyName",
+      "original_value_in_clean": "marshall",
+      "wrong_value_in_dirty": "mxrshxll",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 69,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_ami-1",
+      "wrong_value_in_dirty": "al_amx-1",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 70,
+      "column": "ZipCode",
+      "original_value_in_clean": "35631",
+      "wrong_value_in_dirty": "3563x",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 72,
+      "column": "CountyName",
+      "original_value_in_clean": "lauderdale",
+      "wrong_value_in_dirty": "laudxrdalx",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 73,
+      "column": "Condition",
+      "original_value_in_clean": "heart attack",
+      "wrong_value_in_dirty": "hearx axxack",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 77,
+      "column": "CountyName",
+      "original_value_in_clean": "lauderdale",
+      "wrong_value_in_dirty": "laudexdale",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 79,
+      "column": "City",
+      "original_value_in_clean": "florence",
+      "wrong_value_in_dirty": "fxorence",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 81,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10006",
+      "wrong_value_in_dirty": "1000x",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 83,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "xl",
+      "violated_rule_id": "CFD2",
+      "violated_rule_text": "HospitalName,PhoneNumber,HospitalOwner -> State"
+    },
+    {
+      "row_index": 88,
+      "column": "City",
+      "original_value_in_clean": "florence",
+      "wrong_value_in_dirty": "florxncx",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 91,
+      "column": "Sample",
+      "original_value_in_clean": "619 patients",
+      "wrong_value_in_dirty": "619 paxienxs",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 93,
+      "column": "City",
+      "original_value_in_clean": "florence",
+      "wrong_value_in_dirty": "flxrence",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 93,
+      "column": "ZipCode",
+      "original_value_in_clean": "35631",
+      "wrong_value_in_dirty": "3563x",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 94,
+      "column": "Address1",
+      "original_value_in_clean": "702 n main st",
+      "wrong_value_in_dirty": "702xnxmainxst",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 94,
+      "column": "MeasureName",
+      "original_value_in_clean": "heart attack patients given aspirin at arrival",
+      "wrong_value_in_dirty": "xeart attack patients given aspirin at arrival",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 97,
+      "column": "MeasureCode",
+      "original_value_in_clean": "ami-4",
+      "wrong_value_in_dirty": "axi-4",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 98,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "xl",
+      "violated_rule_id": "CFD2",
+      "violated_rule_text": "HospitalName,PhoneNumber,HospitalOwner -> State"
+    },
+    {
+      "row_index": 98,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acute care hosxitals",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 101,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "3344933541",
+      "wrong_value_in_dirty": "3344x33541",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 101,
+      "column": "MeasureCode",
+      "original_value_in_clean": "hf-1",
+      "wrong_value_in_dirty": "hfx1",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 106,
+      "column": "Address1",
+      "original_value_in_clean": "702 n main st",
+      "wrong_value_in_dirty": "702 x maix st",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 108,
+      "column": "MeasureCode",
+      "original_value_in_clean": "pn-5c",
+      "wrong_value_in_dirty": "pnx5c",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 111,
+      "column": "MeasureName",
+      "original_value_in_clean": "surgery patients who were taking heart drugs called beta blockers before coming to the hospital who were kept on the beta blockers during the period just before and after their surgery",
+      "wrong_value_in_dirty": "surgery patiexts who were takixg heart drugs called beta blockers before comixg to the hospital who were kept ox the beta blockers durixg the period just before axd after their surgery",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 113,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "voluntary non-profit - private",
+      "wrong_value_in_dirty": "volunxary non-profix - privaxe",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 115,
+      "column": "Sample",
+      "original_value_in_clean": "0 patients",
+      "wrong_value_in_dirty": "0 patixnts",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 119,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "ax",
+      "violated_rule_id": "CFD2",
+      "violated_rule_text": "HospitalName,PhoneNumber,HospitalOwner -> State"
+    },
+    {
+      "row_index": 119,
+      "column": "MeasureName",
+      "original_value_in_clean": "heart attack patients given aspirin at arrival",
+      "wrong_value_in_dirty": "heart attack patients given aspirin at arrivax",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 120,
+      "column": "MeasureCode",
+      "original_value_in_clean": "ami-2",
+      "wrong_value_in_dirty": "axi-2",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 120,
+      "column": "Score",
+      "original_value_in_clean": "100%",
+      "wrong_value_in_dirty": "x00%",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 127,
+      "column": "Condition",
+      "original_value_in_clean": "heart failure",
+      "wrong_value_in_dirty": "heaxt failuxe",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 131,
+      "column": "HospitalName",
+      "original_value_in_clean": "crenshaw community hospital",
+      "wrong_value_in_dirty": "crenshaw cxmmunity hxspital",
+      "violated_rule_id": "FD5",
+      "violated_rule_text": "ProviderNumber -> HospitalName"
+    },
+    {
+      "row_index": 133,
+      "column": "Sample",
+      "original_value_in_clean": "21 patients",
+      "wrong_value_in_dirty": "21 pxtients",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 136,
+      "column": "CountyName",
+      "original_value_in_clean": "crenshaw",
+      "wrong_value_in_dirty": "crxnshaw",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 137,
+      "column": "ZipCode",
+      "original_value_in_clean": "36049",
+      "wrong_value_in_dirty": "36x49",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 139,
+      "column": "ZipCode",
+      "original_value_in_clean": "36049",
+      "wrong_value_in_dirty": "360x9",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 140,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "ax",
+      "violated_rule_id": "CFD2",
+      "violated_rule_text": "HospitalName,PhoneNumber,HospitalOwner -> State"
+    },
+    {
+      "row_index": 145,
+      "column": "MeasureName",
+      "original_value_in_clean": "heart attack patients given aspirin at discharge",
+      "wrong_value_in_dirty": "heart attaxk patients given aspirin at disxharge",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 149,
+      "column": "ZipCode",
+      "original_value_in_clean": "35640",
+      "wrong_value_in_dirty": "3x640",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 157,
+      "column": "ZipCode",
+      "original_value_in_clean": "35640",
+      "wrong_value_in_dirty": "3x640",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 157,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "proprietary",
+      "wrong_value_in_dirty": "pxopxietaxy",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 157,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "yxs",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 158,
+      "column": "Score",
+      "original_value_in_clean": "98%",
+      "wrong_value_in_dirty": "9x%",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 159,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "proprietary",
+      "wrong_value_in_dirty": "proxrietary",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 161,
+      "column": "Address1",
+      "original_value_in_clean": "201 pine street northwest",
+      "wrong_value_in_dirty": "201 pine sxreex norxhwesx",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 162,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "proprietary",
+      "wrong_value_in_dirty": "xroprietary",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 163,
+      "column": "Score",
+      "original_value_in_clean": "57%",
+      "wrong_value_in_dirty": "x7%",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 164,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "proprietary",
+      "wrong_value_in_dirty": "pxopxietaxy",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 165,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "ax",
+      "violated_rule_id": "CFD2",
+      "violated_rule_text": "HospitalName,PhoneNumber,HospitalOwner -> State"
+    },
+    {
+      "row_index": 166,
+      "column": "Sample",
+      "original_value_in_clean": "11 patients",
+      "wrong_value_in_dirty": "xx patients",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 170,
+      "column": "Sample",
+      "original_value_in_clean": "6 patients",
+      "wrong_value_in_dirty": "6xpatients",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 171,
+      "column": "HospitalName",
+      "original_value_in_clean": "marshall medical center north",
+      "wrong_value_in_dirty": "marshall medical cenxer norxh",
+      "violated_rule_id": "FD5",
+      "violated_rule_text": "ProviderNumber -> HospitalName"
+    },
+    {
+      "row_index": 175,
+      "column": "Address1",
+      "original_value_in_clean": "8000 alabama highway 69",
+      "wrong_value_in_dirty": "8000 alabama xigxway 69",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 177,
+      "column": "MeasureCode",
+      "original_value_in_clean": "hf-2",
+      "wrong_value_in_dirty": "hf-x",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 180,
+      "column": "City",
+      "original_value_in_clean": "guntersville",
+      "wrong_value_in_dirty": "guntxrsvillx",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 182,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "xl",
+      "violated_rule_id": "CFD2",
+      "violated_rule_text": "HospitalName,PhoneNumber,HospitalOwner -> State"
+    },
+    {
+      "row_index": 187,
+      "column": "Score",
+      "original_value_in_clean": "95%",
+      "wrong_value_in_dirty": "95x",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 190,
+      "column": "MeasureCode",
+      "original_value_in_clean": "scip-inf-4",
+      "wrong_value_in_dirty": "scip-inx-4",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 193,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_scip-vte-2",
+      "wrong_value_in_dirty": "al_scix-vte-2",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 196,
+      "column": "ZipCode",
+      "original_value_in_clean": "35235",
+      "wrong_value_in_dirty": "3x23x",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 199,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acute care hosxitals",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 199,
+      "column": "Condition",
+      "original_value_in_clean": "heart attack",
+      "wrong_value_in_dirty": "heaxt attack",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 207,
+      "column": "City",
+      "original_value_in_clean": "birmingham",
+      "wrong_value_in_dirty": "birmixgham",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 208,
+      "column": "Score",
+      "original_value_in_clean": "95%",
+      "wrong_value_in_dirty": "x5%",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 210,
+      "column": "MeasureName",
+      "original_value_in_clean": "pneumonia patients assessed and given influenza vaccination",
+      "wrong_value_in_dirty": "pneumoniaxpatientsxassessedxandxgivenxinfluenzaxvaccination",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 212,
+      "column": "City",
+      "original_value_in_clean": "birmingham",
+      "wrong_value_in_dirty": "bxrmxngham",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 213,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10011",
+      "wrong_value_in_dirty": "x00xx",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 213,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acutx carx hospitals",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 213,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_scip-inf-2",
+      "wrong_value_in_dirty": "al_sxip-inf-2",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 216,
+      "column": "CountyName",
+      "original_value_in_clean": "jefferson",
+      "wrong_value_in_dirty": "jeffersxn",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 216,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "voluntary non-profit - private",
+      "wrong_value_in_dirty": "volunxary non-profix - privaxe",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 217,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "2058383122",
+      "wrong_value_in_dirty": "2058x8x122",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 218,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "voluntary non-profit - private",
+      "wrong_value_in_dirty": "voluntary nonxprofit x private",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 219,
+      "column": "MeasureName",
+      "original_value_in_clean": "heart attack patients given aspirin at arrival",
+      "wrong_value_in_dirty": "heartxattackxpatientsxgivenxaspirinxatxarrival",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 221,
+      "column": "CountyName",
+      "original_value_in_clean": "de kalb",
+      "wrong_value_in_dirty": "dx kalb",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 221,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "voluntary non-profit - church",
+      "wrong_value_in_dirty": "voluntaryxnon-profitx-xchurch",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 223,
+      "column": "CountyName",
+      "original_value_in_clean": "de kalb",
+      "wrong_value_in_dirty": "xe kalb",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 224,
+      "column": "Sample",
+      "original_value_in_clean": "1 patients",
+      "wrong_value_in_dirty": "1 patiexts",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 225,
+      "column": "Condition",
+      "original_value_in_clean": "heart attack",
+      "wrong_value_in_dirty": "hexrt attxck",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 227,
+      "column": "CountyName",
+      "original_value_in_clean": "de kalb",
+      "wrong_value_in_dirty": "dx kalb",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 228,
+      "column": "City",
+      "original_value_in_clean": "fort payne",
+      "wrong_value_in_dirty": "fort payxe",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 228,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "ax",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 228,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "2568453150",
+      "wrong_value_in_dirty": "2568453x50",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 229,
+      "column": "Condition",
+      "original_value_in_clean": "heart failure",
+      "wrong_value_in_dirty": "heart faxlure",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 232,
+      "column": "ZipCode",
+      "original_value_in_clean": "35968",
+      "wrong_value_in_dirty": "359x8",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 234,
+      "column": "Sample",
+      "original_value_in_clean": "82 patients",
+      "wrong_value_in_dirty": "82 patientx",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 236,
+      "column": "Condition",
+      "original_value_in_clean": "surgical infection prevention",
+      "wrong_value_in_dirty": "suxgical infection pxevention",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 237,
+      "column": "Score",
+      "original_value_in_clean": "97%",
+      "wrong_value_in_dirty": "9x%",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 238,
+      "column": "CountyName",
+      "original_value_in_clean": "de kalb",
+      "wrong_value_in_dirty": "xe kalb",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 238,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "voluntary non-profit - church",
+      "wrong_value_in_dirty": "voxuntary non-profit - church",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 238,
+      "column": "Score",
+      "original_value_in_clean": "99%",
+      "wrong_value_in_dirty": "xx%",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 239,
+      "column": "Condition",
+      "original_value_in_clean": "surgical infection prevention",
+      "wrong_value_in_dirty": "surgxcal infectxon preventxon",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 243,
+      "column": "HospitalName",
+      "original_value_in_clean": "dekalb regional medical center",
+      "wrong_value_in_dirty": "dexalb regional medical center",
+      "violated_rule_id": "FD5",
+      "violated_rule_text": "ProviderNumber -> HospitalName"
+    },
+    {
+      "row_index": 244,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10015",
+      "wrong_value_in_dirty": "x00x5",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 244,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_ami-1",
+      "wrong_value_in_dirty": "ax_ami-1",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 247,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "3346366221",
+      "wrong_value_in_dirty": "xx46x66221",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 247,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "government - federal",
+      "wrong_value_in_dirty": "governxent - federal",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 248,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_ami-5",
+      "wrong_value_in_dirty": "xl_xmi-5",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 252,
+      "column": "CountyName",
+      "original_value_in_clean": "clarke",
+      "wrong_value_in_dirty": "xlarke",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 252,
+      "column": "Score",
+      "original_value_in_clean": "89%",
+      "wrong_value_in_dirty": "89x",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 253,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10015",
+      "wrong_value_in_dirty": "1xx15",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 256,
+      "column": "Condition",
+      "original_value_in_clean": "pneumonia",
+      "wrong_value_in_dirty": "xneumonia",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 256,
+      "column": "MeasureName",
+      "original_value_in_clean": "pneumonia patients whose initial emergency room blood culture was performed prior to the administration of the first hospital dose of antibiotics",
+      "wrong_value_in_dirty": "pneumonxa patxents whose inxtxal emergency room blood culture was performed prxor to the admxnxstratxon of the fxrst hospxtal dose of antxbxotxcs",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 256,
+      "column": "Score",
+      "original_value_in_clean": "96%",
+      "wrong_value_in_dirty": "x6%",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 260,
+      "column": "Address1",
+      "original_value_in_clean": "33700 highway 43",
+      "wrong_value_in_dirty": "33700 hxghway 43",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 261,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "3346366221",
+      "wrong_value_in_dirty": "334x3xx221",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 264,
+      "column": "Address1",
+      "original_value_in_clean": "33700 highway 43",
+      "wrong_value_in_dirty": "33700 highway x3",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 264,
+      "column": "MeasureCode",
+      "original_value_in_clean": "scip-inf-3",
+      "wrong_value_in_dirty": "scxp-xnf-3",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 266,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acuxe care hospixals",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 267,
+      "column": "ZipCode",
+      "original_value_in_clean": "36784",
+      "wrong_value_in_dirty": "x6784",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 269,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_ami-1",
+      "wrong_value_in_dirty": "al_axi-1",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 273,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10016",
+      "wrong_value_in_dirty": "1xx16",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 275,
+      "column": "Address1",
+      "original_value_in_clean": "1000 first street north",
+      "wrong_value_in_dirty": "1000 fixst stxeet noxth",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 278,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "xl",
+      "violated_rule_id": "CFD2",
+      "violated_rule_text": "HospitalName,PhoneNumber,HospitalOwner -> State"
+    },
+    {
+      "row_index": 279,
+      "column": "Condition",
+      "original_value_in_clean": "heart failure",
+      "wrong_value_in_dirty": "xeart failure",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 280,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acutexcarexhospitals",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 281,
+      "column": "MeasureName",
+      "original_value_in_clean": "pneumonia patients whose initial emergency room blood culture was performed prior to the administration of the first hospital dose of antibiotics",
+      "wrong_value_in_dirty": "pnxumonia patixnts whosx initial emxrgxncy room blood culturx was pxrformxd prior to thx administration of thx first hospital dosx of antibiotics",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 283,
+      "column": "ZipCode",
+      "original_value_in_clean": "35007",
+      "wrong_value_in_dirty": "3x007",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 290,
+      "column": "ZipCode",
+      "original_value_in_clean": "35007",
+      "wrong_value_in_dirty": "x5007",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 290,
+      "column": "MeasureName",
+      "original_value_in_clean": "all heart surgery patients whose blood sugar (blood glucose) is kept under good control in the days right after surgery",
+      "wrong_value_in_dirty": "all heart surgerx patients whose blood sugar (blood glucose) is kept under good control in the daxs right after surgerx",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 293,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acuxe care hospixals",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 295,
+      "column": "Address1",
+      "original_value_in_clean": "1720 university blvd",
+      "wrong_value_in_dirty": "1720 univxrsity blvd",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 311,
+      "column": "City",
+      "original_value_in_clean": "anniston",
+      "wrong_value_in_dirty": "axxistox",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 312,
+      "column": "CountyName",
+      "original_value_in_clean": "calhoun",
+      "wrong_value_in_dirty": "calhoxn",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 313,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "proprietary",
+      "wrong_value_in_dirty": "prxprietary",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 314,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10038",
+      "wrong_value_in_dirty": "100x8",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 316,
+      "column": "Address1",
+      "original_value_in_clean": "301 east 18th st",
+      "wrong_value_in_dirty": "301xeastx18thxst",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 316,
+      "column": "Sample",
+      "original_value_in_clean": "29 patients",
+      "wrong_value_in_dirty": "29 xatients",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 318,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "xes",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 321,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "2562358900",
+      "wrong_value_in_dirty": "256235x900",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 324,
+      "column": "CountyName",
+      "original_value_in_clean": "calhoun",
+      "wrong_value_in_dirty": "caxhoun",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 325,
+      "column": "ZipCode",
+      "original_value_in_clean": "36201",
+      "wrong_value_in_dirty": "36x01",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 327,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "yex",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 332,
+      "column": "ZipCode",
+      "original_value_in_clean": "36305",
+      "wrong_value_in_dirty": "3x305",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 332,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "proprietary",
+      "wrong_value_in_dirty": "proxrietary",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 332,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "yex",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 334,
+      "column": "Address1",
+      "original_value_in_clean": "4370 west main street",
+      "wrong_value_in_dirty": "4370xwestxmainxstreet",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 334,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_pn-2",
+      "wrong_value_in_dirty": "al_pnx2",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 336,
+      "column": "Score",
+      "original_value_in_clean": "100%",
+      "wrong_value_in_dirty": "x00%",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 337,
+      "column": "HospitalName",
+      "original_value_in_clean": "flowers hospital",
+      "wrong_value_in_dirty": "floxers hospital",
+      "violated_rule_id": "FD5",
+      "violated_rule_text": "ProviderNumber -> HospitalName"
+    },
+    {
+      "row_index": 340,
+      "column": "ZipCode",
+      "original_value_in_clean": "36305",
+      "wrong_value_in_dirty": "x6x05",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 342,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "3347935000",
+      "wrong_value_in_dirty": "xx479x5000",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 346,
+      "column": "CountyName",
+      "original_value_in_clean": "houston",
+      "wrong_value_in_dirty": "housxon",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 346,
+      "column": "MeasureName",
+      "original_value_in_clean": "surgery patients whose doctors ordered treatments to prevent blood clots after certain types of surgeries",
+      "wrong_value_in_dirty": "surgery pxtients whose doctors ordered trextments to prevent blood clots xfter certxin types of surgeries",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 347,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_scip-vte-2",
+      "wrong_value_in_dirty": "al_scipxvtex2",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 349,
+      "column": "MeasureCode",
+      "original_value_in_clean": "ami-2",
+      "wrong_value_in_dirty": "amix2",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 350,
+      "column": "Address1",
+      "original_value_in_clean": "810 st vincents drive",
+      "wrong_value_in_dirty": "810 st vxncents drxve",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 350,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "yxs",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 354,
+      "column": "Sample",
+      "original_value_in_clean": "10 patients",
+      "wrong_value_in_dirty": "1x patients",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 356,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "ax",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 356,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "proprietary",
+      "wrong_value_in_dirty": "prxprietary",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 360,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10086",
+      "wrong_value_in_dirty": "100x6",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 363,
+      "column": "Address1",
+      "original_value_in_clean": "1530 u s highway 43",
+      "wrong_value_in_dirty": "1530xuxsxhighwayx43",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 366,
+      "column": "ZipCode",
+      "original_value_in_clean": "35594",
+      "wrong_value_in_dirty": "3xx94",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 366,
+      "column": "Condition",
+      "original_value_in_clean": "pneumonia",
+      "wrong_value_in_dirty": "pnxumonia",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 367,
+      "column": "City",
+      "original_value_in_clean": "winfield",
+      "wrong_value_in_dirty": "winfielx",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 369,
+      "column": "Condition",
+      "original_value_in_clean": "pneumonia",
+      "wrong_value_in_dirty": "pnexmonia",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 370,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_pn-7",
+      "wrong_value_in_dirty": "alxpn-7",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 373,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_scip-inf-2",
+      "wrong_value_in_dirty": "al_sxip-inf-2",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 374,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "yex",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 375,
+      "column": "ZipCode",
+      "original_value_in_clean": "35594",
+      "wrong_value_in_dirty": "3xx94",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 378,
+      "column": "Score",
+      "original_value_in_clean": "95%",
+      "wrong_value_in_dirty": "x5%",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 380,
+      "column": "MeasureName",
+      "original_value_in_clean": "heart attack patients given aspirin at discharge",
+      "wrong_value_in_dirty": "heaxt attack patients given aspixin at dischaxge",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 381,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "2514717110",
+      "wrong_value_in_dirty": "25x47x7xx0",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 384,
+      "column": "HospitalName",
+      "original_value_in_clean": "univ of south alabama medical center",
+      "wrong_value_in_dirty": "univ ox south alabama medical center",
+      "violated_rule_id": "FD5",
+      "violated_rule_text": "ProviderNumber -> HospitalName"
+    },
+    {
+      "row_index": 384,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "2514717110",
+      "wrong_value_in_dirty": "25x47x7xx0",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 385,
+      "column": "HospitalName",
+      "original_value_in_clean": "univ of south alabama medical center",
+      "wrong_value_in_dirty": "xniv of soxth alabama medical center",
+      "violated_rule_id": "FD5",
+      "violated_rule_text": "ProviderNumber -> HospitalName"
+    },
+    {
+      "row_index": 386,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "xl",
+      "violated_rule_id": "CFD2",
+      "violated_rule_text": "HospitalName,PhoneNumber,HospitalOwner -> State"
+    },
+    {
+      "row_index": 386,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "2514717110",
+      "wrong_value_in_dirty": "25x47x7xx0",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 386,
+      "column": "Condition",
+      "original_value_in_clean": "heart failure",
+      "wrong_value_in_dirty": "hxart failurx",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 387,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_hf-2",
+      "wrong_value_in_dirty": "al_hx-2",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 389,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "yxs",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 389,
+      "column": "MeasureName",
+      "original_value_in_clean": "heart failure patients given smoking cessation advice/counseling",
+      "wrong_value_in_dirty": "heart xailure patients given smoking cessation advice/counseling",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 391,
+      "column": "MeasureCode",
+      "original_value_in_clean": "pn-3b",
+      "wrong_value_in_dirty": "pn-xb",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 393,
+      "column": "Address1",
+      "original_value_in_clean": "124 s memorial dr",
+      "wrong_value_in_dirty": "124xsxmemorialxdr",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 393,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "3343614267",
+      "wrong_value_in_dirty": "33x361x267",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 398,
+      "column": "MeasureCode",
+      "original_value_in_clean": "hf-1",
+      "wrong_value_in_dirty": "hx-1",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 400,
+      "column": "Condition",
+      "original_value_in_clean": "heart failure",
+      "wrong_value_in_dirty": "hxart failurx",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 402,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "ax",
+      "violated_rule_id": "CFD2",
+      "violated_rule_text": "HospitalName,PhoneNumber,HospitalOwner -> State"
+    },
+    {
+      "row_index": 405,
+      "column": "Score",
+      "original_value_in_clean": "94%",
+      "wrong_value_in_dirty": "x4%",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 406,
+      "column": "ZipCode",
+      "original_value_in_clean": "36067",
+      "wrong_value_in_dirty": "3x0x7",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 408,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10108",
+      "wrong_value_in_dirty": "x0x08",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 409,
+      "column": "MeasureCode",
+      "original_value_in_clean": "scip-inf-1",
+      "wrong_value_in_dirty": "scipxinfx1",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 410,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "yxs",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 411,
+      "column": "Address1",
+      "original_value_in_clean": "124 s memorial dr",
+      "wrong_value_in_dirty": "124 s mxmorial dr",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 411,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acute care hosxitals",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 411,
+      "column": "Score",
+      "original_value_in_clean": "100%",
+      "wrong_value_in_dirty": "1xx%",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 413,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acuxe care hospixals",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 413,
+      "column": "Sample",
+      "original_value_in_clean": "125 patients",
+      "wrong_value_in_dirty": "125 patixnts",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 415,
+      "column": "Address1",
+      "original_value_in_clean": "315 w hickory st",
+      "wrong_value_in_dirty": "315 w hickxry st",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 415,
+      "column": "CountyName",
+      "original_value_in_clean": "talladega",
+      "wrong_value_in_dirty": "tallaxega",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 418,
+      "column": "EmergencyService",
+      "original_value_in_clean": "no",
+      "wrong_value_in_dirty": "xo",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 418,
+      "column": "Sample",
+      "original_value_in_clean": "4 patients",
+      "wrong_value_in_dirty": "4 xatients",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 420,
+      "column": "ZipCode",
+      "original_value_in_clean": "35150",
+      "wrong_value_in_dirty": "x5150",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 426,
+      "column": "Score",
+      "original_value_in_clean": "97%",
+      "wrong_value_in_dirty": "x7%",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 428,
+      "column": "ZipCode",
+      "original_value_in_clean": "35150",
+      "wrong_value_in_dirty": "3x1x0",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 431,
+      "column": "Address1",
+      "original_value_in_clean": "315 w hickory st",
+      "wrong_value_in_dirty": "315xwxhickoryxst",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 434,
+      "column": "MeasureName",
+      "original_value_in_clean": "heart failure patients given ace inhibitor or arb for left ventricular systolic dysfunction (lvsd)",
+      "wrong_value_in_dirty": "heart faxlure patxents gxven ace inhxbxtor or arb for left ventrxcular systolxc dysfunctxon (lvsd)",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 437,
+      "column": "City",
+      "original_value_in_clean": "anchorage",
+      "wrong_value_in_dirty": "anchoraxe",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 444,
+      "column": "Sample",
+      "original_value_in_clean": "521 patients",
+      "wrong_value_in_dirty": "521 patiexts",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 447,
+      "column": "MeasureName",
+      "original_value_in_clean": "surgery patients needing hair removed from the surgical area before surgery who had hair removed using a safer method (electric clippers or hair removal cream c not a razor)",
+      "wrong_value_in_dirty": "surgeryxpatientsxneedingxhairxremovedxfromxthexsurgicalxareaxbeforexsurgery& xwhoxhadxhairxremovedxusingxaxsaferxmethodx(electricxclippersxorxhairxremovalxcreamxï¿½cxnotxaxrazor)",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 448,
+      "column": "HospitalName",
+      "original_value_in_clean": "alaska regional hospital",
+      "wrong_value_in_dirty": "xlxskx regionxl hospitxl",
+      "violated_rule_id": "FD5",
+      "violated_rule_text": "ProviderNumber -> HospitalName"
+    },
+    {
+      "row_index": 449,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "proprietary",
+      "wrong_value_in_dirty": "proxrietary",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 451,
+      "column": "Address1",
+      "original_value_in_clean": "po box 287",
+      "wrong_value_in_dirty": "poxboxx287",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 453,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acute care hospitaxs",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 456,
+      "column": "CountyName",
+      "original_value_in_clean": "jefferson",
+      "wrong_value_in_dirty": "jxffxrson",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 456,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "government - hospital district or authority",
+      "wrong_value_in_dirty": "gxvernment - hxspital district xr authxrity",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 457,
+      "column": "CountyName",
+      "original_value_in_clean": "jefferson",
+      "wrong_value_in_dirty": "xefferson",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 462,
+      "column": "Sample",
+      "original_value_in_clean": "0 patients",
+      "wrong_value_in_dirty": "x patients",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 464,
+      "column": "MeasureCode",
+      "original_value_in_clean": "scip-vte-1",
+      "wrong_value_in_dirty": "sxip-vte-1",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 465,
+      "column": "CountyName",
+      "original_value_in_clean": "jefferson",
+      "wrong_value_in_dirty": "jexxerson",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 467,
+      "column": "Condition",
+      "original_value_in_clean": "heart attack",
+      "wrong_value_in_dirty": "hexrt attxck",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 471,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "3347742601",
+      "wrong_value_in_dirty": "334774x601",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 472,
+      "column": "Address1",
+      "original_value_in_clean": "126 hospital ave",
+      "wrong_value_in_dirty": "126xhospitalxave",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 473,
+      "column": "MeasureName",
+      "original_value_in_clean": "heart failure patients given discharge instructions",
+      "wrong_value_in_dirty": "heaxt failuxe patients given dischaxge instxuctions",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 474,
+      "column": "City",
+      "original_value_in_clean": "ozark",
+      "wrong_value_in_dirty": "ozarx",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 477,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "xl",
+      "violated_rule_id": "CFD2",
+      "violated_rule_text": "HospitalName,PhoneNumber,HospitalOwner -> State"
+    },
+    {
+      "row_index": 477,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_pn-2",
+      "wrong_value_in_dirty": "ax_pn-2",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 482,
+      "column": "Sample",
+      "original_value_in_clean": "62 patients",
+      "wrong_value_in_dirty": "62 patientx",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 483,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "xl",
+      "violated_rule_id": "CFD2",
+      "violated_rule_text": "HospitalName,PhoneNumber,HospitalOwner -> State"
+    },
+    {
+      "row_index": 484,
+      "column": "Address1",
+      "original_value_in_clean": "126 hospital ave",
+      "wrong_value_in_dirty": "1x6 hospital ave",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 485,
+      "column": "City",
+      "original_value_in_clean": "ozark",
+      "wrong_value_in_dirty": "xzark",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 488,
+      "column": "Score",
+      "original_value_in_clean": "100%",
+      "wrong_value_in_dirty": "1xx%",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 490,
+      "column": "ZipCode",
+      "original_value_in_clean": "36360",
+      "wrong_value_in_dirty": "x6x60",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 490,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acute caxe hospitals",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 492,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "yxs",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 493,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acute care hxspitals",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 493,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "voluntary non-profit - private",
+      "wrong_value_in_dirty": "voluntaryxnon-profitx-xprivate",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 493,
+      "column": "MeasureName",
+      "original_value_in_clean": "heart attack patients given ace inhibitor or arb for left ventricular systolic dysfunction (lvsd)",
+      "wrong_value_in_dirty": "hxart attack patixnts givxn ace inhibitor or arb for lxft vxntricular systolic dysfunction (lvsd)",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 495,
+      "column": "MeasureCode",
+      "original_value_in_clean": "ami-5",
+      "wrong_value_in_dirty": "ami-x",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 496,
+      "column": "Sample",
+      "original_value_in_clean": "0 patients",
+      "wrong_value_in_dirty": "0 patxents",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 497,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acutx carx hospitals",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 499,
+      "column": "ZipCode",
+      "original_value_in_clean": "35960",
+      "wrong_value_in_dirty": "x5960",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 502,
+      "column": "CountyName",
+      "original_value_in_clean": "cherokee",
+      "wrong_value_in_dirty": "chxrokxx",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 502,
+      "column": "Sample",
+      "original_value_in_clean": "44 patients",
+      "wrong_value_in_dirty": "44 paxienxs",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 504,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "ax",
+      "violated_rule_id": "CFD2",
+      "violated_rule_text": "HospitalName,PhoneNumber,HospitalOwner -> State"
+    },
+    {
+      "row_index": 506,
+      "column": "Condition",
+      "original_value_in_clean": "pneumonia",
+      "wrong_value_in_dirty": "pneumonix",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 506,
+      "column": "Score",
+      "original_value_in_clean": "93%",
+      "wrong_value_in_dirty": "93x",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 507,
+      "column": "MeasureName",
+      "original_value_in_clean": "pneumonia patients assessed and given influenza vaccination",
+      "wrong_value_in_dirty": "pneumonix pxtients assessed xnd given influenzx vxccinxtion",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 511,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acuxe care hospixals",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 513,
+      "column": "CountyName",
+      "original_value_in_clean": "cherokee",
+      "wrong_value_in_dirty": "chxrokxx",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 514,
+      "column": "Score",
+      "original_value_in_clean": "100%",
+      "wrong_value_in_dirty": "1xx%",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 516,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "3342882100",
+      "wrong_value_in_dirty": "3342xx2100",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 517,
+      "column": "City",
+      "original_value_in_clean": "montgomery",
+      "wrong_value_in_dirty": "montxomery",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 521,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "yxs",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 523,
+      "column": "Sample",
+      "original_value_in_clean": "257 patients",
+      "wrong_value_in_dirty": "25x patients",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 526,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "voluntary non-profit - church",
+      "wrong_value_in_dirty": "volxntary non-profit - chxrch",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 527,
+      "column": "CountyName",
+      "original_value_in_clean": "montgomery",
+      "wrong_value_in_dirty": "monxgomery",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 532,
+      "column": "HospitalName",
+      "original_value_in_clean": "baptist medical center south",
+      "wrong_value_in_dirty": "baptist medical cexter south",
+      "violated_rule_id": "FD5",
+      "violated_rule_text": "ProviderNumber -> HospitalName"
+    },
+    {
+      "row_index": 532,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acute care hosxitals",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 532,
+      "column": "MeasureName",
+      "original_value_in_clean": "pneumonia patients assessed and given influenza vaccination",
+      "wrong_value_in_dirty": "pxeumoxia patiexts assessed axd givex ixfluexza vaccixatiox",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 532,
+      "column": "Sample",
+      "original_value_in_clean": "87 patients",
+      "wrong_value_in_dirty": "87 patientx",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 536,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "yex",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 540,
+      "column": "CountyName",
+      "original_value_in_clean": "montgomery",
+      "wrong_value_in_dirty": "montgomexy",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 541,
+      "column": "MeasureName",
+      "original_value_in_clean": "heart attack patients given aspirin at arrival",
+      "wrong_value_in_dirty": "hexrt attxck pxtients given aspirin xt arrivxl",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 544,
+      "column": "ZipCode",
+      "original_value_in_clean": "36106",
+      "wrong_value_in_dirty": "3x10x",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 545,
+      "column": "MeasureName",
+      "original_value_in_clean": "heart attack patients given beta blocker at discharge",
+      "wrong_value_in_dirty": "heaxt attack patients given beta blockex at dischaxge",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 546,
+      "column": "Sample",
+      "original_value_in_clean": "0 patients",
+      "wrong_value_in_dirty": "x patients",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 548,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "3342938000",
+      "wrong_value_in_dirty": "3342938xxx",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 551,
+      "column": "CountyName",
+      "original_value_in_clean": "montgomery",
+      "wrong_value_in_dirty": "monxgomery",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 554,
+      "column": "Sample",
+      "original_value_in_clean": "74 patients",
+      "wrong_value_in_dirty": "74 patxents",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 555,
+      "column": "Condition",
+      "original_value_in_clean": "pneumonia",
+      "wrong_value_in_dirty": "pxeumoxia",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 555,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_pn-5c",
+      "wrong_value_in_dirty": "al_pn-5x",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 559,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10024",
+      "wrong_value_in_dirty": "1xx24",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 559,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "xl",
+      "violated_rule_id": "CFD2",
+      "violated_rule_text": "HospitalName,PhoneNumber,HospitalOwner -> State"
+    },
+    {
+      "row_index": 560,
+      "column": "HospitalName",
+      "original_value_in_clean": "jackson hospital & clinic inc",
+      "wrong_value_in_dirty": "jaxkson hospital & xlinix inx",
+      "violated_rule_id": "FD5",
+      "violated_rule_text": "ProviderNumber -> HospitalName"
+    },
+    {
+      "row_index": 561,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "3342938000",
+      "wrong_value_in_dirty": "33x2938000",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 562,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "3342938000",
+      "wrong_value_in_dirty": "3342938xxx",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 562,
+      "column": "MeasureName",
+      "original_value_in_clean": "all heart surgery patients whose blood sugar (blood glucose) is kept under good control in the days right after surgery",
+      "wrong_value_in_dirty": "allxheartxsurgeryxpatientsxwhosexbloodxsugarx(bloodxglucose)xisxkeptxunderxgoodxcontrolxinxthexdaysxrightxafterxsurgery",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 564,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "xes",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 564,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_scip-vte-1",
+      "wrong_value_in_dirty": "al_scipxvtex1",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 567,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_ami-2",
+      "wrong_value_in_dirty": "xl_xmi-2",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 572,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "ax",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 572,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "3347561400",
+      "wrong_value_in_dirty": "334x561400",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 572,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "voluntary non-profit - other",
+      "wrong_value_in_dirty": "voluntary non-profit - otxer",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 578,
+      "column": "City",
+      "original_value_in_clean": "valley",
+      "wrong_value_in_dirty": "vallex",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 578,
+      "column": "CountyName",
+      "original_value_in_clean": "chambers",
+      "wrong_value_in_dirty": "xhambers",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 579,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "xes",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 580,
+      "column": "MeasureCode",
+      "original_value_in_clean": "pn-5c",
+      "wrong_value_in_dirty": "px-5c",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 580,
+      "column": "Sample",
+      "original_value_in_clean": "50 patients",
+      "wrong_value_in_dirty": "50 pxtients",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 587,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "xes",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 588,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acuxe care hospixals",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 588,
+      "column": "Sample",
+      "original_value_in_clean": "172 patients",
+      "wrong_value_in_dirty": "172 patxents",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 590,
+      "column": "City",
+      "original_value_in_clean": "valley",
+      "wrong_value_in_dirty": "vxlley",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 590,
+      "column": "CountyName",
+      "original_value_in_clean": "chambers",
+      "wrong_value_in_dirty": "chaxbers",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 592,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "ax",
+      "violated_rule_id": "CFD2",
+      "violated_rule_text": "HospitalName,PhoneNumber,HospitalOwner -> State"
+    },
+    {
+      "row_index": 593,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "3348972257",
+      "wrong_value_in_dirty": "33x8972257",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 599,
+      "column": "Condition",
+      "original_value_in_clean": "heart failure",
+      "wrong_value_in_dirty": "heart faixure",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 601,
+      "column": "City",
+      "original_value_in_clean": "elba",
+      "wrong_value_in_dirty": "exba",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 602,
+      "column": "CountyName",
+      "original_value_in_clean": "coffee",
+      "wrong_value_in_dirty": "coffxx",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 608,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10027",
+      "wrong_value_in_dirty": "x0027",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 608,
+      "column": "Condition",
+      "original_value_in_clean": "surgical infection prevention",
+      "wrong_value_in_dirty": "surgical ixfectiox prevextiox",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 612,
+      "column": "MeasureName",
+      "original_value_in_clean": "all heart surgery patients whose blood sugar (blood glucose) is kept under good control in the days right after surgery",
+      "wrong_value_in_dirty": "all heaxt suxgexy patients whose blood sugax (blood glucose) is kept undex good contxol in the days xight aftex suxgexy",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 622,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_ami-8a",
+      "wrong_value_in_dirty": "al_amix8a",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 627,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10029",
+      "wrong_value_in_dirty": "x0029",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 628,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "yex",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 631,
+      "column": "Condition",
+      "original_value_in_clean": "pneumonia",
+      "wrong_value_in_dirty": "pneumonxa",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 633,
+      "column": "CountyName",
+      "original_value_in_clean": "lee",
+      "wrong_value_in_dirty": "xee",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 634,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acuxe care hospixals",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 639,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10029",
+      "wrong_value_in_dirty": "1xx29",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 639,
+      "column": "MeasureCode",
+      "original_value_in_clean": "scip-vte-1",
+      "wrong_value_in_dirty": "scip-vtx-1",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 645,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10032",
+      "wrong_value_in_dirty": "1xx32",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 646,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_ami-7a",
+      "wrong_value_in_dirty": "alxami-7a",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 648,
+      "column": "MeasureCode",
+      "original_value_in_clean": "hf-1",
+      "wrong_value_in_dirty": "hfx1",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 650,
+      "column": "MeasureName",
+      "original_value_in_clean": "heart failure patients given ace inhibitor or arb for left ventricular systolic dysfunction (lvsd)",
+      "wrong_value_in_dirty": "heart failure patients given ace inhibitor or arb for left xentricular systolic dysfunction (lxsd)",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 651,
+      "column": "MeasureName",
+      "original_value_in_clean": "heart failure patients given smoking cessation advice/counseling",
+      "wrong_value_in_dirty": "heart faxlure patxents gxven smokxng cessatxon advxce/counselxng",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 652,
+      "column": "Address1",
+      "original_value_in_clean": "209 north main street",
+      "wrong_value_in_dirty": "209 xorth maix street",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 653,
+      "column": "EmergencyService",
+      "original_value_in_clean": "no",
+      "wrong_value_in_dirty": "xo",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 654,
+      "column": "HospitalName",
+      "original_value_in_clean": "wedowee hospital",
+      "wrong_value_in_dirty": "wedowee hosxital",
+      "violated_rule_id": "FD5",
+      "violated_rule_text": "ProviderNumber -> HospitalName"
+    },
+    {
+      "row_index": 654,
+      "column": "City",
+      "original_value_in_clean": "wedowee",
+      "wrong_value_in_dirty": "wxdowxx",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 655,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10032",
+      "wrong_value_in_dirty": "1xx32",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 666,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "2059344011",
+      "wrong_value_in_dirty": "20593xx011",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 668,
+      "column": "Sample",
+      "original_value_in_clean": "87 patients",
+      "wrong_value_in_dirty": "87 paxienxs",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 672,
+      "column": "CountyName",
+      "original_value_in_clean": "jefferson",
+      "wrong_value_in_dirty": "jxffxrson",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 672,
+      "column": "MeasureName",
+      "original_value_in_clean": "heart attack patients given pci within 90 minutes of arrival",
+      "wrong_value_in_dirty": "heartxattackxpatientsxgivenxpcixwithinx90xminutesxofxarrival",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 673,
+      "column": "MeasureCode",
+      "original_value_in_clean": "hf-1",
+      "wrong_value_in_dirty": "xf-1",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 673,
+      "column": "Sample",
+      "original_value_in_clean": "618 patients",
+      "wrong_value_in_dirty": "618 xatients",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 674,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "yex",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 676,
+      "column": "MeasureCode",
+      "original_value_in_clean": "hf-4",
+      "wrong_value_in_dirty": "hfx4",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 678,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_pn-3b",
+      "wrong_value_in_dirty": "alxpn-3b",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 679,
+      "column": "ZipCode",
+      "original_value_in_clean": "35233",
+      "wrong_value_in_dirty": "3x233",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 679,
+      "column": "Condition",
+      "original_value_in_clean": "pneumonia",
+      "wrong_value_in_dirty": "xneumonia",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 685,
+      "column": "ZipCode",
+      "original_value_in_clean": "35233",
+      "wrong_value_in_dirty": "x52xx",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 689,
+      "column": "CountyName",
+      "original_value_in_clean": "jefferson",
+      "wrong_value_in_dirty": "jexxerson",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 690,
+      "column": "City",
+      "original_value_in_clean": "birmingham",
+      "wrong_value_in_dirty": "birminxham",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 691,
+      "column": "MeasureCode",
+      "original_value_in_clean": "ami-1",
+      "wrong_value_in_dirty": "amix1",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 692,
+      "column": "CountyName",
+      "original_value_in_clean": "elmore",
+      "wrong_value_in_dirty": "elmoxe",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 694,
+      "column": "MeasureCode",
+      "original_value_in_clean": "ami-4",
+      "wrong_value_in_dirty": "amx-4",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 695,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acute cxre hospitxls",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 695,
+      "column": "Condition",
+      "original_value_in_clean": "heart attack",
+      "wrong_value_in_dirty": "heart attaxk",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 696,
+      "column": "City",
+      "original_value_in_clean": "tallassee",
+      "wrong_value_in_dirty": "tallaxxee",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 697,
+      "column": "HospitalName",
+      "original_value_in_clean": "community hospital inc",
+      "wrong_value_in_dirty": "communitx hospital inc",
+      "violated_rule_id": "FD5",
+      "violated_rule_text": "ProviderNumber -> HospitalName"
+    },
+    {
+      "row_index": 698,
+      "column": "CountyName",
+      "original_value_in_clean": "elmore",
+      "wrong_value_in_dirty": "elxore",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 698,
+      "column": "Condition",
+      "original_value_in_clean": "heart failure",
+      "wrong_value_in_dirty": "hexrt fxilure",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 698,
+      "column": "Score",
+      "original_value_in_clean": "88%",
+      "wrong_value_in_dirty": "xx%",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 699,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "3342836541",
+      "wrong_value_in_dirty": "334x836541",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 701,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "xl",
+      "violated_rule_id": "CFD2",
+      "violated_rule_text": "HospitalName,PhoneNumber,HospitalOwner -> State"
+    },
+    {
+      "row_index": 704,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10034",
+      "wrong_value_in_dirty": "100x4",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 705,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acutexcarexhospitals",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 705,
+      "column": "MeasureName",
+      "original_value_in_clean": "pneumonia patients given initial antibiotic(s) within 6 hours after arrival",
+      "wrong_value_in_dirty": "pxeumoxia patiexts givex ixitial axtibiotic(s) withix 6 hours after arrival",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 706,
+      "column": "MeasureName",
+      "original_value_in_clean": "pneumonia patients given the most appropriate initial antibiotic(s)",
+      "wrong_value_in_dirty": "pxeumoxia patiexts givex the most appropriate ixitial axtibiotic(s)",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 710,
+      "column": "HospitalName",
+      "original_value_in_clean": "community hospital inc",
+      "wrong_value_in_dirty": "communixy hospixal inc",
+      "violated_rule_id": "FD5",
+      "violated_rule_text": "ProviderNumber -> HospitalName"
+    },
+    {
+      "row_index": 710,
+      "column": "ZipCode",
+      "original_value_in_clean": "36078",
+      "wrong_value_in_dirty": "36x78",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 711,
+      "column": "Score",
+      "original_value_in_clean": "100%",
+      "wrong_value_in_dirty": "1xx%",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 712,
+      "column": "Condition",
+      "original_value_in_clean": "surgical infection prevention",
+      "wrong_value_in_dirty": "surgical infection xrevention",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 713,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "3342836541",
+      "wrong_value_in_dirty": "33x28365x1",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 713,
+      "column": "MeasureName",
+      "original_value_in_clean": "surgery patients needing hair removed from the surgical area before surgery who had hair removed using a safer method (electric clippers or hair removal cream c not a razor)",
+      "wrong_value_in_dirty": "surgery paxienxs needing hair removed from xhe surgical area before surgery who had hair removed using a safer mexhod (elecxric clippers or hair removal cream c nox a razor)",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 716,
+      "column": "Condition",
+      "original_value_in_clean": "heart attack",
+      "wrong_value_in_dirty": "heartxattack",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 718,
+      "column": "MeasureCode",
+      "original_value_in_clean": "ami-3",
+      "wrong_value_in_dirty": "amx-3",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 718,
+      "column": "Score",
+      "original_value_in_clean": "67%",
+      "wrong_value_in_dirty": "x7%",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 721,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10035",
+      "wrong_value_in_dirty": "100x5",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 721,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_ami-7a",
+      "wrong_value_in_dirty": "al_amx-7a",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 722,
+      "column": "CountyName",
+      "original_value_in_clean": "cullman",
+      "wrong_value_in_dirty": "cxllman",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 724,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10035",
+      "wrong_value_in_dirty": "1xx35",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 729,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acutexcarexhospitals",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 729,
+      "column": "MeasureCode",
+      "original_value_in_clean": "pn-4",
+      "wrong_value_in_dirty": "px-4",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 730,
+      "column": "HospitalName",
+      "original_value_in_clean": "cullman regional medical center",
+      "wrong_value_in_dirty": "cullmxn regionxl medicxl center",
+      "violated_rule_id": "FD5",
+      "violated_rule_text": "ProviderNumber -> HospitalName"
+    },
+    {
+      "row_index": 730,
+      "column": "CountyName",
+      "original_value_in_clean": "cullman",
+      "wrong_value_in_dirty": "cxllman",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 733,
+      "column": "Condition",
+      "original_value_in_clean": "surgical infection prevention",
+      "wrong_value_in_dirty": "suxgical infection pxevention",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 735,
+      "column": "MeasureCode",
+      "original_value_in_clean": "scip-inf-2",
+      "wrong_value_in_dirty": "scix-inf-2",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 736,
+      "column": "Address1",
+      "original_value_in_clean": "1912 alabama highway 157",
+      "wrong_value_in_dirty": "1912xalabamaxhighwayx157",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 736,
+      "column": "City",
+      "original_value_in_clean": "cullman",
+      "wrong_value_in_dirty": "cuxxman",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 744,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "proprietary",
+      "wrong_value_in_dirty": "prxprietary",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 749,
+      "column": "MeasureCode",
+      "original_value_in_clean": "hf-2",
+      "wrong_value_in_dirty": "hx-2",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 750,
+      "column": "ZipCode",
+      "original_value_in_clean": "36420",
+      "wrong_value_in_dirty": "3642x",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 751,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "3342228466",
+      "wrong_value_in_dirty": "334xxx8466",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 752,
+      "column": "CountyName",
+      "original_value_in_clean": "covington",
+      "wrong_value_in_dirty": "coxington",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 755,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10036",
+      "wrong_value_in_dirty": "1xx36",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 756,
+      "column": "City",
+      "original_value_in_clean": "andalusia",
+      "wrong_value_in_dirty": "andaluxia",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 758,
+      "column": "HospitalName",
+      "original_value_in_clean": "andalusia regional hospital",
+      "wrong_value_in_dirty": "andaxusia regionax hospitax",
+      "violated_rule_id": "FD5",
+      "violated_rule_text": "ProviderNumber -> HospitalName"
+    },
+    {
+      "row_index": 760,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_scip-inf-2",
+      "wrong_value_in_dirty": "al_scipxinfx2",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 763,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "3342228466",
+      "wrong_value_in_dirty": "33422284xx",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 764,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "xl",
+      "violated_rule_id": "CFD2",
+      "violated_rule_text": "HospitalName,PhoneNumber,HospitalOwner -> State"
+    },
+    {
+      "row_index": 764,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_scip-vte-1",
+      "wrong_value_in_dirty": "al_scix-vte-1",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 765,
+      "column": "HospitalName",
+      "original_value_in_clean": "andalusia regional hospital",
+      "wrong_value_in_dirty": "andaluxia regional hoxpital",
+      "violated_rule_id": "FD5",
+      "violated_rule_text": "ProviderNumber -> HospitalName"
+    },
+    {
+      "row_index": 767,
+      "column": "Address1",
+      "original_value_in_clean": "301 east 18th st",
+      "wrong_value_in_dirty": "301 east 1xth st",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 769,
+      "column": "Score",
+      "original_value_in_clean": "93%",
+      "wrong_value_in_dirty": "x3%",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 772,
+      "column": "City",
+      "original_value_in_clean": "anniston",
+      "wrong_value_in_dirty": "annxston",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 774,
+      "column": "MeasureCode",
+      "original_value_in_clean": "cac-1",
+      "wrong_value_in_dirty": "xax-1",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 776,
+      "column": "Sample",
+      "original_value_in_clean": "193 patients",
+      "wrong_value_in_dirty": "193 paxienxs",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 777,
+      "column": "HospitalName",
+      "original_value_in_clean": "huntsville hospital",
+      "wrong_value_in_dirty": "huntsvxlle hospxtal",
+      "violated_rule_id": "FD5",
+      "violated_rule_text": "ProviderNumber -> HospitalName"
+    },
+    {
+      "row_index": 779,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acutexcarexhospitals",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 780,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10039",
+      "wrong_value_in_dirty": "1003x",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 780,
+      "column": "Condition",
+      "original_value_in_clean": "heart attack",
+      "wrong_value_in_dirty": "heart attaxk",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 782,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acute care hospitaxs",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 784,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "government - hospital district or authority",
+      "wrong_value_in_dirty": "goverxmext - hospital district or authority",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 785,
+      "column": "CountyName",
+      "original_value_in_clean": "madison",
+      "wrong_value_in_dirty": "madisxn",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 785,
+      "column": "MeasureName",
+      "original_value_in_clean": "heart failure patients given an evaluation of left ventricular systolic (lvs) function",
+      "wrong_value_in_dirty": "heaxt failuxe patients given an evaluation of left ventxiculax systolic (lvs) function",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 787,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_hf-4",
+      "wrong_value_in_dirty": "al_hf-x",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 788,
+      "column": "MeasureCode",
+      "original_value_in_clean": "pn-2",
+      "wrong_value_in_dirty": "pn-x",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 789,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10039",
+      "wrong_value_in_dirty": "1xx39",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 791,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "xl",
+      "violated_rule_id": "CFD2",
+      "violated_rule_text": "HospitalName,PhoneNumber,HospitalOwner -> State"
+    },
+    {
+      "row_index": 793,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10039",
+      "wrong_value_in_dirty": "100x9",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 796,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_scip-inf-2",
+      "wrong_value_in_dirty": "xl_scip-inf-2",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 797,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "yxs",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 798,
+      "column": "CountyName",
+      "original_value_in_clean": "madison",
+      "wrong_value_in_dirty": "madisox",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 802,
+      "column": "MeasureName",
+      "original_value_in_clean": "heart attack patients given aspirin at arrival",
+      "wrong_value_in_dirty": "heart attack patxents gxven aspxrxn at arrxval",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 809,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "xes",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 814,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "axute care hospitals",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 815,
+      "column": "ZipCode",
+      "original_value_in_clean": "35903",
+      "wrong_value_in_dirty": "x590x",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 816,
+      "column": "MeasureName",
+      "original_value_in_clean": "pneumonia patients given initial antibiotic(s) within 6 hours after arrival",
+      "wrong_value_in_dirty": "pneumonix pxtients given initixl antibiotic(s) within 6 hours after arrivxl",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 821,
+      "column": "City",
+      "original_value_in_clean": "gadsden",
+      "wrong_value_in_dirty": "gxdsden",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 824,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "2564944000",
+      "wrong_value_in_dirty": "2564944xxx",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 827,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_ami-1",
+      "wrong_value_in_dirty": "xl_xmi-1",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 842,
+      "column": "MeasureCode",
+      "original_value_in_clean": "pn-6",
+      "wrong_value_in_dirty": "pnx6",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 842,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_pn-6",
+      "wrong_value_in_dirty": "al_pnx6",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 845,
+      "column": "Sample",
+      "original_value_in_clean": "4 patients",
+      "wrong_value_in_dirty": "4 patiexts",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 846,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "voluntary non-profit - private",
+      "wrong_value_in_dirty": "voluntaxy non-pxofit - pxivate",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 848,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acute caxe hospitals",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 849,
+      "column": "Address1",
+      "original_value_in_clean": "1010 lay dam road",
+      "wrong_value_in_dirty": "x0x0 lay dam road",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 851,
+      "column": "Condition",
+      "original_value_in_clean": "surgical infection prevention",
+      "wrong_value_in_dirty": "surgical infxction prxvxntion",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 855,
+      "column": "City",
+      "original_value_in_clean": "hamilton",
+      "wrong_value_in_dirty": "hamilxon",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 855,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "2059216200",
+      "wrong_value_in_dirty": "x059x16x00",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 857,
+      "column": "Address1",
+      "original_value_in_clean": "1256 military street south",
+      "wrong_value_in_dirty": "1256 military street sxuth",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 859,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10044",
+      "wrong_value_in_dirty": "1xx44",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 860,
+      "column": "Score",
+      "original_value_in_clean": "80%",
+      "wrong_value_in_dirty": "80x",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 865,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "2059216200",
+      "wrong_value_in_dirty": "20x9216200",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 865,
+      "column": "MeasureCode",
+      "original_value_in_clean": "pn-4",
+      "wrong_value_in_dirty": "px-4",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 866,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "yxs",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 866,
+      "column": "Sample",
+      "original_value_in_clean": "121 patients",
+      "wrong_value_in_dirty": "121 patiexts",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 868,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "voluntary non-profit - private",
+      "wrong_value_in_dirty": "voluxtary xox-profit - private",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 869,
+      "column": "Condition",
+      "original_value_in_clean": "surgical infection prevention",
+      "wrong_value_in_dirty": "surgical ixfectiox prevextiox",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 872,
+      "column": "HospitalOwner",
+      "original_value_in_clean": "voluntary non-profit - private",
+      "wrong_value_in_dirty": "voluntaxy non-pxofit - pxivate",
+      "violated_rule_id": "FD8",
+      "violated_rule_text": "HospitalName -> HospitalOwner"
+    },
+    {
+      "row_index": 872,
+      "column": "Sample",
+      "original_value_in_clean": "15 patients",
+      "wrong_value_in_dirty": "15 patiexts",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 877,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acute care hoxpitalx",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 878,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10045",
+      "wrong_value_in_dirty": "1xx45",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 881,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "2059325966",
+      "wrong_value_in_dirty": "x0593x5966",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 883,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "2059325966",
+      "wrong_value_in_dirty": "x0593x5966",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 884,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "xl",
+      "violated_rule_id": "CFD2",
+      "violated_rule_text": "HospitalName,PhoneNumber,HospitalOwner -> State"
+    },
+    {
+      "row_index": 886,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "xl",
+      "violated_rule_id": "CFD2",
+      "violated_rule_text": "HospitalName,PhoneNumber,HospitalOwner -> State"
+    },
+    {
+      "row_index": 888,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10045",
+      "wrong_value_in_dirty": "x0045",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 888,
+      "column": "Score",
+      "original_value_in_clean": "85%",
+      "wrong_value_in_dirty": "x5%",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 889,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "yex",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 893,
+      "column": "MeasureName",
+      "original_value_in_clean": "pneumonia patients assessed and given influenza vaccination",
+      "wrong_value_in_dirty": "pneumonia patients assessed and given influenza vaxxination",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 895,
+      "column": "City",
+      "original_value_in_clean": "fayette",
+      "wrong_value_in_dirty": "faxette",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 895,
+      "column": "CountyName",
+      "original_value_in_clean": "fayette",
+      "wrong_value_in_dirty": "fayexxe",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 902,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acutexcarexhospitals",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 902,
+      "column": "MeasureName",
+      "original_value_in_clean": "children who received reliever medication while hospitalized for asthma",
+      "wrong_value_in_dirty": "childrenxwhoxreceivedxrelieverxmedicationxwhilexhospitalizedxforxasthma",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 903,
+      "column": "HospitalName",
+      "original_value_in_clean": "riverview regional medical center",
+      "wrong_value_in_dirty": "rivxrvixw rxgional mxdical cxntxr",
+      "violated_rule_id": "FD5",
+      "violated_rule_text": "ProviderNumber -> HospitalName"
+    },
+    {
+      "row_index": 905,
+      "column": "Sample",
+      "original_value_in_clean": "126 patients",
+      "wrong_value_in_dirty": "126 patxents",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 915,
+      "column": "Address1",
+      "original_value_in_clean": "600 south third street",
+      "wrong_value_in_dirty": "600 souxh xhird sxreex",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 915,
+      "column": "MeasureName",
+      "original_value_in_clean": "heart failure patients given smoking cessation advice/counseling",
+      "wrong_value_in_dirty": "hearx failure paxienxs given smoking cessaxion advice/counseling",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    },
+    {
+      "row_index": 916,
+      "column": "PhoneNumber",
+      "original_value_in_clean": "2565435200",
+      "wrong_value_in_dirty": "x565435x00",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "HospitalName -> PhoneNumber"
+    },
+    {
+      "row_index": 917,
+      "column": "CountyName",
+      "original_value_in_clean": "etowah",
+      "wrong_value_in_dirty": "etowxh",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 919,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "yex",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 920,
+      "column": "Stateavg",
+      "original_value_in_clean": "al_pn-6",
+      "wrong_value_in_dirty": "alxpn-6",
+      "violated_rule_id": "FD4",
+      "violated_rule_text": "MeasureCode -> Stateavg"
+    },
+    {
+      "row_index": 921,
+      "column": "HospitalName",
+      "original_value_in_clean": "riverview regional medical center",
+      "wrong_value_in_dirty": "xivexview xegional medical centex",
+      "violated_rule_id": "FD5",
+      "violated_rule_text": "ProviderNumber -> HospitalName"
+    },
+    {
+      "row_index": 921,
+      "column": "EmergencyService",
+      "original_value_in_clean": "yes",
+      "wrong_value_in_dirty": "yxs",
+      "violated_rule_id": "FD11",
+      "violated_rule_text": "ZipCode -> EmergencyService"
+    },
+    {
+      "row_index": 922,
+      "column": "HospitalName",
+      "original_value_in_clean": "riverview regional medical center",
+      "wrong_value_in_dirty": "riverview rexional medical center",
+      "violated_rule_id": "FD5",
+      "violated_rule_text": "ProviderNumber -> HospitalName"
+    },
+    {
+      "row_index": 922,
+      "column": "State",
+      "original_value_in_clean": "al",
+      "wrong_value_in_dirty": "ax",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 923,
+      "column": "ZipCode",
+      "original_value_in_clean": "35901",
+      "wrong_value_in_dirty": "3590x",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "HospitalName -> ZipCode"
+    },
+    {
+      "row_index": 926,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acuxe care hospixals",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 930,
+      "column": "MeasureCode",
+      "original_value_in_clean": "ami-1",
+      "wrong_value_in_dirty": "amix1",
+      "violated_rule_id": "FD13",
+      "violated_rule_text": "MeasureName -> MeasureCode"
+    },
+    {
+      "row_index": 933,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10047",
+      "wrong_value_in_dirty": "1xx47",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 934,
+      "column": "Address1",
+      "original_value_in_clean": "515 miranda st",
+      "wrong_value_in_dirty": "515 miranda sx",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 935,
+      "column": "Address1",
+      "original_value_in_clean": "515 miranda st",
+      "wrong_value_in_dirty": "515 miranxa st",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 938,
+      "column": "HospitalName",
+      "original_value_in_clean": "georgiana hospital",
+      "wrong_value_in_dirty": "georgiaxa hospital",
+      "violated_rule_id": "FD5",
+      "violated_rule_text": "ProviderNumber -> HospitalName"
+    },
+    {
+      "row_index": 943,
+      "column": "CountyName",
+      "original_value_in_clean": "butler",
+      "wrong_value_in_dirty": "butxer",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 945,
+      "column": "Address1",
+      "original_value_in_clean": "515 miranda st",
+      "wrong_value_in_dirty": "515 mirxndx st",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 949,
+      "column": "City",
+      "original_value_in_clean": "georgiana",
+      "wrong_value_in_dirty": "geoxgiana",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 949,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acute care hosxitals",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 955,
+      "column": "ProviderNumber",
+      "original_value_in_clean": "10049",
+      "wrong_value_in_dirty": "1004x",
+      "violated_rule_id": "FD9",
+      "violated_rule_text": "HospitalName -> ProviderNumber"
+    },
+    {
+      "row_index": 955,
+      "column": "Condition",
+      "original_value_in_clean": "heart attack",
+      "wrong_value_in_dirty": "hexrt attxck",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 956,
+      "column": "HospitalName",
+      "original_value_in_clean": "medical center enterprise",
+      "wrong_value_in_dirty": "medixal xenter enterprise",
+      "violated_rule_id": "FD5",
+      "violated_rule_text": "ProviderNumber -> HospitalName"
+    },
+    {
+      "row_index": 956,
+      "column": "Address1",
+      "original_value_in_clean": "400 n edwards street",
+      "wrong_value_in_dirty": "400xnxedwardsxstreet",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 956,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acute xare hospitals",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 960,
+      "column": "City",
+      "original_value_in_clean": "enterprise",
+      "wrong_value_in_dirty": "enterprxse",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 962,
+      "column": "HospitalName",
+      "original_value_in_clean": "medical center enterprise",
+      "wrong_value_in_dirty": "medxcal center enterprxse",
+      "violated_rule_id": "FD5",
+      "violated_rule_text": "ProviderNumber -> HospitalName"
+    },
+    {
+      "row_index": 964,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acutexcarexhospitals",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 966,
+      "column": "CountyName",
+      "original_value_in_clean": "coffee",
+      "wrong_value_in_dirty": "cxffee",
+      "violated_rule_id": "FD10",
+      "violated_rule_text": "City -> CountyName"
+    },
+    {
+      "row_index": 968,
+      "column": "City",
+      "original_value_in_clean": "enterprise",
+      "wrong_value_in_dirty": "xntxrprisx",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 972,
+      "column": "Sample",
+      "original_value_in_clean": "27 patients",
+      "wrong_value_in_dirty": "27 paxienxs",
+      "violated_rule_id": "UNKNOWN",
+      "violated_rule_text": "UNKNOWN"
+    },
+    {
+      "row_index": 974,
+      "column": "Condition",
+      "original_value_in_clean": "surgical infection prevention",
+      "wrong_value_in_dirty": "surgical xnfection prevention",
+      "violated_rule_id": "FD6",
+      "violated_rule_text": "MeasureCode -> Condition"
+    },
+    {
+      "row_index": 976,
+      "column": "HospitalType",
+      "original_value_in_clean": "acute care hospitals",
+      "wrong_value_in_dirty": "acutexcarexhospitals",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "Condition,MeasureName -> HospitalType"
+    },
+    {
+      "row_index": 985,
+      "column": "City",
+      "original_value_in_clean": "oneonta",
+      "wrong_value_in_dirty": "onxonta",
+      "violated_rule_id": "FD12",
+      "violated_rule_text": "HospitalName -> City"
+    },
+    {
+      "row_index": 986,
+      "column": "Address1",
+      "original_value_in_clean": "150 gilbreath drive",
+      "wrong_value_in_dirty": "150 gilxreath drive",
+      "violated_rule_id": "FD7",
+      "violated_rule_text": "HospitalName -> Address1"
+    },
+    {
+      "row_index": 987,
+      "column": "HospitalName",
+      "original_value_in_clean": "st vincents blount",
+      "wrong_value_in_dirty": "st vincents bxount",
+      "violated_rule_id": "FD5",
+      "violated_rule_text": "ProviderNumber -> HospitalName"
+    },
+    {
+      "row_index": 997,
+      "column": "MeasureName",
+      "original_value_in_clean": "surgery patients who were taking heart drugs called beta blockers before coming to the hospital who were kept on the beta blockers during the period just before and after their surgery",
+      "wrong_value_in_dirty": "surgery pxtients who were txking hexrt drugs cxlled betx blockers before coming to the hospitxl who were kept on the betx blockers during the period just before xnd xfter their surgery",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "MeasureCode -> MeasureName"
+    }
+  ],
+  "meta": {
+    "clean_source": "hospital_clean.csv",
+    "dirty_source": "hospital dirty.csv",
+    "constraints_source": "hospital_constraints.txt",
+    "row_alignment": "assume dirty row_index == clean tid"
+  }
+}

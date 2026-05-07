@@ -1,0 +1,81 @@
+{
+  "schema": {
+    "row_indexing": "0-based (header not counted)",
+    "columns": [
+      "Country",
+      "State",
+      "City",
+      "Zip",
+      "StoreType",
+      "Manager"
+    ]
+  },
+  "rules": {
+    "FD": [
+      {
+        "id": "FD1",
+        "text": "City -> State"
+      },
+      {
+        "id": "FD2",
+        "text": "City -> Zip"
+      },
+      {
+        "id": "FD3",
+        "text": "StoreType -> Manager"
+      }
+    ],
+    "CFD": [
+      {
+        "id": "CFD1",
+        "text": "(Country='UK') -> Zip contains a space (pattern like 'XXXX XXXX' or 'XX#X #XX')"
+      },
+      {
+        "id": "CFD2",
+        "text": "(Country='US') -> Zip is exactly 5 digits (regex ^\\d{5}$)"
+      }
+    ]
+  },
+  "errors": [
+    {
+      "row_index": 0,
+      "column": "State",
+      "original_value_in_clean": "CA",
+      "wrong_value_in_dirty": "NY",
+      "violated_rule_id": "FD1",
+      "violated_rule_text": "City -> State"
+    },
+    {
+      "row_index": 6,
+      "column": "Zip",
+      "original_value_in_clean": "10115",
+      "wrong_value_in_dirty": "99999",
+      "violated_rule_id": "FD2",
+      "violated_rule_text": "City -> Zip"
+    },
+    {
+      "row_index": 8,
+      "column": "Manager",
+      "original_value_in_clean": "Carol",
+      "wrong_value_in_dirty": "Bob",
+      "violated_rule_id": "FD3",
+      "violated_rule_text": "StoreType -> Manager"
+    },
+    {
+      "row_index": 10,
+      "column": "Zip",
+      "original_value_in_clean": "SW1A 1AA",
+      "wrong_value_in_dirty": "SW1A1AA",
+      "violated_rule_id": "CFD1",
+      "violated_rule_text": "(Country='UK') -> Zip contains a space"
+    },
+    {
+      "row_index": 17,
+      "column": "Zip",
+      "original_value_in_clean": "94203",
+      "wrong_value_in_dirty": "94A03",
+      "violated_rule_id": "CFD2",
+      "violated_rule_text": "(Country='US') -> Zip is exactly 5 digits (regex ^\\d{5}$)"
+    }
+  ]
+}

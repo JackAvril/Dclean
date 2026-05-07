@@ -1,0 +1,21 @@
+PatientID,Age,City,Year,Gender
+P1000,58,Cambridge,2015,F
+P1001,25,Cambridge,2023,M
+P1002,19,Boston,2015,M
+P1003,65,Cambridge,2019,M
+P1004,35,San Francisco,2014,M
+P1005,33,Cambridge,2022,F
+P1006,32,San Francisco,2010,M
+P1007,26,New York,2021,M
+P1008,65,Boston,2017,M
+P1009,24,Cambridge,2018,F
+P1010,61,San Francisco,2011,F
+P1011,65,New York,2024,F
+P1012,75,New York,2016,F
+P1013,52,Cambridge,2011,M
+P1014,23,Cambridge,2018,F
+P1015,55,New York,2014,F
+P1016,45,Boston,2023,M
+P1017,20,Boston,2020,F
+P1018,19,San Francisco,2019,M
+P1019,23,Boston,2024,M

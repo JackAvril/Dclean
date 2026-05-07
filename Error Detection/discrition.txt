@@ -1,0 +1,33 @@
+build_rule_pool.py//用于建立规则池
+输入："/home/dq/Splittree/hospital/hospital_dirty.csv"
+输出："rule_pool.json"
+
+shrink_search_space.py//减小搜索空间
+输入："/home/dq/Splittree/hospital/hospital_dirty.csv"
+      "rule_pool.json"
+输出："candidate_cells.jsonl"
+     "candidate_cells.csv"
+
+summarize_full_contexts.py//建立上下文信息
+输入： "/home/dq/Splittree/hospital/hospital_dirty.csv"
+      "candidate_cells.csv"
+输出："candidate_llm_contexts.jsonl"//包含详细信息
+      "candidate_llm_contexts_flat.csv"//包含缩略信息
+
+cluster_and_sample_candidates.py//聚类并采样
+输入："candidate_llm_contexts_flat.csv"
+      "candidate_llm_contexts.jsonl"
+
+输出："candidate_clustered.csv"
+      "candidate_sampled.csv"
+      "candidate_sampled_with_context.jsonl"
+      "bucket_cluster_summary.csv"
+
+
+annotate_with_deepseek.py//大模型进行标注
+
+//标签传播
+
+infer_mlp_detector_enhanced.py//训练一个轻量化模型
+
+infer_mlp_detector_enhanced.py//规模化推理

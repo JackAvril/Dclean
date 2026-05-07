@@ -1,0 +1,5 @@
+row_id,col,dirty_value,clean_value
+3,Age,1500,65
+7,City,Bostn,New York
+12,Year,2000000,2016
+16,Gender,Male,M

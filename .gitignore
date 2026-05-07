@@ -1,0 +1,100 @@
+# Ignore everything by default.
+*
+
+# Keep directories visible so allow rules below can work.
+!*/
+
+# Git metadata/docs/config.
+!.gitignore
+!README.md
+!requirements.txt
+!pyproject.toml
+
+# Source code and small text configs.
+!*.py
+!*.c
+!*.h
+!*.sh
+!*.txt
+!*.json
+
+# Allow Python/source files in nested project folders.
+!**/*.py
+!**/*.c
+!**/*.h
+!**/*.sh
+!**/*.txt
+!**/*.json
+
+# Do not include generated/model/vendor/heavy directories.
+ZeroEC-main/
+holoclean-master/
+debug_bad_outputs/
+**/active_cleaning_loop_runs*/
+**/model_output/
+**/best_model/
+**/iter_*/
+**/*_output/
+**/*outputs*/
+**/coverage_analysis_output/
+**/context_recall_check_output/
+**/feature_coverage_output/
+**/repair_candidate_coverage_output/
+**/repair_diagnosis_output/
+**/repair_eval_output/
+**/evaluation_candidate_space*/
+**/evaluation_output*/
+**/eval_outputs*/
+**/pairwise_ltr_student_output*/
+
+# Heavy/generated artifacts even if nested.
+*.zip
+*.exe
+*.dll
+*.so
+*.dylib
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.onnx
+*.joblib
+*.pkl
+*.csv
+*.jsonl
+*.xlsx
+*.xls
+
+# But keep root-level small sample files that your scripts may use.
+!/dirty_20x6.csv
+!/groundtruth_4_errors.csv
+!/hospital data analysis.csv
+!/hospital dirty.csv
+!/hospital.csv
+!/hospital_clean.csv
+!/synthetic_clean_20x5.csv
+!/synthetic_dirty_20x5.csv
+!/evidence.jsonl
+!/evidence1.jsonl
+!/evidence2.jsonl
+!/evidence3.jsonl
+!/evidence4.jsonl
+!/evidence5.jsonl
+!/evidence6.jsonl
+!/hospital_evidence1.jsonl
+
+# Python/system/editor.
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.env.*
+.DS_Store
+.vscode/
+.idea/
+
+# model output configs/results
+Error Detection/mlp_model_output_enhanced/
+Error Correction hospital/built_cooccurrence_dict.json
+Error Correction hospital/built_cooccurrence_dict_v2.json

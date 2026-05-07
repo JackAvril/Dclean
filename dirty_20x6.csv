@@ -1,0 +1,21 @@
+Country,State,City,Zip,StoreType,Manager
+US,NY,Los Angeles,90001,Grocery,Alice
+US,CA,San Diego,92101,Electronics,Bob
+US,NY,New York,10001,Pharmacy,Carol
+US,TX,Austin,73301,Grocery,Alice
+US,CA,San Jose,95101,Pharmacy,Carol
+US,NY,Buffalo,14201,Electronics,Bob
+DE,BE,Berlin,99999,Grocery,Alice
+DE,BY,Munich,80331,Electronics,Bob
+FR,IDF,Paris,75001,Pharmacy,Bob
+FR,PAC,Marseille,13001,Grocery,Alice
+UK,ENG,London,SW1A1AA,Electronics,Bob
+UK,SCT,Edinburgh,EH1 1YZ,Grocery,Alice
+US,TX,Dallas,75201,Electronics,Bob
+US,NY,Rochester,14604,Grocery,Alice
+DE,HH,Hamburg,20095,Pharmacy,Carol
+FR,ARA,Lyon,69001,Electronics,Bob
+UK,WLS,Cardiff,CF10 1AA,Pharmacy,Carol
+US,CA,Sacramento,94A03,Grocery,Alice
+DE,NW,Cologne,50667,Grocery,Alice
+FR,NAQ,Bordeaux,33000,Pharmacy,Carol

@@ -1,0 +1,18 @@
+{
+  "total_rows": 2390,
+  "error_count": 1912,
+  "correct_count": 478,
+  "label_source_counter": {
+    "llm": 1816,
+    "knn_propagation": 334,
+    "outside_clean": 240
+  },
+  "outside_candidate_count": 240,
+  "inside_candidate_count": 2150,
+  "column_counter_top20": {
+    "sched_arr_time": 686,
+    "act_arr_time": 660,
+    "act_dep_time": 640,
+    "sched_dep_time": 404
+  }
+}
