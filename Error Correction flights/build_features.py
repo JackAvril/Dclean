@@ -32,7 +32,7 @@ RAW_DATA_FILE = "/mnt/mydata/dq/projects/Splittree/flights/flights_dirty.csv"
 # 可选：现成共现字典。没有就保持 None。
 COOCCURRENCE_DICT_FILE = None
 
-# 输出；如果是相对路径，会自动输出到 CANDIDATES_FILE 所在目录。
+# 输出；如果是相对路径，会输出到当前运行目录。
 OUTPUT_FEATURES_CSV = "repair_candidate_features_v2.csv"
 OUTPUT_BUILT_COOCCUR_JSON = "built_cooccurrence_dict_v2.json"
 
@@ -85,16 +85,16 @@ def path_exists_nonempty(path):
     return path is not None and str(path).strip() != "" and os.path.exists(str(path))
 
 
-def resolve_output_path(output_path, anchor_input_path):
+def resolve_output_path(output_path, anchor_input_path=None):
     """
-    如果 output_path 是相对路径，则默认输出到 anchor_input_path 所在目录。
-    这样特征文件会和候选文件放在同一个实验目录里。
+    输出路径适配：
+    - 如果 output_path 是绝对路径，则直接使用；
+    - 如果 output_path 是相对路径，则保存到当前运行目录。
     """
     output_path = str(output_path)
     if os.path.isabs(output_path):
         return output_path
-    base_dir = os.path.dirname(os.path.abspath(str(anchor_input_path)))
-    return os.path.join(base_dir, output_path)
+    return os.path.abspath(output_path)
 
 
 def string_similarity(a, b):
@@ -335,6 +335,17 @@ TIME_COLUMNS_HINT = {
     "actual_arrival",
 }
 
+ACTUAL_TIME_COLUMNS = {"act_dep_time", "act_arr_time", "actual_departure", "actual_arrival"}
+SCHEDULED_TIME_COLUMNS = {"sched_dep_time", "sched_arr_time", "scheduled_departure", "scheduled_arrival"}
+
+
+def looks_like_actual_time_column(column):
+    return norm_text(column) in ACTUAL_TIME_COLUMNS
+
+
+def looks_like_scheduled_time_column(column):
+    return norm_text(column) in SCHEDULED_TIME_COLUMNS
+
 
 def looks_like_time_column(column, semantic_type=None):
     col = norm_text(column)
@@ -342,34 +353,117 @@ def looks_like_time_column(column, semantic_type=None):
     return sem == "time_like" or col in TIME_COLUMNS_HINT or col.endswith("_time")
 
 
+def extract_time_candidate_strings(x):
+    """
+    从复杂时间字符串中抽取可解析片段。
+    支持：
+    - 12/02/2011 6:55 a.m.
+    - 9:32aDec 1 / 6:09pDec 1
+    - 10:30 p.m. estimated
+    - 7:16a / 8:20p
+    - 710 / 0710
+    """
+    raw = canonical_empty_text(x)
+    s = raw.lower().strip()
+    if s in {"", "empty"}:
+        return []
+
+    s_norm = s
+    s_norm = s_norm.replace("estimated", " ")
+    s_norm = s_norm.replace("(estimated)", " ")
+    s_norm = s_norm.replace("est.", " ")
+    s_norm = s_norm.replace("est", " ")
+    s_norm = re.sub(r"\s+", " ", s_norm).strip()
+
+    candidates = []
+
+    patterns = [
+        r"(?P<h>\d{1,2})\s*:\s*(?P<m>\d{2})\s*(?P<ampm>a\.?m\.?|p\.?m\.?|am|pm|a|p)\b",
+        r"(?P<h>\d{1,2})\s*:\s*(?P<m>\d{2})\s*(?P<ampm>a|p)(?=[a-z])",
+        r"(?P<h>\d{1,2})\s*:\s*(?P<m>\d{2})",
+    ]
+
+    for pat in patterns:
+        for m in re.finditer(pat, s_norm):
+            h = m.group("h")
+            mm = m.group("m")
+            ampm = m.groupdict().get("ampm", "") or ""
+            ampm = ampm.replace(".", "")
+            if ampm == "a":
+                ampm = "am"
+            elif ampm == "p":
+                ampm = "pm"
+
+            if ampm:
+                candidates.append(f"{h}:{mm} {ampm}")
+            else:
+                candidates.append(f"{h}:{mm}")
+
+    compact = re.sub(r"\D", "", s_norm)
+    if len(compact) in {3, 4} and not re.search(r"[/-]", s_norm):
+        candidates.append(compact)
+
+    candidates.append(raw)
+
+    out = []
+    seen = set()
+    for c in candidates:
+        c = str(c).strip()
+        if not c:
+            continue
+        k = c.lower()
+        if k not in seen:
+            seen.add(k)
+            out.append(c)
+    return out
+
+
 def parse_time_to_minutes(x):
     """
-    解析常见航班时间格式：
-    - 7:10 a.m.
-    - 7:10 am
-    - 07:10
-    - 710 / 0710
+    增强版时间解析。
     返回 [0, 1439] 分钟；失败返回 None。
     """
+    raw = canonical_empty_text(x)
+    if raw.lower() in {"", "empty"}:
+        return None
+
+    for cand in extract_time_candidate_strings(raw):
+        minutes = _parse_simple_time_piece(cand)
+        if minutes is not None:
+            return minutes
+
+    return None
+
+
+def _parse_simple_time_piece(x):
     s = canonical_empty_text(x).lower()
     if s in {"", "empty"}:
         return None
 
     s = s.replace(".", "")
+    s = s.replace("estimated", " ")
+    s = s.replace("est", " ")
     s = re.sub(r"\s+", " ", s).strip()
 
     ampm = None
-    if "am" in s:
+    if re.search(r"\b(am)\b", s) or re.search(r"\d\s*a\b", s):
         ampm = "am"
-    elif "pm" in s:
+    elif re.search(r"\b(pm)\b", s) or re.search(r"\d\s*p\b", s):
+        ampm = "pm"
+    elif re.search(r"\d:\d{2}a(?=[a-z]|\b)", s):
+        ampm = "am"
+    elif re.search(r"\d:\d{2}p(?=[a-z]|\b)", s):
         ampm = "pm"
 
-    s_clean = s.replace("am", "").replace("pm", "").strip()
+    s_clean = s
+    s_clean = re.sub(r"\b(am|pm)\b", "", s_clean)
+    s_clean = re.sub(r"(?<=\d)\s*[ap](?=[a-z]|\b)", "", s_clean)
+    s_clean = s_clean.strip()
 
     hour = None
     minute = None
 
-    m = re.fullmatch(r"(\d{1,2})\s*:\s*(\d{2})", s_clean)
+    m = re.search(r"(\d{1,2})\s*:\s*(\d{2})", s_clean)
     if m:
         hour = int(m.group(1))
         minute = int(m.group(2))
@@ -1024,6 +1118,47 @@ def compute_column_plausibility_features(candidate_value, dirty_value, ctx):
     else:
         candidate_time_context_gain = None
 
+    # Flights 四时间列结构特征
+    sched_dep_minutes = parse_time_to_minutes(row_values.get("sched_dep_time", ""))
+    act_dep_minutes = parse_time_to_minutes(row_values.get("act_dep_time", ""))
+    sched_arr_minutes = parse_time_to_minutes(row_values.get("sched_arr_time", ""))
+    act_arr_minutes = parse_time_to_minutes(row_values.get("act_arr_time", ""))
+
+    candidate_vs_sched_dep_diff = circular_minute_diff(candidate_minutes, sched_dep_minutes)
+    candidate_vs_act_dep_diff = circular_minute_diff(candidate_minutes, act_dep_minutes)
+    candidate_vs_sched_arr_diff = circular_minute_diff(candidate_minutes, sched_arr_minutes)
+    candidate_vs_act_arr_diff = circular_minute_diff(candidate_minutes, act_arr_minutes)
+
+    current_col = ctx.get("column", "")
+    is_actual_col = looks_like_actual_time_column(current_col)
+    is_sched_col = looks_like_scheduled_time_column(current_col)
+
+    if current_col in {"act_dep_time", "actual_departure"}:
+        candidate_paired_schedule_diff = candidate_vs_sched_dep_diff
+    elif current_col in {"act_arr_time", "actual_arrival"}:
+        candidate_paired_schedule_diff = candidate_vs_sched_arr_diff
+    elif current_col in {"sched_dep_time", "scheduled_departure"}:
+        candidate_paired_schedule_diff = candidate_vs_act_dep_diff
+    elif current_col in {"sched_arr_time", "scheduled_arrival"}:
+        candidate_paired_schedule_diff = candidate_vs_act_arr_diff
+    else:
+        candidate_paired_schedule_diff = None
+
+    if sched_dep_minutes is not None and sched_arr_minutes is not None:
+        scheduled_duration_minutes = circular_minute_diff(sched_dep_minutes, sched_arr_minutes)
+    else:
+        scheduled_duration_minutes = None
+
+    if act_dep_minutes is not None and act_arr_minutes is not None:
+        actual_duration_minutes = circular_minute_diff(act_dep_minutes, act_arr_minutes)
+    else:
+        actual_duration_minutes = None
+
+    if scheduled_duration_minutes is not None and actual_duration_minutes is not None:
+        duration_gap_abs = abs(scheduled_duration_minutes - actual_duration_minutes)
+    else:
+        duration_gap_abs = None
+
     return {
         "candidate_in_column_top_values": candidate_in_top_values,
         "candidate_column_top_ratio": candidate_top_ratio,
@@ -1067,6 +1202,16 @@ def compute_column_plausibility_features(candidate_value, dirty_value, ctx):
         "candidate_mean_diff_to_row_time": candidate_mean_diff_to_row_time,
         "dirty_min_diff_to_row_time": dirty_min_diff_to_row_time,
         "candidate_time_context_gain": candidate_time_context_gain,
+        "candidate_vs_sched_dep_diff": candidate_vs_sched_dep_diff,
+        "candidate_vs_act_dep_diff": candidate_vs_act_dep_diff,
+        "candidate_vs_sched_arr_diff": candidate_vs_sched_arr_diff,
+        "candidate_vs_act_arr_diff": candidate_vs_act_arr_diff,
+        "candidate_paired_schedule_diff": candidate_paired_schedule_diff,
+        "is_actual_time_column": int(is_actual_col),
+        "is_scheduled_time_column": int(is_sched_col),
+        "scheduled_duration_minutes": scheduled_duration_minutes,
+        "actual_duration_minutes": actual_duration_minutes,
+        "duration_gap_abs": duration_gap_abs,
     }
 
 
@@ -1074,16 +1219,16 @@ def compute_column_plausibility_features(candidate_value, dirty_value, ctx):
 # 12. 主流程
 # ============================================================
 
+if not path_exists_nonempty(CANDIDATES_FILE):
+    raise FileNotFoundError(f"候选展开文件不存在: {CANDIDATES_FILE}")
+if not path_exists_nonempty(CONTEXT_FILE):
+    raise FileNotFoundError(f"上下文文件不存在: {CONTEXT_FILE}")
+
 candidates_df = pd.read_csv(CANDIDATES_FILE, encoding="utf-8-sig")
 if not {"row_id", "column", "dirty_value", "candidate_value"}.issubset(set(candidates_df.columns)):
     raise ValueError("候选文件必须至少包含 row_id,column,dirty_value,candidate_value")
 
 candidates_df["row_id"] = candidates_df["row_id"].astype(int)
-
-if not path_exists_nonempty(CANDIDATES_FILE):
-    raise FileNotFoundError(f"候选展开文件不存在: {CANDIDATES_FILE}")
-if not path_exists_nonempty(CONTEXT_FILE):
-    raise FileNotFoundError(f"上下文文件不存在: {CONTEXT_FILE}")
 
 context_records = load_context_records(CONTEXT_FILE)
 context_map = build_context_map_rich(context_records)
@@ -1124,6 +1269,17 @@ for _, row in candidates_df.iterrows():
     candidate_source_text = str(row.get("candidate_source", "") or "")
     sources = set([s.strip() for s in candidate_source_text.split("|") if s.strip()])
 
+    is_flight_consensus_source = int("trusted_flight_source_weighted_consensus" in sources or "flight_source_weighted_consensus" in sources or "flight_source_consensus" in sources)
+    is_time_dirty_extract_source = int("time_dirty_extract" in sources)
+    is_time_pattern_restore_source = int("time_pattern_restore" in sources)
+    is_time_column_dictionary_source = int("time_column_dictionary" in sources)
+    is_time_row_context_source = int("time_row_context" in sources)
+
+    flight_consensus_confidence = safe_float(row.get("flight_consensus_confidence", 0.0), 0.0)
+    flight_consensus_margin = safe_float(row.get("flight_consensus_margin", 0.0), 0.0)
+    flight_consensus_support_count = int(safe_float(row.get("flight_consensus_support_count", 0), 0.0))
+    flight_consensus_source_count = int(safe_float(row.get("flight_consensus_source_count", 0), 0.0))
+
     out.update({
         "semantic_type": ctx.get("semantic_type", None),
         "violation_count": ctx.get("violation_count", None),
@@ -1152,12 +1308,36 @@ for _, row in candidates_df.iterrows():
             "measurename_from_condition",
             "time_column_dictionary",
             "time_row_context",
+            "trusted_flight_source_weighted_consensus",
+            "flight_source_weighted_consensus",
         })),
         "contains_time_source": int(any(s in sources for s in {
+            "time_dirty_extract",
             "time_pattern_restore",
             "time_column_dictionary",
             "time_row_context",
+            "trusted_flight_source_weighted_consensus",
+            "flight_source_weighted_consensus",
         })),
+
+        # 新增：Flights source-aware consensus 特征
+        "is_from_flight_consensus": int(row.get("is_from_flight_consensus", 0) or is_flight_consensus_source),
+        "contains_flight_consensus_source": is_flight_consensus_source,
+        "contains_trusted_flight_consensus_source": int("trusted_flight_source_weighted_consensus" in sources),
+        "flight_consensus_confidence": flight_consensus_confidence,
+        "flight_consensus_margin": flight_consensus_margin,
+        "flight_consensus_support_count": flight_consensus_support_count,
+        "flight_consensus_source_count": flight_consensus_source_count,
+        "candidate_equals_flight_consensus": int(
+            norm_text(candidate_value) == norm_text(row.get("flight_consensus_value", ""))
+            and norm_text(row.get("flight_consensus_value", "")) != ""
+        ),
+
+        # 新增：time 候选来源细粒度特征
+        "contains_time_dirty_extract_source": is_time_dirty_extract_source,
+        "contains_time_pattern_restore_source": is_time_pattern_restore_source,
+        "contains_time_column_dictionary_source": is_time_column_dictionary_source,
+        "contains_time_row_context_source": is_time_row_context_source,
     })
 
     out.update(rule_feats)
@@ -1189,7 +1369,10 @@ if not features_df.empty:
         "candidate_percent_restoration_gain", "candidate_sample_restoration_gain",
         "is_time_like_column", "candidate_is_valid_time",
         "candidate_dirty_time_minute_diff", "candidate_time_context_gain",
-        "contains_time_source"
+        "candidate_paired_schedule_diff",
+        "contains_time_source", "is_from_flight_consensus",
+        "flight_consensus_confidence", "flight_consensus_support_count",
+        "flight_consensus_source_count"
     ] if c in features_df.columns]
     print("\n[INFO] 前 20 行特征预览：")
     print(features_df[show_cols].head(20).to_string(index=False))

@@ -1,0 +1,20 @@
+{
+  "total_rows": 1451,
+  "error_count": 709,
+  "correct_count": 742,
+  "label_source_counter": {
+    "llm": 731,
+    "outside_clean": 720
+  },
+  "outside_candidate_count": 720,
+  "inside_candidate_count": 731,
+  "column_counter_top20": {
+    "abv": 288,
+    "ibu": 235,
+    "ounces": 226,
+    "city": 220,
+    "state": 217,
+    "style": 136,
+    "brewery_name": 129
+  }
+}

@@ -34,9 +34,14 @@ FALLBACK_CONTEXT_FLAT_FILE = "/mnt/mydata/dq/projects/Splittree/test/Error Detec
 # DIRTY_TABLE_CSV = "/mnt/mydata/dq/projects/Splittree/flights/flights_dirty.csv"
 DIRTY_TABLE_CSV = "/mnt/mydata/dq/projects/Splittree/flights/flights_dirty.csv"
 
-# 输出：如果这里写相对路径，会自动输出到 ERROR_PRED_FILE 所在目录。
+# 输出：如果这里写相对路径，会输出到当前运行目录。
 OUTPUT_CANDIDATES_EXPANDED_CSV = "repair_candidates_expanded.csv"
 OUTPUT_CANDIDATES_GROUPED_CSV = "repair_candidates_grouped.csv"
+
+# Flights source-aware consensus 输出
+OUTPUT_FLIGHT_CONSENSUS_CSV = "flight_time_consensus.csv"
+OUTPUT_CONSENSUS_SUSPICIOUS_CELLS_CSV = "consensus_suspicious_cells.csv"
+OUTPUT_AUGMENTED_ALLOWED_CELLS_CSV = "predicted_error_positions_consensus_augmented.csv"
 
 # 参数
 TOP_K_COLUMN_VALUES = 12
@@ -48,6 +53,86 @@ INCLUDE_DIRTY_VALUE = False
 
 # 是否启用列专属补候选
 ENABLE_COLUMN_SPECIFIC_GENERATION = True
+
+# 是否启用 Flights source-aware flight consensus
+ENABLE_FLIGHT_CONSENSUS = True
+
+# 用于构建同一 flight 多 source 共识的列
+FLIGHT_ID_COLUMN = "flight"
+SOURCE_COLUMN = "src"
+FLIGHT_TIME_COLUMNS = ["sched_dep_time", "act_dep_time", "sched_arr_time", "act_arr_time"]
+
+# consensus 阈值
+MIN_CONSENSUS_SUPPORT_COUNT = 2
+MIN_CONSENSUS_SOURCE_COUNT = 2
+MIN_CONSENSUS_CONFIDENCE = 0.55
+
+# 对 actual time，只有更高置信才自动加入白名单，避免召回提升时误伤太多 clean cell
+MIN_ACTUAL_CONSENSUS_CONFIDENCE_FOR_ALLOW = 0.62
+MIN_SCHEDULED_CONSENSUS_CONFIDENCE_FOR_ALLOW = 0.55
+
+# consensus 候选分数
+CONSENSUS_STRONG_SCORE = 0.98
+CONSENSUS_MEDIUM_SCORE = 0.90
+
+# ============================================================
+# Flights trusted-source consensus 配置
+# ============================================================
+# 关键思想：
+# actual time 不能让所有 source 都参与投票，否则低质量 source 数量多时会把共识带偏。
+# 因此四个时间列使用 per-column source reliability。
+#
+# 注意：
+# 这些 source 名称按 norm_text(src) 后的小写形式匹配。
+# 如果你的 src 列里还有其它可靠来源，可以直接加到集合里。
+TRUSTED_ACTUAL_TIME_SOURCES = {
+    "co",
+    "aa",
+    "ua",
+    "ifly",
+    "flightstats",
+    "flightview",
+    "quicktrip",
+    "flights",
+    "businesstravellogue",
+    "flylouisville",
+    "world-flight-tracker",
+    "panynj",
+}
+
+TRUSTED_SCHEDULED_TIME_SOURCES = {
+    "co",
+    "aa",
+    "ua",
+    "ifly",
+    "flightstats",
+    "flightview",
+    "quicktrip",
+    "flights",
+    "weather",
+    "world-flight-tracker",
+    "flightaware",
+    "wunderground",
+    "flightwise",
+    "panynj",
+}
+
+# 对不在 trusted 集合里的 source，time consensus 默认不参与投票。
+# 如果想做消融实验，可以把它改成 0.2，但冲高 F1 时建议保持 0。
+UNTRUSTED_TIME_SOURCE_WEIGHT = 0.0
+
+# trusted source 权重。actual time 给更强区分。
+TRUSTED_ACTUAL_SOURCE_WEIGHT = 3.0
+TRUSTED_SCHEDULED_SOURCE_WEIGHT = 2.6
+
+# 高置信 consensus 自动扩展白名单的更强阈值。
+# actual time 必须至少两个 trusted source 支持。
+MIN_TRUSTED_ACTUAL_SOURCE_COUNT_FOR_ALLOW = 2
+MIN_TRUSTED_SCHEDULED_SOURCE_COUNT_FOR_ALLOW = 2
+
+# 当 trusted source 之间完全一致时，允许较低 confidence；否则仍要求 confidence。
+MIN_TRUSTED_ACTUAL_CONSENSUS_CONFIDENCE = 0.58
+MIN_TRUSTED_SCHEDULED_CONSENSUS_CONFIDENCE = 0.55
 
 
 # ============================================================
@@ -96,17 +181,19 @@ def path_exists_nonempty(path):
     return path is not None and str(path).strip() != "" and os.path.exists(str(path))
 
 
-def resolve_output_path(output_path, anchor_input_path):
+def resolve_output_path(output_path, anchor_input_path=None):
     """
     输出路径适配：
-    - 如果 OUTPUT_* 是绝对路径，则直接使用；
-    - 如果是相对路径，则默认输出到 ERROR_PRED_FILE 所在目录。
+    - 如果 output_path 是绝对路径，则直接使用；
+    - 如果 output_path 是相对路径，则保存到当前运行目录。
+
+    这样所有输出都会放在你执行 python 命令时所在的目录，
+    不再自动写到 ERROR_PRED_FILE 所在目录。
     """
     output_path = str(output_path)
     if os.path.isabs(output_path):
         return output_path
-    base_dir = os.path.dirname(os.path.abspath(str(anchor_input_path)))
-    return os.path.join(base_dir, output_path)
+    return os.path.abspath(output_path)
 
 
 def is_empty_like_value(x):
@@ -220,6 +307,19 @@ TIME_COLUMNS_HINT = {
     "actual_arrival",
 }
 
+ACTUAL_TIME_COLUMNS = {"act_dep_time", "act_arr_time", "actual_departure", "actual_arrival"}
+SCHEDULED_TIME_COLUMNS = {"sched_dep_time", "sched_arr_time", "scheduled_departure", "scheduled_arrival"}
+
+
+def looks_like_actual_time_column(column):
+    col = norm_text(column)
+    return col in ACTUAL_TIME_COLUMNS
+
+
+def looks_like_scheduled_time_column(column):
+    col = norm_text(column)
+    return col in SCHEDULED_TIME_COLUMNS
+
 
 def looks_like_time_column(column, semantic_type=None):
     col = norm_text(column)
@@ -227,37 +327,128 @@ def looks_like_time_column(column, semantic_type=None):
     return sem == "time_like" or col in TIME_COLUMNS_HINT or col.endswith("_time")
 
 
+def extract_time_candidate_strings(x):
+    """
+    从复杂 dirty value 中抽取可能的时间字符串。
+    支持：
+    - 12/02/2011 6:55 a.m.
+    - 9:32aDec 1
+    - 6:09pDec 1
+    - 10:30 p.m. estimated
+    - 7:16a / 8:20p
+    - 710 / 0710
+    """
+    raw = canonical_empty_text(x)
+    s = raw.lower().strip()
+    if s in {"", "empty"}:
+        return []
+
+    candidates = []
+
+    # 统一一些常见噪声，但保留原始字符串也参与解析
+    s_norm = s
+    s_norm = s_norm.replace("estimated", " ")
+    s_norm = s_norm.replace("(estimated)", " ")
+    s_norm = s_norm.replace("est.", " ")
+    s_norm = s_norm.replace("est", " ")
+    s_norm = re.sub(r"\s+", " ", s_norm).strip()
+
+    # 1) 标准显式 am/pm: 6:55 a.m. / 6:55 am / 6:55a / 6:55p
+    patterns = [
+        r"(?P<h>\d{1,2})\s*:\s*(?P<m>\d{2})\s*(?P<ampm>a\.?m\.?|p\.?m\.?|am|pm|a|p)\b",
+        # 9:32aDec 1 / 6:09pDec 1，这里 ampm 后面可能直接接字母
+        r"(?P<h>\d{1,2})\s*:\s*(?P<m>\d{2})\s*(?P<ampm>a|p)(?=[a-z])",
+        # 无 am/pm 的 24 小时或上下文中出现的 07:10
+        r"(?P<h>\d{1,2})\s*:\s*(?P<m>\d{2})",
+    ]
+
+    for pat in patterns:
+        for m in re.finditer(pat, s_norm):
+            h = m.group("h")
+            mm = m.group("m")
+            ampm = m.groupdict().get("ampm", "") or ""
+            ampm = ampm.replace(".", "")
+            if ampm == "a":
+                ampm = "am"
+            elif ampm == "p":
+                ampm = "pm"
+            if ampm:
+                candidates.append(f"{h}:{mm} {ampm}")
+            else:
+                candidates.append(f"{h}:{mm}")
+
+    # 2) 纯数字时间：710 / 0710 / 2355
+    # 避免从日期里误抽：如果字符串包含 / 或 - 日期，数字时间只在整个字符串几乎只有数字时启用
+    compact = re.sub(r"\D", "", s_norm)
+    if len(compact) in {3, 4} and not re.search(r"[/-]", s_norm):
+        candidates.append(compact)
+
+    # 3) 如果原始字符串本身就是可解析的，也加入
+    candidates.append(raw)
+
+    # 去重保序
+    out = []
+    seen = set()
+    for c in candidates:
+        c = str(c).strip()
+        if not c:
+            continue
+        k = c.lower()
+        if k not in seen:
+            seen.add(k)
+            out.append(c)
+    return out
+
+
 def parse_time_to_minutes(x):
     """
-    将常见航班时间格式转成分钟：
-    - 7:10 a.m.
-    - 7:10 am
-    - 07:10
-    - 710
-    - 0710
+    将常见航班时间格式转成分钟。
+    增强版支持从复杂字符串里抽取时间片段。
     解析失败返回 None。
     """
+    raw = canonical_empty_text(x)
+    if raw.lower() in {"", "empty"}:
+        return None
+
+    # 先尝试抽取出的候选片段；避免递归，内部用 _parse_simple_time_to_minutes
+    for cand in extract_time_candidate_strings(raw):
+        minutes = _parse_simple_time_to_minutes(cand)
+        if minutes is not None:
+            return minutes
+
+    return None
+
+
+def _parse_simple_time_to_minutes(x):
     s = canonical_empty_text(x).lower()
     if s in {"", "empty"}:
         return None
 
     s = s.replace(".", "")
+    s = s.replace("estimated", " ")
+    s = s.replace("est", " ")
     s = re.sub(r"\s+", " ", s).strip()
 
     ampm = None
-    if "a.m" in s or "am" in s:
+    # 注意顺序：先匹配紧凑的 a/p，再匹配 am/pm
+    if re.search(r"\b(am)\b", s) or re.search(r"\d\s*a\b", s):
         ampm = "am"
-    elif "p.m" in s or "pm" in s:
+    elif re.search(r"\b(pm)\b", s) or re.search(r"\d\s*p\b", s):
+        ampm = "pm"
+    elif re.search(r"\d:\d{2}a(?=[a-z]|\b)", s):
+        ampm = "am"
+    elif re.search(r"\d:\d{2}p(?=[a-z]|\b)", s):
         ampm = "pm"
 
-    s_clean = s.replace("a.m.", "am").replace("p.m.", "pm")
-    s_clean = s_clean.replace("a.m", "am").replace("p.m", "pm")
-    s_clean = s_clean.replace("am", "").replace("pm", "").strip()
+    s_clean = s
+    s_clean = re.sub(r"\b(am|pm)\b", "", s_clean)
+    s_clean = re.sub(r"(?<=\d)\s*[ap](?=[a-z]|\b)", "", s_clean)
+    s_clean = s_clean.strip()
 
     hour = None
     minute = None
 
-    m = re.fullmatch(r"(\d{1,2})\s*:\s*(\d{2})", s_clean)
+    m = re.search(r"(\d{1,2})\s*:\s*(\d{2})", s_clean)
     if m:
         hour = int(m.group(1))
         minute = int(m.group(2))
@@ -293,6 +484,18 @@ def parse_time_to_minutes(x):
     return hour * 60 + minute
 
 
+def circular_minute_diff(a, b):
+    """
+    计算两个分钟值之间的环形时间差。
+    输入应为 parse_time_to_minutes() 的返回值，即 0~1439 的分钟数；
+    若任一输入为 None，则返回 None。
+    """
+    if a is None or b is None:
+        return None
+    diff = abs(int(a) - int(b))
+    return min(diff, 1440 - diff)
+
+
 def format_minutes_as_time(minutes):
     if minutes is None:
         return None
@@ -315,14 +518,282 @@ def normalize_time_candidate(x):
     return format_minutes_as_time(minutes)
 
 
+def normalize_all_time_candidates(x):
+    """
+    从一个输入中抽取所有可解析的 canonical time 候选。
+    通常第一个最可信。
+    """
+    out = []
+    seen = set()
+    for cand in extract_time_candidate_strings(x):
+        fixed = normalize_time_candidate(cand)
+        if fixed:
+            k = norm_text(fixed)
+            if k not in seen:
+                seen.add(k)
+                out.append(fixed)
+    return out
+
+
+def source_weight(src, column):
+    """
+    按列区分 source 可靠性。
+    - actual time: 只让 trusted actual sources 参与投票；
+    - scheduled time: 只让 trusted scheduled sources 参与投票；
+    - 其它列：退化为 1.0。
+    """
+    s = norm_text(src)
+    col = norm_text(column)
+
+    if col in ACTUAL_TIME_COLUMNS:
+        if s in TRUSTED_ACTUAL_TIME_SOURCES:
+            return TRUSTED_ACTUAL_SOURCE_WEIGHT
+        return UNTRUSTED_TIME_SOURCE_WEIGHT
+
+    if col in SCHEDULED_TIME_COLUMNS:
+        if s in TRUSTED_SCHEDULED_TIME_SOURCES:
+            return TRUSTED_SCHEDULED_SOURCE_WEIGHT
+        return UNTRUSTED_TIME_SOURCE_WEIGHT
+
+    return 1.0
+
+
+def is_trusted_source_for_column(src, column):
+    return source_weight(src, column) > 0
+
+
+def default_source_weight(src):
+    """
+    兼容旧调用。新逻辑应优先使用 source_weight(src, column)。
+    """
+    return 1.0
+
+
+def build_flight_time_consensus(dirty_table_df):
+    """
+    从 Flights 脏表中构建同一 flight 多 source 时间共识。
+    返回：
+    - consensus_map[(row_id, column)] = consensus info
+    - consensus_df: 便于输出诊断
+    - suspicious_df: 当前值与高置信 consensus 不一致的 cell
+    """
+    consensus_map = {}
+    consensus_rows = []
+    suspicious_rows = []
+
+    if dirty_table_df is None or dirty_table_df.empty:
+        return consensus_map, pd.DataFrame(), pd.DataFrame()
+
+    if FLIGHT_ID_COLUMN not in dirty_table_df.columns:
+        print(f"[WARN] DIRTY_TABLE_CSV 中没有 {FLIGHT_ID_COLUMN} 列，跳过 flight consensus。")
+        return consensus_map, pd.DataFrame(), pd.DataFrame()
+
+    if SOURCE_COLUMN not in dirty_table_df.columns:
+        print(f"[WARN] DIRTY_TABLE_CSV 中没有 {SOURCE_COLUMN} 列，source 权重退化为统一权重。")
+
+    work = dirty_table_df.copy()
+    work["__row_id__"] = range(len(work))
+    work[FLIGHT_ID_COLUMN] = work[FLIGHT_ID_COLUMN].map(canonical_empty_text)
+
+    available_time_cols = [c for c in FLIGHT_TIME_COLUMNS if c in work.columns]
+    if not available_time_cols:
+        print("[WARN] DIRTY_TABLE_CSV 中没有 Flights 时间列，跳过 flight consensus。")
+        return consensus_map, pd.DataFrame(), pd.DataFrame()
+
+    for flight_id, fg in work.groupby(FLIGHT_ID_COLUMN, sort=False):
+        if flight_id in {"", "empty"}:
+            continue
+
+        for col in available_time_cols:
+            weighted_counter = defaultdict(float)
+            support_sources = defaultdict(set)
+            support_rows = defaultdict(list)
+            raw_values = defaultdict(list)
+
+            for _, r in fg.iterrows():
+                raw_val = r.get(col, "")
+                fixed_values = normalize_all_time_candidates(raw_val)
+                if not fixed_values:
+                    continue
+
+                fixed = fixed_values[0]
+                if fixed in {"", "empty"}:
+                    continue
+
+                src_name = canonical_empty_text(r.get(SOURCE_COLUMN, "")) if SOURCE_COLUMN in fg.columns else ""
+                w = source_weight(src_name, col)
+
+                # 对 time columns，非 trusted source 直接不参与 consensus。
+                # 这样避免低质量 source 数量多时把 actual time 共识带偏。
+                if w <= 0:
+                    continue
+
+                weighted_counter[fixed] += w
+                support_sources[fixed].add(norm_text(src_name))
+                support_rows[fixed].append(int(r["__row_id__"]))
+                raw_values[fixed].append(canonical_empty_text(raw_val))
+
+            if not weighted_counter:
+                continue
+
+            sorted_vals = sorted(weighted_counter.items(), key=lambda x: x[1], reverse=True)
+            best_val, best_weight = sorted_vals[0]
+            second_weight = sorted_vals[1][1] if len(sorted_vals) > 1 else 0.0
+            total_weight = sum(weighted_counter.values())
+
+            confidence = best_weight / max(total_weight, 1e-9)
+            margin = (best_weight - second_weight) / max(total_weight, 1e-9)
+            support_count = len(support_rows[best_val])
+            source_count = len(support_sources[best_val])
+            is_actual_col = col in ACTUAL_TIME_COLUMNS
+
+            # trusted-source consensus 判定。
+            # source_count 此时已经只统计 trusted source。
+            if is_actual_col:
+                high_conf = (
+                    support_count >= MIN_CONSENSUS_SUPPORT_COUNT
+                    and source_count >= MIN_TRUSTED_ACTUAL_SOURCE_COUNT_FOR_ALLOW
+                    and confidence >= MIN_TRUSTED_ACTUAL_CONSENSUS_CONFIDENCE
+                )
+            elif col in SCHEDULED_TIME_COLUMNS:
+                high_conf = (
+                    support_count >= MIN_CONSENSUS_SUPPORT_COUNT
+                    and source_count >= MIN_TRUSTED_SCHEDULED_SOURCE_COUNT_FOR_ALLOW
+                    and confidence >= MIN_TRUSTED_SCHEDULED_CONSENSUS_CONFIDENCE
+                )
+            else:
+                high_conf = (
+                    support_count >= MIN_CONSENSUS_SUPPORT_COUNT
+                    and source_count >= MIN_CONSENSUS_SOURCE_COUNT
+                    and confidence >= MIN_CONSENSUS_CONFIDENCE
+                )
+
+            consensus_rows.append({
+                "flight": flight_id,
+                "column": col,
+                "consensus_value": best_val,
+                "consensus_weight": best_weight,
+                "consensus_total_weight": total_weight,
+                "consensus_confidence": confidence,
+                "consensus_margin": margin,
+                "consensus_support_count": support_count,
+                "consensus_source_count": source_count,
+                "consensus_sources": "|".join(sorted(support_sources[best_val])),
+                "consensus_raw_values": " || ".join(raw_values[best_val][:10]),
+                "is_actual_time_column": int(is_actual_col),
+                "is_high_confidence": int(high_conf),
+            })
+
+            if not high_conf:
+                continue
+
+            if is_actual_col:
+                allow_threshold = MIN_TRUSTED_ACTUAL_CONSENSUS_CONFIDENCE
+            elif col in SCHEDULED_TIME_COLUMNS:
+                allow_threshold = MIN_TRUSTED_SCHEDULED_CONSENSUS_CONFIDENCE
+            else:
+                allow_threshold = (
+                    MIN_ACTUAL_CONSENSUS_CONFIDENCE_FOR_ALLOW
+                    if is_actual_col else
+                    MIN_SCHEDULED_CONSENSUS_CONFIDENCE_FOR_ALLOW
+                )
+
+            if confidence < allow_threshold:
+                continue
+
+            for _, r in fg.iterrows():
+                row_id = int(r["__row_id__"])
+                dirty_val = canonical_empty_text(r.get(col, ""))
+                dirty_fixed = normalize_time_candidate(dirty_val)
+                dirty_for_compare = dirty_fixed if dirty_fixed else dirty_val
+
+                if norm_text(dirty_for_compare) == norm_text(best_val):
+                    continue
+
+                # dirty 不可解析、空值、或与 consensus 时间不同，都加入 suspicious。
+                dirty_minutes = parse_time_to_minutes(dirty_val)
+                best_minutes = parse_time_to_minutes(best_val)
+                diff = circular_minute_diff(dirty_minutes, best_minutes)
+
+                suspicious_rows.append({
+                    "row_id": row_id,
+                    "column": col,
+                    "value": dirty_val,
+                    "flight": flight_id,
+                    "src": canonical_empty_text(r.get(SOURCE_COLUMN, "")) if SOURCE_COLUMN in fg.columns else "",
+                    "consensus_value": best_val,
+                    "consensus_confidence": confidence,
+                    "consensus_margin": margin,
+                    "consensus_support_count": support_count,
+                    "consensus_source_count": source_count,
+                    "consensus_sources": "|".join(sorted(support_sources[best_val])),
+                    "time_diff_to_consensus": diff,
+                    "consensus_reason": "trusted_flight_source_weighted_consensus",
+                })
+
+                consensus_map[(row_id, col)] = {
+                    "candidate_value": best_val,
+                    "flight": flight_id,
+                    "src": canonical_empty_text(r.get(SOURCE_COLUMN, "")) if SOURCE_COLUMN in fg.columns else "",
+                    "confidence": confidence,
+                    "margin": margin,
+                    "support_count": support_count,
+                    "source_count": source_count,
+                    "sources": "|".join(sorted(support_sources[best_val])),
+                    "weight": best_weight,
+                    "total_weight": total_weight,
+                    "time_diff_to_consensus": diff,
+                    "is_actual_time_column": int(is_actual_col),
+                }
+
+    consensus_df = pd.DataFrame(consensus_rows)
+    suspicious_df = pd.DataFrame(suspicious_rows)
+
+    if not suspicious_df.empty:
+        suspicious_df = suspicious_df.drop_duplicates(subset=["row_id", "column"], keep="first").reset_index(drop=True)
+
+    return consensus_map, consensus_df, suspicious_df
+
+
+def generate_flight_consensus_candidates(row_id, column, dirty_value, consensus_map):
+    """
+    针对当前 cell 生成 flight/source consensus 候选。
+    """
+    info = consensus_map.get((int(row_id), str(column)))
+    if not info:
+        return []
+
+    val = canonical_empty_text(info.get("candidate_value", ""))
+    if val in {"", "empty"}:
+        return []
+    if norm_text(val) == norm_text(dirty_value):
+        return []
+
+    conf = safe_float(info.get("confidence", 0.0), 0.0)
+    margin = safe_float(info.get("margin", 0.0), 0.0)
+    support_count = int(info.get("support_count", 0) or 0)
+    source_count = int(info.get("source_count", 0) or 0)
+
+    if support_count < MIN_CONSENSUS_SUPPORT_COUNT or source_count < MIN_CONSENSUS_SOURCE_COUNT:
+        return []
+
+    score = CONSENSUS_STRONG_SCORE if conf >= 0.70 else CONSENSUS_MEDIUM_SCORE
+    extra = (
+        f"confidence={conf:.4f}|margin={margin:.4f}|"
+        f"support_count={support_count}|source_count={source_count}|"
+        f"sources={info.get('sources', '')}"
+    )
+    return [(val, "trusted_flight_source_weighted_consensus", score, extra)]
+
+
 def generate_time_candidates(dirty_value, ctx, global_dict):
     """
-    针对 Flights 这类 time_like 列补候选。
-    主力仍然是 rule_expected_values / column_top_values；
-    这里主要补：
-    1) dirty value 可被解析但格式不统一时的标准化形式；
-    2) 从本行 time_bundle 中取同类时间；
-    3) 从当前列全局高频合法时间中补若干个。
+    针对 Flights time-like 列补候选。
+    改进点：
+    1) 从 dirty value 中直接抽取 canonical time，作为强候选；
+    2) 规则 expected value 仍由主流程加入，这里不重复；
+    3) 同行时间上下文只作为中等候选；
+    4) actual time 列降低 column dictionary 权重，避免把正确实际时间误改成高频时间。
     """
     cands = []
     dirty = canonical_empty_text(dirty_value)
@@ -332,24 +803,45 @@ def generate_time_candidates(dirty_value, ctx, global_dict):
     if not looks_like_time_column(column, sem_type):
         return cands
 
+    is_actual_col = looks_like_actual_time_column(column)
+
+    # A. 从 dirty value 中抽取 canonical time：最强候选之一
+    # 例如 12/02/2011 6:55 a.m. -> 6:55 a.m.; 9:32aDec 1 -> 9:32 a.m.
+    dirty_fixed_list = normalize_all_time_candidates(dirty)
+    for fixed in dirty_fixed_list:
+        if fixed and norm_text(fixed) != norm_text(dirty):
+            cands.append((fixed, "time_dirty_extract", 0.95, "extract_canonical_time_from_dirty"))
+
+    # B. 如果 dirty 本身可解析但格式不统一，保留原有 pattern restore 语义
     fixed = normalize_time_candidate(dirty)
     if fixed and norm_text(fixed) != norm_text(dirty):
-        cands.append((fixed, "time_pattern_restore", 0.90, "normalize_time_format"))
+        cands.append((fixed, "time_pattern_restore", 0.92, "normalize_time_format"))
 
+    # C. 从同行时间字段补候选。
+    # 对 actual time，这类候选不宜过强；对 schedule time 可略强。
     row_values = ctx.get("row_values", {}) or {}
     for related_col in ["sched_dep_time", "act_dep_time", "sched_arr_time", "act_arr_time"]:
         if related_col == column:
             continue
         v = row_values.get(related_col, "")
-        fixed_v = normalize_time_candidate(v)
-        if fixed_v and norm_text(fixed_v) != norm_text(dirty):
-            cands.append((fixed_v, "time_row_context", 0.42, f"from={related_col}"))
+        fixed_v_list = normalize_all_time_candidates(v)
+        for fixed_v in fixed_v_list:
+            if fixed_v and norm_text(fixed_v) != norm_text(dirty):
+                if is_actual_col:
+                    score = 0.30
+                else:
+                    score = 0.42
+                cands.append((fixed_v, "time_row_context", score, f"from={related_col}"))
 
+    # D. 当前列全局高频合法时间。
+    # actual time 波动大，列内高频容易造成 FP，因此显著降权。
     col_counter = global_dict["column_value_counter"].get(column, Counter())
     for val, cnt in col_counter.most_common(20):
-        fixed_val = normalize_time_candidate(val)
-        if fixed_val and norm_text(fixed_val) != norm_text(dirty):
-            cands.append((fixed_val, "time_column_dictionary", 0.36, f"freq={cnt}"))
+        fixed_val_list = normalize_all_time_candidates(val)
+        for fixed_val in fixed_val_list:
+            if fixed_val and norm_text(fixed_val) != norm_text(dirty):
+                score = 0.20 if is_actual_col else 0.34
+                cands.append((fixed_val, "time_column_dictionary", score, f"freq={cnt}"))
 
     return cands
 
@@ -401,9 +893,12 @@ def add_candidate(candidate_dict, value, source, score, extra=None):
     elif source in {"measurecode_dictionary", "stateavg_from_measurecode", "condition_from_measurecode",
                     "measurename_from_measurecode", "measurename_from_condition"}:
         item["is_from_dictionary"] = 1
-    elif source in {"pattern_restore_score", "pattern_restore_sample", "time_pattern_restore"}:
+    elif source in {"pattern_restore_score", "pattern_restore_sample", "time_pattern_restore", "time_dirty_extract"}:
         item["is_from_pattern_restore"] = 1
     elif source in {"time_row_context", "time_column_dictionary"}:
+        item["is_from_dictionary"] = 1
+    elif source in {"trusted_flight_source_weighted_consensus", "flight_source_weighted_consensus", "flight_source_consensus"}:
+        item["is_from_rule"] = 1
         item["is_from_dictionary"] = 1
 
     if extra is not None:
@@ -784,6 +1279,25 @@ if str(DIRTY_TABLE_CSV).strip():
         print(f"[WARN] DIRTY_TABLE_CSV 不存在，已跳过: {DIRTY_TABLE_CSV}")
 
 global_dict = build_global_dictionaries(context_records, dirty_table_df=dirty_table_df)
+
+flight_consensus_map = {}
+flight_consensus_df = pd.DataFrame()
+consensus_suspicious_df = pd.DataFrame()
+if ENABLE_FLIGHT_CONSENSUS:
+    flight_consensus_map, flight_consensus_df, consensus_suspicious_df = build_flight_time_consensus(dirty_table_df)
+    print(f"[INFO] flight consensus entries: {len(flight_consensus_df)}")
+    print(f"[INFO] consensus suspicious cells: {len(consensus_suspicious_df)}")
+    if not flight_consensus_df.empty:
+        print("[INFO] trusted consensus by column:")
+        print(
+            flight_consensus_df.groupby("column")["is_high_confidence"]
+            .agg(["count", "sum"])
+            .to_string()
+        )
+    if not consensus_suspicious_df.empty:
+        print("[INFO] trusted consensus suspicious by column:")
+        print(consensus_suspicious_df["column"].value_counts().to_string())
+
 context_map = build_context_map_rich(context_records, global_dict)
 
 if str(FALLBACK_CONTEXT_FLAT_FILE).strip():
@@ -795,6 +1309,26 @@ if str(FALLBACK_CONTEXT_FLAT_FILE).strip():
         print(f"[WARN] FALLBACK_CONTEXT_FLAT_FILE 不存在，已跳过: {FALLBACK_CONTEXT_FLAT_FILE}")
 
 print(f"[INFO] 可索引上下文条数: {len(context_map)}")
+
+# ============================================================
+# 7.5 用 high-confidence flight consensus 扩展允许修复范围
+# ============================================================
+
+if ENABLE_FLIGHT_CONSENSUS and not consensus_suspicious_df.empty:
+    base_allowed = error_df[["row_id", "column"]].copy()
+    if "value" in error_df.columns:
+        base_allowed["value"] = error_df["value"]
+
+    add_allowed = consensus_suspicious_df[["row_id", "column", "value"]].copy()
+    before_allowed = len(base_allowed.drop_duplicates(subset=["row_id", "column"]))
+
+    error_df = pd.concat([base_allowed, add_allowed], ignore_index=True)
+    error_df["row_id"] = pd.to_numeric(error_df["row_id"], errors="raise").astype(int)
+    error_df["column"] = error_df["column"].astype(str).str.strip()
+    error_df = error_df.drop_duplicates(subset=["row_id", "column"], keep="first").reset_index(drop=True)
+
+    after_allowed = len(error_df)
+    print(f"[INFO] consensus 扩展允许修复范围: {before_allowed} -> {after_allowed} (+{after_allowed - before_allowed})")
 
 
 # ============================================================
@@ -961,6 +1495,13 @@ for _, row in error_df.iterrows():
         add_candidate(candidate_dict, dirty_value, "dirty_value", 0.01)
 
     # -------------------------------------------------
+    # A0. Flights 同一 flight 多 source 共识候选
+    # -------------------------------------------------
+    if ENABLE_FLIGHT_CONSENSUS and looks_like_time_column(column, ctx.get("semantic_type", None)):
+        for val, source, score, extra in generate_flight_consensus_candidates(row_id, column, dirty_value, flight_consensus_map):
+            add_candidate(candidate_dict, val, source, score, extra=extra)
+
+    # -------------------------------------------------
     # A. 规则 expected values（rich jsonl 主力）
     # -------------------------------------------------
     expected_counter = Counter()
@@ -1023,11 +1564,18 @@ for _, row in error_df.iterrows():
         ratio = safe_float(item.get("ratio", 0.0), 0.0)
         sim = string_similarity(dirty_value, val)
 
-        top_score = 0.34 + 0.18 * min(ratio, 1.0)
+        # actual time 列波动大，列内高频值容易造成误修，降低其权重
+        if looks_like_actual_time_column(column):
+            top_score = 0.18 + 0.08 * min(ratio, 1.0)
+        else:
+            top_score = 0.34 + 0.18 * min(ratio, 1.0)
         add_candidate(candidate_dict, val, "column_top_value", top_score, extra=f"ratio={ratio:.4f}")
 
         if sim >= MIN_STRING_SIM_FOR_COLUMN_VALUE:
-            sim_score = 0.48 + 0.22 * sim + 0.12 * min(ratio, 1.0)
+            if looks_like_actual_time_column(column):
+                sim_score = 0.34 + 0.14 * sim + 0.06 * min(ratio, 1.0)
+            else:
+                sim_score = 0.48 + 0.22 * sim + 0.12 * min(ratio, 1.0)
             add_candidate(candidate_dict, val, "similar_column_value", sim_score, extra=f"ratio={ratio:.4f}|sim={sim:.4f}")
 
     # -------------------------------------------------
@@ -1102,6 +1650,12 @@ for _, row in error_df.iterrows():
                 semantic_bonus += 0.05
         if looks_like_time_column(column, ctx.get("semantic_type", None)) and is_time_like_candidate(cand):
             semantic_bonus += 0.06
+            if ("trusted_flight_source_weighted_consensus" in item["candidate_sources"]) or ("flight_source_weighted_consensus" in item["candidate_sources"]):
+                semantic_bonus += 0.20
+            if "time_dirty_extract" in item["candidate_sources"]:
+                semantic_bonus += 0.10
+            if looks_like_actual_time_column(column) and "time_column_dictionary" in item["candidate_sources"]:
+                semantic_bonus -= 0.08
 
         final_score = item["source_score"] + 0.16 * sim + support_bonus + semantic_bonus
 
@@ -1146,6 +1700,13 @@ for _, row in error_df.iterrows():
             "is_from_pattern_restore": item["is_from_pattern_restore"],
             "source_count": len(item["candidate_sources"]),
             "extra_info": " || ".join(item["extra_info"][:15]),
+            "is_from_flight_consensus": int(("trusted_flight_source_weighted_consensus" in item["candidate_sources"]) or ("flight_source_weighted_consensus" in item["candidate_sources"])),
+            "flight_consensus_value": flight_consensus_map.get((row_id, column), {}).get("candidate_value", ""),
+            "flight_consensus_confidence": flight_consensus_map.get((row_id, column), {}).get("confidence", 0.0),
+            "flight_consensus_margin": flight_consensus_map.get((row_id, column), {}).get("margin", 0.0),
+            "flight_consensus_support_count": flight_consensus_map.get((row_id, column), {}).get("support_count", 0),
+            "flight_consensus_source_count": flight_consensus_map.get((row_id, column), {}).get("source_count", 0),
+            "flight_consensus_sources": flight_consensus_map.get((row_id, column), {}).get("sources", ""),
             "violation_count": ctx.get("violation_count", None),
             "conflict_score": ctx.get("conflict_score", None),
             "semantic_type": ctx.get("semantic_type", None),
@@ -1180,13 +1741,25 @@ if not grouped_df.empty:
 
 OUTPUT_CANDIDATES_EXPANDED_CSV = resolve_output_path(OUTPUT_CANDIDATES_EXPANDED_CSV, ERROR_PRED_FILE)
 OUTPUT_CANDIDATES_GROUPED_CSV = resolve_output_path(OUTPUT_CANDIDATES_GROUPED_CSV, ERROR_PRED_FILE)
+OUTPUT_FLIGHT_CONSENSUS_CSV = resolve_output_path(OUTPUT_FLIGHT_CONSENSUS_CSV, ERROR_PRED_FILE)
+OUTPUT_CONSENSUS_SUSPICIOUS_CELLS_CSV = resolve_output_path(OUTPUT_CONSENSUS_SUSPICIOUS_CELLS_CSV, ERROR_PRED_FILE)
+OUTPUT_AUGMENTED_ALLOWED_CELLS_CSV = resolve_output_path(OUTPUT_AUGMENTED_ALLOWED_CELLS_CSV, ERROR_PRED_FILE)
 
 expanded_df.to_csv(OUTPUT_CANDIDATES_EXPANDED_CSV, index=False, encoding="utf-8-sig")
 grouped_df.to_csv(OUTPUT_CANDIDATES_GROUPED_CSV, index=False, encoding="utf-8-sig")
 
+if ENABLE_FLIGHT_CONSENSUS:
+    flight_consensus_df.to_csv(OUTPUT_FLIGHT_CONSENSUS_CSV, index=False, encoding="utf-8-sig")
+    consensus_suspicious_df.to_csv(OUTPUT_CONSENSUS_SUSPICIOUS_CELLS_CSV, index=False, encoding="utf-8-sig")
+    error_df.to_csv(OUTPUT_AUGMENTED_ALLOWED_CELLS_CSV, index=False, encoding="utf-8-sig")
+
 print(f"[INFO] 缺失上下文的错误 cell 数量: {missing_context_count}")
 print(f"[INFO] 候选展开文件已保存: {OUTPUT_CANDIDATES_EXPANDED_CSV}")
 print(f"[INFO] 候选汇总文件已保存: {OUTPUT_CANDIDATES_GROUPED_CSV}")
+if ENABLE_FLIGHT_CONSENSUS:
+    print(f"[INFO] flight consensus 文件已保存: {OUTPUT_FLIGHT_CONSENSUS_CSV}")
+    print(f"[INFO] consensus suspicious cells 已保存: {OUTPUT_CONSENSUS_SUSPICIOUS_CELLS_CSV}")
+    print(f"[INFO] consensus augmented allowed cells 已保存: {OUTPUT_AUGMENTED_ALLOWED_CELLS_CSV}")
 
 if not grouped_df.empty:
     print("\n[INFO] 前 20 个错误 cell 的候选示例：")

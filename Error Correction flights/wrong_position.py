@@ -8,7 +8,7 @@ import pandas as pd
 
 INPUT_FILE = "/mnt/mydata/dq/projects/Splittree/test/Error Detection flights/active_cleaning_loop_runs_flights_v4/iter_3/infer/inference_all_predictions.csv"
 
-# 建议输出到和输入文件同目录，避免你在别的目录运行时找不到结果
+# 输出到当前运行目录
 OUTPUT_FILE = "predicted_error_positions.csv"
 
 
@@ -16,7 +16,7 @@ OUTPUT_FILE = "predicted_error_positions.csv"
 # 2. 读取文件
 # ============================================================
 
-df = pd.read_csv(INPUT_FILE)
+df = pd.read_csv(INPUT_FILE, encoding="utf-8-sig")
 
 print("读取完成")
 print(f"输入文件: {INPUT_FILE}")
@@ -181,7 +181,7 @@ result_df = error_df[keep_cols].copy()
 # ============================================================
 
 if "row_id" in result_df.columns:
-    result_df["row_id"] = pd.to_numeric(result_df["row_id"], errors="coerce")
+    result_df["row_id"] = pd.to_numeric(result_df["row_id"], errors="raise").astype(int)
 
 prob_cols = [
     "final_pred_error_prob",
@@ -220,6 +220,9 @@ if sort_cols:
 # ============================================================
 # 7. 输出
 # ============================================================
+
+if result_df.empty:
+    print("[WARN] 没有筛选出任何预测错误单元格，请检查 final_pred_label / final_pred_label_name 等预测标签字段。")
 
 result_df.to_csv(OUTPUT_FILE, index=False, encoding="utf-8-sig")
 

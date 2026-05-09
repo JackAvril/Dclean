@@ -22,11 +22,11 @@ from openai import OpenAI
 
 # 输入1：候选特征文件
 # 推荐使用白名单过滤之后的特征文件，避免把检测阶段未判错的 cell 送入 repair 标注。
-INPUT_CANDIDATE_FEATURES_CSV = "/mnt/mydata/dq/projects/Splittree/test/Error Correction flights/repair_candidate_features_infer_whitelist.csv"
+INPUT_CANDIDATE_FEATURES_CSV = "/mnt/mydata/dq/projects/Splittree/test/Error Correction beers/repair_candidate_features_infer_whitelist.csv"
 
 
 # 输入2：详细上下文 rich jsonl
-INPUT_DETAIL_JSONL = "/mnt/mydata/dq/projects/Splittree/test/Error Detection flights/candidate_llm_contexts_flights.jsonl"
+INPUT_DETAIL_JSONL = "/mnt/mydata/dq/projects/Splittree/test/Error Detection beers/candidate_llm_contexts_beers.jsonl"
 
 # 输出：如果是相对路径，会输出到当前运行目录
 OUTPUT_CELL_SUMMARY_CSV = "repair_cell_summary_for_sampling_v2.csv"
@@ -41,7 +41,7 @@ OUTPUT_TEACHER_TOP1_CSV = "repair_teacher_top1_labels_v2.csv"
 OUTPUT_BUCKET_SUMMARY_CSV = "repair_bucket_cluster_summary_v2.csv"
 
 # 是否把 column 纳入分桶
-# Flights 建议 True，因为 sched_dep_time / act_dep_time / sched_arr_time / act_arr_time 的修复语义不同。
+# Beers 建议 True，因为 state/city/ounces/abv/ibu 等列的修复语义不同。
 USE_COLUMN_IN_BUCKET = True
 
 # 聚类参数
@@ -61,11 +61,11 @@ RANDOM_STATE = 42
 DEFAULT_MAX_CANDIDATES_PER_CELL_FOR_LLM = 6
 HARD_COLUMN_MAX_CANDIDATES = 8
 
-# Hospital hard columns + Flights time columns
-HOSPITAL_HARD_COLUMNS = {"MeasureCode", "Stateavg", "Condition", "MeasureName", "Score", "Sample"}
-TIME_COLUMNS = {"sched_dep_time", "act_dep_time", "sched_arr_time", "act_arr_time"}
+# Beers hard columns
+BEERS_HARD_COLUMNS = {"state", "city", "ounces", "abv", "ibu", "brewery_id", "brewery_name", "beer_name", "style"}
+TIME_COLUMNS = set()
 
-HARD_COLUMNS = HOSPITAL_HARD_COLUMNS | TIME_COLUMNS
+HARD_COLUMNS = BEERS_HARD_COLUMNS
 
 DROP_UNKNOWN_IF_TOO_MANY = False
 
@@ -287,20 +287,34 @@ def build_cell_summary_df(cand_df: pd.DataFrame) -> pd.DataFrame:
         top1_is_from_dictionary = safe_int(g["is_from_dictionary"].iloc[0], 0) if "is_from_dictionary" in g.columns and len(g) >= 1 else 0
         top1_is_from_pattern_restore = safe_int(g["is_from_pattern_restore"].iloc[0], 0) if "is_from_pattern_restore" in g.columns and len(g) >= 1 else 0
 
-        # Flights time-like features
-        is_time_like_column = int(
-            looks_like_time_column(str(column), semantic_type)
-            or (get_numeric_series(g, "is_time_like_column", 0.0).max() > 0)
-        )
+        # Beers 专属聚合特征
+        is_time_like_column = 0
+        candidate_is_valid_time_max = 0.0
+        avg_time_context_gain = 0.0
+        max_time_context_gain = 0.0
+        min_time_diff = 0.0
+        time_source_any = 0
+        top1_time_context_gain = 0.0
+        top1_candidate_is_valid_time = 0
+        top1_candidate_in_time_range = 0
 
-        candidate_is_valid_time_max = get_numeric_series(g, "candidate_is_valid_time", 0.0).max()
-        avg_time_context_gain = get_numeric_series(g, "candidate_time_context_gain", 0.0).mean()
-        max_time_context_gain = get_numeric_series(g, "candidate_time_context_gain", 0.0).max()
-        min_time_diff = get_numeric_series(g, "candidate_dirty_time_minute_diff", 999999.0).min()
-        time_source_any = get_numeric_series(g, "contains_time_source", 0.0).max()
-        top1_time_context_gain = safe_float(g["candidate_time_context_gain"].iloc[0], 0.0) if "candidate_time_context_gain" in g.columns and len(g) >= 1 else 0.0
-        top1_candidate_is_valid_time = safe_int(g["candidate_is_valid_time"].iloc[0], 0) if "candidate_is_valid_time" in g.columns and len(g) >= 1 else 0
-        top1_candidate_in_time_range = safe_int(g["candidate_in_time_range"].iloc[0], 0) if "candidate_in_time_range" in g.columns and len(g) >= 1 else 0
+        beers_dict_any = get_numeric_series(g, "contains_beers_dictionary_source", 0.0).max()
+        beers_pattern_any = get_numeric_series(g, "contains_beers_pattern_restore_source", 0.0).max()
+        brewery_source_any = get_numeric_series(g, "contains_brewery_source", 0.0).max()
+        beer_source_any = get_numeric_series(g, "contains_beer_source", 0.0).max()
+        style_source_any = get_numeric_series(g, "contains_style_source", 0.0).max()
+        state_city_source_any = get_numeric_series(g, "contains_state_city_source", 0.0).max()
+
+        beers_state_city_gain_max = get_numeric_series(g, "beers_state_city_suffix_gain", 0.0).max()
+        beers_valid_state_max = get_numeric_series(g, "beers_candidate_is_valid_state", 0.0).max()
+        beers_valid_city_max = get_numeric_series(g, "beers_candidate_is_valid_city", 0.0).max()
+        beers_valid_ounces_max = get_numeric_series(g, "beers_candidate_is_valid_ounces", 0.0).max()
+        beers_valid_abv_max = get_numeric_series(g, "beers_candidate_is_valid_abv", 0.0).max()
+        beers_valid_ibu_max = get_numeric_series(g, "beers_candidate_is_valid_ibu", 0.0).max()
+        beers_format_restore_any = get_numeric_series(g, "beers_candidate_is_format_restoration", 0.0).max()
+
+        top1_beers_dict = safe_int(g["contains_beers_dictionary_source"].iloc[0], 0) if "contains_beers_dictionary_source" in g.columns and len(g) >= 1 else 0
+        top1_beers_pattern = safe_int(g["contains_beers_pattern_restore_source"].iloc[0], 0) if "contains_beers_pattern_restore_source" in g.columns and len(g) >= 1 else 0
 
         # Detection / verifier features if passed from upstream
         final_pred_error_prob = safe_float(first_non_null(g["final_pred_error_prob"], 0.0), 0.0) if "final_pred_error_prob" in g.columns else 0.0
@@ -358,13 +372,29 @@ def build_cell_summary_df(cand_df: pd.DataFrame) -> pd.DataFrame:
             "top1_candidate_is_valid_time": int(top1_candidate_is_valid_time),
             "top1_candidate_in_time_range": int(top1_candidate_in_time_range),
 
+            "beers_dict_any": int(beers_dict_any),
+            "beers_pattern_any": int(beers_pattern_any),
+            "brewery_source_any": int(brewery_source_any),
+            "beer_source_any": int(beer_source_any),
+            "style_source_any": int(style_source_any),
+            "state_city_source_any": int(state_city_source_any),
+            "beers_state_city_gain_max": float(beers_state_city_gain_max),
+            "beers_valid_state_max": int(beers_valid_state_max),
+            "beers_valid_city_max": int(beers_valid_city_max),
+            "beers_valid_ounces_max": int(beers_valid_ounces_max),
+            "beers_valid_abv_max": int(beers_valid_abv_max),
+            "beers_valid_ibu_max": int(beers_valid_ibu_max),
+            "beers_format_restore_any": int(beers_format_restore_any),
+            "top1_beers_dict": int(top1_beers_dict),
+            "top1_beers_pattern": int(top1_beers_pattern),
+
             "final_pred_error_prob": float(final_pred_error_prob),
             "is_high_risk": int(is_high_risk),
             "is_hard_case_from_detection": int(is_hard_case_from_detection),
 
             "confidence_bucket": confidence_bucket,
             "candidate_count_bucket": candidate_count_bucket,
-            "is_hard_column": int(str(column) in HARD_COLUMNS or is_time_like_column == 1),
+            "is_hard_column": int(norm_text(column) in HARD_COLUMNS or is_time_like_column == 1),
         })
 
     return pd.DataFrame(rows)
@@ -382,7 +412,8 @@ def get_bucket_keys() -> List[str]:
         "confidence_bucket",
         "candidate_count_bucket",
         "is_hard_column",
-        "is_time_like_column",
+        "beers_dict_any",
+        "beers_pattern_any",
     ]
     if USE_COLUMN_IN_BUCKET:
         keys = ["column"] + keys
@@ -441,6 +472,23 @@ FEATURE_COLUMNS_NUMERIC = [
     "top1_time_context_gain",
     "top1_candidate_is_valid_time",
     "top1_candidate_in_time_range",
+
+    # Beers-specific cell summary features
+    "beers_dict_any",
+    "beers_pattern_any",
+    "brewery_source_any",
+    "beer_source_any",
+    "style_source_any",
+    "state_city_source_any",
+    "beers_state_city_gain_max",
+    "beers_valid_state_max",
+    "beers_valid_city_max",
+    "beers_valid_ounces_max",
+    "beers_valid_abv_max",
+    "beers_valid_ibu_max",
+    "beers_format_restore_any",
+    "top1_beers_dict",
+    "top1_beers_pattern",
 
     "final_pred_error_prob",
     "is_high_risk",
@@ -593,7 +641,7 @@ def safe_jsonable(x):
 
 
 def get_max_candidates_for_column(column: str) -> int:
-    return HARD_COLUMN_MAX_CANDIDATES if str(column) in HARD_COLUMNS else DEFAULT_MAX_CANDIDATES_PER_CELL_FOR_LLM
+    return HARD_COLUMN_MAX_CANDIDATES if norm_text(column) in HARD_COLUMNS else DEFAULT_MAX_CANDIDATES_PER_CELL_FOR_LLM
 
 
 CANDIDATE_FEATURE_EXPORT_COLS = [
@@ -619,6 +667,42 @@ CANDIDATE_FEATURE_EXPORT_COLS = [
     "avg_keyboard_distance",
     "phonetic_similarity_to_dirty",
     "candidate_in_column_top_values",
+
+    # Beers-style
+    "contains_beers_dictionary_source",
+    "contains_beers_pattern_restore_source",
+    "contains_brewery_source",
+    "contains_beer_source",
+    "contains_style_source",
+    "contains_state_city_source",
+    "beers_candidate_is_valid_state",
+    "beers_dirty_is_valid_state",
+    "beers_candidate_is_valid_city",
+    "beers_dirty_is_valid_city",
+    "beers_candidate_is_valid_ounces",
+    "beers_dirty_is_valid_ounces",
+    "beers_candidate_is_valid_abv",
+    "beers_dirty_is_valid_abv",
+    "beers_candidate_is_valid_ibu",
+    "beers_dirty_is_valid_ibu",
+    "beers_candidate_is_valid_id",
+    "beers_dirty_is_valid_id",
+    "beers_candidate_state_matches_city_suffix",
+    "beers_dirty_state_matches_city_suffix",
+    "beers_state_city_suffix_gain",
+    "beers_candidate_city_equals_city_without_state",
+    "beers_dirty_city_has_state_suffix",
+    "beers_candidate_normalized_equals_dirty",
+    "beers_candidate_is_format_restoration",
+    "beers_abv_abs_diff_after_norm",
+    "beers_ibu_abs_diff_after_norm",
+    "beers_candidate_matches_row_state",
+    "beers_candidate_matches_row_city",
+    "beers_is_state_candidate",
+    "beers_is_city_candidate",
+    "beers_is_ounces_candidate",
+    "beers_is_abv_candidate",
+    "beers_is_ibu_candidate",
 
     # Hospital-style
     "candidate_looks_like_measurecode",
@@ -748,6 +832,14 @@ def build_sampled_jsonl(sampled_df: pd.DataFrame, cand_df: pd.DataFrame, detail_
                     "avg_time_context_gain": row.get("avg_time_context_gain"),
                     "max_time_context_gain": row.get("max_time_context_gain"),
                     "time_source_any": row.get("time_source_any"),
+                    "beers_dict_any": row.get("beers_dict_any"),
+                    "beers_pattern_any": row.get("beers_pattern_any"),
+                    "brewery_source_any": row.get("brewery_source_any"),
+                    "beer_source_any": row.get("beer_source_any"),
+                    "style_source_any": row.get("style_source_any"),
+                    "state_city_source_any": row.get("state_city_source_any"),
+                    "beers_state_city_gain_max": row.get("beers_state_city_gain_max"),
+                    "beers_format_restore_any": row.get("beers_format_restore_any"),
                     "final_pred_error_prob": row.get("final_pred_error_prob"),
                     "is_high_risk": row.get("is_high_risk"),
                     "is_hard_case_from_detection": row.get("is_hard_case_from_detection"),
@@ -807,8 +899,7 @@ def build_context_for_prompt(detail_context: Dict[str, Any], dirty_value: str, c
             "dominant_pattern": col_ctx.get("dominant_pattern"),
             "current_value_pattern": col_ctx.get("current_value_pattern"),
             "numeric_stats": col_ctx.get("numeric_stats"),
-            "time_stats": col_ctx.get("time_stats"),
-            "time_value_minutes": col_ctx.get("time_value_minutes"),
+            
             "top_patterns_with_counts": col_ctx.get("top_patterns_with_counts"),
         }
 
@@ -821,7 +912,7 @@ def build_context_for_prompt(detail_context: Dict[str, Any], dirty_value: str, c
             "strong_rule_count": conf_ctx.get("strong_rule_count"),
             "candidate_generation_rule_count": conf_ctx.get("candidate_generation_rule_count"),
             "fd_like_count": conf_ctx.get("fd_like_count"),
-            "time_window_rule_count": conf_ctx.get("time_window_rule_count"),
+            "numeric_window_rule_count": conf_ctx.get("numeric_window_rule_count"),
             "violated_rules_detailed": violated[:10] if isinstance(violated, list) else [],
             "expected_values_from_rules": conf_ctx.get("expected_values_from_rules", []),
             "alternative_values_from_column": conf_ctx.get("alternative_values_from_column", []),
@@ -845,54 +936,58 @@ def build_context_for_prompt(detail_context: Dict[str, Any], dirty_value: str, c
 
 
 def build_column_specific_instruction(column: str) -> str:
-    column = str(column)
+    column_raw = str(column)
+    column = norm_text(column_raw)
 
-    if column in TIME_COLUMNS or column.endswith("_time"):
+    if column == "state":
         return (
-            "本列是航班时间列。优先选择满足以下条件的候选："
-            "1) 是合法时间格式，例如 '7:10 a.m.' 或 '4:00 p.m.'；"
-            "2) 与 violated rules / expected_values_from_rules 中的建议值一致；"
-            "3) 与同行的 flight、act_dep_time、sched_arr_time、act_arr_time 等时间上下文一致；"
-            "4) 如果候选来自 trusted_flight_source_weighted_consensus / flight_source_weighted_consensus，且 consensus_confidence / support_count / source_count 较高，应优先考虑；"
-            "5) 不要仅因为列内高频就选择候选；"
-            "6) 对空值或 nan，规则强支持或可信多源共识强支持的具体时间通常比泛化高频时间更可信。"
+            "本列是美国州缩写列。优先选择合法州缩写，例如 OK/OR/VA；"
+            "如果 city 中包含州后缀，例如 'Oklahoma City OK'，state 通常应为 OK；"
+            "同时参考 brewery_id/brewery_name/city 对 state 的一致性，不要只凭列内高频选择。"
         )
 
-    if column in {"MeasureCode", "Stateavg"}:
+    if column == "city":
         return (
-            "本列是结构化编码列。优先看 family/prefix/suffix 是否一致，"
-            "以及它是否与同行的 State / MeasureCode / Stateavg 保持结构一致；"
-            "不要只因为字符串相似就选择 sibling code。"
+            "本列是城市列。注意 dirty value 可能把州缩写混入城市名，例如 'Ashland OR'，"
+            "这种情况下候选 'Ashland' 可能是格式恢复；也要参考 brewery_id/brewery_name 对 city 的映射。"
         )
 
-    if column == "Condition":
+    if column == "ounces":
         return (
-            "本列是疾病/主题分类列。优先看它是否与 MeasureCode family 一致："
-            "hf->heart failure, ami->heart attack, pn->pneumonia, scip->surgical infection prevention。"
+            "本列是容量列，通常应为类似 '16.0 oz.' 的格式。"
+            "优先选择格式规范化候选，例如 '16 oz' -> '16.0 oz.'；"
+            "同时参考 beer_name/style 对 ounces 的支持。"
         )
 
-    if column == "MeasureName":
+    if column == "abv":
         return (
-            "本列是长文本 canonical phrase。优先看它是否与 MeasureCode 和 Condition 一致，"
-            "不要只因为词面相似就选择语义不匹配的候选。"
+            "本列是酒精度 abv，通常为 0 到 1 之间的小数，例如 0.063。"
+            "如果出现百分数格式如 6.3%，候选 0.063 通常更合理；"
+            "同时参考 beer_name/style 的上下文支持，避免把合法小数随意改成高频值。"
         )
 
-    if column == "Score":
+    if column == "ibu":
         return (
-            "本列是百分比。已经是合法百分号格式的原值要非常谨慎改动；"
-            "优先恢复 malformed percent（例如 95x -> 95%），不要无根据把合法分数改成别的合法分数。"
+            "本列是 IBU 数值，通常是非负整数或简单数值。"
+            "优先选择格式规范化候选，例如 '35 ibu' -> '35'；"
+            "同时参考 beer_name/style 的上下文支持。"
         )
 
-    if column == "Sample":
+    if column in {"brewery_id", "brewery_name"}:
         return (
-            "本列通常应符合 '\\d+ patients' 模式。优先恢复 pattern typo，"
-            "不要随意补空值，也不要选择不符合样式的候选。"
+            "本列是 brewery 相关属性。优先选择与同一行 brewery_name/brewery_id/city/state 一致的候选；"
+            "不要只因为字符串相似就选择与该 brewery 不匹配的值。"
+        )
+
+    if column in {"beer_name", "style"}:
+        return (
+            "本列是啤酒名称或风格。优先选择与 id、beer_name、style、ounces、abv、ibu 上下文一致的候选；"
+            "风格候选要看 beer_name 的常见风格支持。"
         )
 
     return (
         "优先考虑规则一致性、同行上下文一致性、统计支持和合理的拼写/模式变换。"
     )
-
 
 def build_pairwise_prompt(context_obj: Dict[str, Any], cand_a: Dict[str, Any], cand_b: Dict[str, Any], column: str) -> str:
     column_instruction = build_column_specific_instruction(column)
@@ -908,13 +1003,13 @@ def build_pairwise_prompt(context_obj: Dict[str, Any], cand_a: Dict[str, Any], c
 - Unknown：无法可靠判断，或者两个都不够好
 
 通用判断原则：
-1. 优先考虑规则一致性：FD、soft FD、上下文主导值、时间约束等是否支持该候选
+1. 优先考虑规则一致性：FD、soft FD、上下文主导值、数值/格式约束等是否支持该候选
 2. 再考虑同行上下文一致性：该候选是否与同一行其它属性更匹配
 3. 再考虑统计支持：列内高频、共现概率、邻居支持、similar row 支持
-4. 再考虑变换合理性：拼写相似、键盘误触、发音相似、pattern/time format 恢复
+4. 再考虑变换合理性：拼写相似、键盘误触、发音相似、pattern/数值格式恢复
 5. 如果两个候选都明显不合理，输出 Unknown
 6. 不要仅因为候选更常见就无条件选择它
-7. 对时间列，优先选择规则强支持且符合时间上下文的候选
+7. 对 Beers 特殊列，state/city/ounces/abv/ibu 要优先满足列格式规范和行上下文一致性
 
 本列专属判断：
 {column_instruction}
@@ -1272,6 +1367,8 @@ def main():
                 "candidate_count_bucket": str(cluster_df["candidate_count_bucket"].iloc[0]) if "candidate_count_bucket" in cluster_df.columns else "unknown",
                 "is_hard_column": int(cluster_df["is_hard_column"].iloc[0]) if "is_hard_column" in cluster_df.columns else 0,
                 "is_time_like_column": int(cluster_df["is_time_like_column"].iloc[0]) if "is_time_like_column" in cluster_df.columns else 0,
+                "beers_dict_any": int(cluster_df["beers_dict_any"].iloc[0]) if "beers_dict_any" in cluster_df.columns else 0,
+                "beers_pattern_any": int(cluster_df["beers_pattern_any"].iloc[0]) if "beers_pattern_any" in cluster_df.columns else 0,
             })
 
         clustered_bucket = pd.concat(bucket_clustered_parts, ignore_index=True)
@@ -1343,8 +1440,8 @@ def main():
         print(sampled_df["sample_role"].value_counts(dropna=False).to_string())
 
         if "is_time_like_column" in sampled_df.columns:
-            print("\n时间列采样分布:")
-            print(sampled_df["is_time_like_column"].value_counts(dropna=False).to_string())
+            print("\nBeers 特殊列采样分布:")
+            print(sampled_df["is_hard_column"].value_counts(dropna=False).to_string())
 
         print("\n采样列分布:")
         print(sampled_df["column"].value_counts(dropna=False).head(20).to_string())

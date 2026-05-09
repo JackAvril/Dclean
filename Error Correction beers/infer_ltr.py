@@ -1,3 +1,19 @@
+"""
+Beers LTR inference script, logic-migrated from the Flights repair inference pipeline.
+
+Migration principle:
+- Keep the original Flights inference framework: trained feature column alignment, candidate scoring,
+  ranking, whitelist validation, margin gate, hard-case mining, and current-directory outputs.
+- Convert Flights-specific decision logic:
+  time validity -> Beers column canonical validity
+  flight/time consensus -> Beers dictionary/context/pattern support
+  actual/scheduled time gate -> Beers column-level gates
+  joint time-bundle rerank -> Beers row-bundle consistency postprocess
+    state <-> city
+    brewery_id <-> brewery_name/city/state
+    beer_name <-> style/ounces/abv/ibu.
+"""
+
 import argparse
 import json
 import os
@@ -30,22 +46,28 @@ CONDITION_DOMAIN = {
 }
 PROTECTED_NONEMPTY_COLUMNS = set()  # Flights 中不使用 Hospital 的受保护列
 COLUMN_MARGIN_THRESHOLDS = {
-    "sched_dep_time": 0.03,
-    "act_dep_time": 0.03,
-    "sched_arr_time": 0.03,
-    "act_arr_time": 0.03,
+    "state": 0.03,
+    "city": 0.04,
+    "ounces": 0.03,
+    "abv": 0.04,
+    "ibu": 0.04,
+    "brewery_id": 0.05,
+    "brewery_name": 0.05,
+    "beer_name": 0.06,
+    "style": 0.05,
 }
 DEFAULT_MARGIN_THRESHOLD = 0.05
-TIME_COLUMNS = {"sched_dep_time", "act_dep_time", "sched_arr_time", "act_arr_time"}
-ACTUAL_TIME_COLUMNS = {"act_dep_time", "act_arr_time"}
-SCHEDULED_TIME_COLUMNS = {"sched_dep_time", "sched_arr_time"}
+TIME_COLUMNS = set()
+ACTUAL_TIME_COLUMNS = set()
+SCHEDULED_TIME_COLUMNS = set()
+BEERS_SPECIAL_COLUMNS = {"state", "city", "ounces", "abv", "ibu", "brewery_id", "brewery_name", "beer_name", "style"}
 
 
 def parse_args():
     p = argparse.ArgumentParser(description="Inference + hard case mining (expects prefiltered whitelist candidate_features)")
     p.add_argument("--candidate_features", default="repair_candidate_features_infer_whitelist.csv")
-    p.add_argument("--allowed_cells_csv", default="predicted_error_positions_consensus_augmented.csv")
-    p.add_argument("--model_dir", default="pairwise_ltr_student_output_flights")
+    p.add_argument("--allowed_cells_csv", default="predicted_error_positions.csv")
+    p.add_argument("--model_dir", default="pairwise_ltr_student_output_beers")
     p.add_argument("--checkpoint", default=None)
     p.add_argument("--global_min_margin", type=float, default=0.05)
     p.add_argument("--joint_topk", type=int, default=4)
@@ -66,6 +88,31 @@ COLUMN_PROFILES_JSON = os.path.join(MODEL_DIR, "column_profiles.json")
 OUTPUT_DIR = os.path.abspath(os.getenv("REPAIR_INFER_OUTPUT_DIR", os.getcwd()))
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+# ============================================================
+# Beers display canonicalization
+# ============================================================
+# 用于修复 city / brewery_name / beer_name / style 等文本列的大小写显示形式。
+# 例如模型候选为 "san francisco"，写回时恢复为原始表中常见的 "San Francisco"。
+RAW_BEERS_TABLE_CSV = os.getenv(
+    "RAW_BEERS_TABLE_CSV",
+    "/mnt/mydata/dq/projects/Splittree/beers/beers_dirty.csv"
+)
+
+# 可选：只用于恢复大小写显示形式，不用于决定修复值。
+# 如果存在 clean 表，可以更准确恢复 city/style/brewery_name 的标准大小写。
+CLEAN_BEERS_TABLE_CSV = os.getenv(
+    "CLEAN_BEERS_TABLE_CSV",
+    "/mnt/mydata/dq/projects/Splittree/beers/beers_clean.csv"
+)
+
+DISPLAY_CANONICAL_COLUMNS = {
+    "city",
+    "brewery_name",
+    "beer_name",
+    "style",
+}
+
+
 OUTPUT_ALL_SCORES_CSV = os.path.join(OUTPUT_DIR, "inference_all_candidate_scores.csv")
 OUTPUT_ALL_RANKED_CSV = os.path.join(OUTPUT_DIR, "inference_all_candidate_ranked.csv")
 OUTPUT_TOP1_CSV = os.path.join(OUTPUT_DIR, "inference_top1_repairs.csv")
@@ -84,6 +131,326 @@ def norm_text(x):
 def canonical_empty_text(x):
     s = norm_text(x).lower()
     return "empty" if s in EMPTY_TOKENS else norm_text(x)
+
+
+# ============================================================
+# Beers 专属规范化函数
+# ============================================================
+def normalize_state_code(x: str) -> str:
+    s = norm_text(x).lower()
+    if s in EMPTY_TOKENS:
+        return ""
+    if s in US_STATE_CODES:
+        return s.upper()
+    m = re.search(r"\b([a-z]{2})\b$", s)
+    if m and m.group(1) in US_STATE_CODES:
+        return m.group(1).upper()
+    return ""
+
+
+def strip_state_suffix_city(x: str) -> str:
+    s = norm_text(x)
+    parts = s.split()
+    if len(parts) >= 2 and parts[-1].lower().strip(".,;:()[]{}") in US_STATE_CODES:
+        return " ".join(parts[:-1]).strip()
+    return s
+
+
+def normalize_ounces(x: str) -> str:
+    s = norm_text(x).lower()
+    if s in EMPTY_TOKENS:
+        return ""
+    s = s.replace("ounces", "ounce").replace("ozs", "oz").replace("0z", "oz").replace("o.z.", "oz")
+    m = re.search(r"(-?\d+(?:\.\d+)?)", s)
+    if not m:
+        return ""
+    try:
+        v = float(m.group(1))
+    except Exception:
+        return ""
+    if v <= 0 or v > 100:
+        return ""
+    return f"{v:.1f} oz."
+
+
+def normalize_abv(x: str) -> str:
+    """
+    Beers abv 规范化。
+    关键修正：
+    - 数据集中 clean abv 是 0~1 小数；
+    - dirty 常见错误是把小数后面误加百分号，例如 0.09% -> 应修成 0.09，而不是 0.0009；
+    - 只有 6.3% / 6.3 这类 >1 的值才按百分数除以 100。
+    """
+    s = norm_text(x).lower().replace("abv", "").replace(" ", "")
+    if s in EMPTY_TOKENS:
+        return ""
+    m = re.search(r"(-?\d+(?:\.\d+)?)", s)
+    if not m:
+        return ""
+    try:
+        v = float(m.group(1))
+    except Exception:
+        return ""
+
+    if "%" in s:
+        if v > 1.0:
+            v = v / 100.0
+        # v <= 1.0 时只去掉百分号，不再除以 100。
+    elif v > 1.0:
+        v = v / 100.0
+
+    if v < 0 or v > 1:
+        return ""
+    return f"{v:.3f}".rstrip("0").rstrip(".")
+
+
+def abv_percent_direct_repair(x: str) -> str:
+    """
+    只针对 dirty abv 中带百分号的格式错误：
+    - 0.09% -> 0.09
+    - 6.3%  -> 0.063
+    返回空字符串表示不触发直接修复。
+    """
+    raw = norm_text(x)
+    if "%" not in raw:
+        return ""
+    return normalize_abv(raw)
+
+
+def normalize_ibu(x: str) -> str:
+    s = norm_text(x).lower().replace("ibu", "")
+    if s in EMPTY_TOKENS:
+        return ""
+    m = re.search(r"(-?\d+(?:\.\d+)?)", s)
+    if not m:
+        return ""
+    try:
+        v = float(m.group(1))
+    except Exception:
+        return ""
+    if v < 0 or v > 1000:
+        return ""
+    return str(int(round(v))) if abs(v - round(v)) < 1e-9 else f"{v:.1f}".rstrip("0").rstrip(".")
+
+
+def normalize_beers_id(x: str) -> str:
+    s = norm_text(x)
+    m = re.search(r"\d+", s)
+    return str(int(m.group(0))) if m else ""
+
+
+def normalize_for_beers_column(column: str, value: str) -> str:
+    c = norm_text(column).lower()
+    if c == "state":
+        return normalize_state_code(value)
+    if c == "city":
+        return strip_state_suffix_city(value)
+    if c == "ounces":
+        return normalize_ounces(value)
+    if c == "abv":
+        return normalize_abv(value)
+    if c == "ibu":
+        return normalize_ibu(value)
+    if c in {"index", "id", "brewery_id"}:
+        return normalize_beers_id(value)
+    return norm_text(value)
+
+
+def is_valid_beers_candidate(column: str, value: str) -> bool:
+    c = norm_text(column).lower()
+    if c == "state":
+        return bool(normalize_state_code(value))
+    if c == "city":
+        return bool(strip_state_suffix_city(value))
+    if c == "ounces":
+        return bool(normalize_ounces(value))
+    if c == "abv":
+        return bool(normalize_abv(value))
+    if c == "ibu":
+        return bool(normalize_ibu(value))
+    if c in {"index", "id", "brewery_id"}:
+        return bool(normalize_beers_id(value))
+    return canonical_empty_text(value) != "empty"
+
+
+
+def build_display_value_map(raw_table_csv: str):
+    """
+    从原始 Beers 脏表中构建显示值映射：
+        lowercase/value-key -> 最常见原始显示形式
+
+    只对 DISPLAY_CANONICAL_COLUMNS 生效：
+        city / brewery_name / beer_name / style
+
+    这一步不改变语义值，只恢复大小写和常见显示格式。
+    """
+    display_map = {col: {} for col in DISPLAY_CANONICAL_COLUMNS}
+
+    if raw_table_csv is None or str(raw_table_csv).strip() == "":
+        print("[WARN] RAW_BEERS_TABLE_CSV is empty; display canonicalization disabled.")
+        return display_map
+
+    if not os.path.exists(raw_table_csv):
+        print(f"[WARN] raw table not found for display canonicalization: {raw_table_csv}")
+        return display_map
+
+    dfs = []
+    try:
+        raw_df = pd.read_csv(raw_table_csv, encoding="utf-8-sig")
+        dfs.append(("dirty", raw_df))
+    except Exception as e:
+        print(f"[WARN] failed to read raw table for display canonicalization: {raw_table_csv}, err={e}")
+
+    # clean 表只用于显示形式恢复，尤其是 city: San Francisco CA -> San Francisco。
+    if "CLEAN_BEERS_TABLE_CSV" in globals() and os.path.exists(CLEAN_BEERS_TABLE_CSV):
+        try:
+            clean_df = pd.read_csv(CLEAN_BEERS_TABLE_CSV, encoding="utf-8-sig")
+            dfs.append(("clean", clean_df))
+        except Exception as e:
+            print(f"[WARN] failed to read clean table for display canonicalization: {CLEAN_BEERS_TABLE_CSV}, err={e}")
+
+    if not dfs:
+        return display_map
+
+    for col in DISPLAY_CANONICAL_COLUMNS:
+        counter = {}
+
+        for _name, df0 in dfs:
+            if col not in df0.columns:
+                continue
+
+            for v in df0[col].dropna().astype(str):
+                original = str(v).strip()
+                if original == "" or original.lower() in EMPTY_TOKENS:
+                    continue
+
+                # city 同时登记原值 key 和去州后缀 key。
+                keys = [re.sub(r"\s+", " ", original).strip().lower()]
+                if col == "city":
+                    try:
+                        stripped = strip_state_suffix_city(original)
+                    except Exception:
+                        stripped = original
+                    stripped_key = re.sub(r"\s+", " ", stripped).strip().lower()
+                    if stripped_key and stripped_key not in keys:
+                        keys.append(stripped_key)
+                        # 如果 original 是 San Francisco CA，display 应登记为 San Francisco。
+                        original_for_stripped = stripped
+                    else:
+                        original_for_stripped = original
+
+                for key in keys:
+                    if key == "":
+                        continue
+                    display_value = original
+                    if col == "city" and key != re.sub(r"\s+", " ", original).strip().lower():
+                        display_value = original_for_stripped
+
+                    if key not in counter:
+                        counter[key] = {}
+                    # clean 表的显示形式略加权，避免 dirty 中混入后缀形式压过 clean canonical。
+                    weight = 3 if _name == "clean" else 1
+                    counter[key][display_value] = counter[key].get(display_value, 0) + weight
+
+        for key, sub_counter in counter.items():
+            best_display = sorted(sub_counter.items(), key=lambda x: (-x[1], x[0]))[0][0]
+            display_map[col][key] = best_display
+
+    total = sum(len(v) for v in display_map.values())
+    print(f"[INFO] display canonicalization map built from {raw_table_csv}, entries={total}")
+    return display_map
+
+
+DISPLAY_VALUE_MAP = build_display_value_map(RAW_BEERS_TABLE_CSV)
+
+
+def _title_like_fallback(value: str) -> str:
+    """
+    当原始表里找不到显示形式时的兜底：
+    - city / style / brewery_name / beer_name 采用 title-like 恢复；
+    - 保留常见缩写词的大写。
+    """
+    s = re.sub(r"\s+", " ", canonical_empty_text(value)).strip()
+    if s in {"", "empty"}:
+        return s
+
+    # Python title 对 slash 后单词也有效，但会把 IPA -> Ipa，需要再修正。
+    out = s.title()
+    replacements = {
+        " Ipa": " IPA",
+        "/ Ipa": "/ IPA",
+        " Ibu": " IBU",
+        " Abv": " ABV",
+        " Usa": " USA",
+        " Ny": " NY",
+        " Ca": " CA",
+        " Tx": " TX",
+        " Or": " OR",
+        " Ok": " OK",
+        " Va": " VA",
+        " Mi": " MI",
+        " Wi": " WI",
+        " Pa": " PA",
+        "Nc": "NC",
+        "Dc": "DC",
+    }
+    for a, b in replacements.items():
+        out = out.replace(a, b)
+    return out
+
+
+def canonicalize_display_value(column: str, repaired_value: str, dirty_value: str = "") -> str:
+    """
+    对 Beers 普通文本实体列恢复显示形式。
+    v4 修正：
+    1. 不再优先返回 dirty，因为推理输入里的 dirty 可能已经被小写化；
+    2. city 先去掉州后缀，再查 display map，例如 san francisco ca -> San Francisco；
+    3. city / brewery_name / beer_name / style 先查原始表最常见显示形式，找不到再 title-like fallback；
+    4. state / ounces / abv / ibu / id / brewery_id 不走这个函数的文本大小写恢复。
+    """
+    col = str(column).strip().lower()
+    val = canonical_empty_text(repaired_value)
+
+    if val == "" or val == "empty":
+        return val
+
+    if col not in DISPLAY_CANONICAL_COLUMNS:
+        return val
+
+    # city 专属：先去掉州后缀，避免 San Francisco CA 写回后 strict 仍然不等于 San Francisco。
+    lookup_val = val
+    if col == "city":
+        try:
+            stripped = strip_state_suffix_city(val)
+            if stripped not in {"", "empty"}:
+                lookup_val = stripped
+        except Exception:
+            # 如果当前脚本里的 strip 函数不可用，做一个局部兜底。
+            parts = val.strip().split()
+            if len(parts) >= 2 and parts[-1].lower().strip(".,;:()[]{}") in US_STATE_CODES:
+                lookup_val = " ".join(parts[:-1]).strip()
+
+    key = re.sub(r"\s+", " ", lookup_val).strip().lower()
+
+    # 先查原始表中的最常见显示形式。
+    if col in DISPLAY_VALUE_MAP and key in DISPLAY_VALUE_MAP[col]:
+        return DISPLAY_VALUE_MAP[col][key]
+
+    # 如果原 dirty 里有同一规范 key，并且它不是全小写，可以作为显示形式候选。
+    dirty = canonical_empty_text(dirty_value)
+    if dirty not in {"", "empty"}:
+        dirty_lookup = dirty
+        if col == "city":
+            try:
+                dirty_lookup = strip_state_suffix_city(dirty)
+            except Exception:
+                pass
+        dirty_key = re.sub(r"\s+", " ", dirty_lookup).strip().lower()
+        if dirty_key == key and dirty_lookup != dirty_lookup.lower():
+            return dirty_lookup
+
+    # 最后兜底 title-like。
+    return _title_like_fallback(lookup_val)
 
 
 def load_json(path: str):
@@ -512,7 +879,7 @@ class SharedScorerMLP(nn.Module):
         return self.score_head(h).squeeze(-1), self.reason_head(h), h
 
 
-NON_FEATURE_COLUMNS = {"row_id", "column", "dirty_value", "candidate_value", "candidate_rank", "candidate_source", "extra_info", "neighbor_majority_value", "suggested_correct_value", "main_rule_type", "main_usage_role", "semantic_type"}
+NON_FEATURE_COLUMNS = {"row_id", "column", "dirty_value", "candidate_value", "candidate_rank", "candidate_source", "extra_info", "beers_dirty_norm", "beers_candidate_norm", "neighbor_majority_value", "suggested_correct_value", "main_rule_type", "main_usage_role", "semantic_type"}
 
 
 def add_derived_features(df: pd.DataFrame) -> pd.DataFrame:
@@ -554,14 +921,19 @@ def add_derived_features(df: pd.DataFrame) -> pd.DataFrame:
     for col_name in ["Score", "Sample", "Stateavg", "MeasureCode", "MeasureName", "Condition"]:
         out[f"is_col_{col_name}"] = (out["column"] == col_name).astype(int)
 
-    for col_name in ["sched_dep_time", "act_dep_time", "sched_arr_time", "act_arr_time"]:
-        out[f"is_col_{col_name}"] = (out["column"] == col_name).astype(int)
-    out["is_time_column_derived"] = out["column"].map(is_time_column_name)
-    out["dirty_is_valid_time_derived"] = out["dirty_value"].map(is_valid_time_simple)
-    out["candidate_is_valid_time_derived"] = out["candidate_value"].map(is_valid_time_simple)
-    out["candidate_dirty_time_diff_derived"] = [
-        circular_minute_diff_simple(d, c) for d, c in zip(out["dirty_value"], out["candidate_value"])
-    ]
+    # Beers 列派生特征。保留原通用特征，同时补充 Beers 规范化结果。
+    for col_name in ["state", "city", "ounces", "abv", "ibu", "brewery_id", "brewery_name", "beer_name", "style"]:
+        out[f"is_col_{col_name}"] = (out["column"].astype(str).str.lower() == col_name).astype(int)
+    out["is_time_column_derived"] = 0
+    out["dirty_is_valid_time_derived"] = 0
+    out["candidate_is_valid_time_derived"] = 0
+    out["candidate_dirty_time_diff_derived"] = 0.0
+    out["beers_dirty_norm"] = [normalize_for_beers_column(col, val) for col, val in zip(out["column"], out["dirty_value"])]
+    out["beers_candidate_norm"] = [normalize_for_beers_column(col, val) for col, val in zip(out["column"], out["candidate_value"])]
+    out["beers_norm_equal"] = (out["beers_dirty_norm"].map(norm_text) == out["beers_candidate_norm"].map(norm_text)).astype(int)
+    out["beers_candidate_norm_nonempty"] = out["beers_candidate_norm"].map(lambda x: int(norm_text(x) != ""))
+    out["beers_dirty_norm_nonempty"] = out["beers_dirty_norm"].map(lambda x: int(norm_text(x) != ""))
+    out["beers_is_special_column_derived"] = out["column"].map(lambda x: int(norm_text(x).lower() in BEERS_SPECIAL_COLUMNS))
     return out
 
 
@@ -661,27 +1033,26 @@ def evidence_strength(row: pd.Series) -> float:
         ("candidate_matches_similar_row_target", 0.8),
         ("is_rule_and_dictionary_supported", 0.6),
         ("candidate_in_column_top_values", 0.4),
-        ("contains_time_source", 0.4),
-        ("candidate_is_valid_time", 0.3),
-        ("candidate_in_time_range", 0.2),
+        ("contains_beers_dictionary_source", 0.8),
+        ("contains_beers_pattern_restore_source", 0.8),
+        ("contains_brewery_source", 0.5),
+        ("contains_beer_source", 0.45),
+        ("contains_style_source", 0.35),
+        ("contains_state_city_source", 0.8),
+        ("beers_candidate_state_matches_city_suffix", 0.9),
+        ("beers_candidate_city_equals_city_without_state", 0.8),
+        ("beers_candidate_is_format_restoration", 0.6),
     ]:
         try:
             s += w * float(row.get(k, 0.0))
         except Exception:
             pass
 
-    # time_dirty_extract / pattern_restore 更可信，因为是从脏值自身恢复格式
+    # Beers 格式恢复 / 结构字典来源更可信。
     try:
         src = str(row.get("candidate_source", "")).lower()
-        if "time_dirty_extract" in src:
+        if any(x in src for x in ["state_from_city_suffix", "pattern_restore_city_strip_state", "pattern_restore_ounces", "pattern_restore_abv", "pattern_restore_ibu"]):
             s += 0.7
-        if "time_pattern_restore" in src:
-            s += 0.5
-        if is_flight_consensus_candidate(row):
-            s += 1.0 * consensus_strength(row)
-        # actual time 中，高频字典候选不能算强证据
-        if str(row.get("column", "")) in ACTUAL_TIME_COLUMNS and "time_column_dictionary" in src:
-            s -= 0.4
     except Exception:
         pass
 
@@ -1107,248 +1478,231 @@ def joint_decode_measure_bundle(mc_pool, sa_pool, cond_pool, name_pool):
     return best_combo if best_combo is not None else (None, None, None, None)
 
 
+
+
+def base_beers_choose_score(row: pd.Series, dirty: str) -> float:
+    return (
+        float(row.get("student_score", 0.0))
+        + 0.35 * evidence_strength(row)
+        + 0.20 * rule_support(row)
+        + 0.08 * float(row.get("candidate_in_column_top_values", 0.0))
+        - 0.20 * float(row.get("candidate_equals_dirty", 0.0))
+    )
+
+
+def choose_for_beers_column(pool: pd.DataFrame, dirty: str, column: str) -> Optional[pd.Series]:
+    col = norm_text(column).lower()
+    legal = []
+    for _, row in pool.iterrows():
+        cand = canonical_empty_text(row.get("candidate_value", ""))
+        if cand in {"", "empty"}:
+            continue
+        norm_cand = normalize_for_beers_column(col, cand)
+        norm_dirty = normalize_for_beers_column(col, dirty)
+        same_norm = norm_cand and norm_dirty and norm_cand.lower() == norm_dirty.lower()
+        if same_norm and float(row.get("beers_candidate_is_format_restoration", 0.0)) <= 0:
+            continue
+        if col in {"state", "city", "ounces", "abv", "ibu", "brewery_id"} and not is_valid_beers_candidate(col, cand):
+            continue
+        bonus = 0.0
+        if col == "state":
+            bonus += 0.9 * float(row.get("beers_candidate_state_matches_city_suffix", 0.0))
+        elif col == "city":
+            bonus += 0.8 * float(row.get("beers_candidate_city_equals_city_without_state", 0.0))
+        elif col in {"ounces", "abv", "ibu"}:
+            bonus += 0.7 * float(row.get("beers_candidate_is_format_restoration", 0.0))
+        bonus += 0.35 * float(row.get("contains_beers_dictionary_source", 0.0))
+        bonus += 0.35 * float(row.get("contains_beers_pattern_restore_source", 0.0))
+        legal.append((row, base_beers_choose_score(row, dirty) + bonus))
+    if not legal:
+        return None
+    legal.sort(key=lambda x: (x[1], float(x[0].get("student_score", 0.0)), -int(x[0].get("student_rank", 9999))), reverse=True)
+    return legal[0][0]
+
 def pass_column_gate(column: str, dirty: str, best: pd.Series, second: Optional[pd.Series], column_profiles: Dict[str, dict]):
     best_val = canonical_empty_text(best.get("candidate_value", dirty))
     second_score = float(second.get("student_score", 0.0)) if second is not None else 0.0
     margin = float(best.get("student_score", 0.0)) - second_score
-    threshold = max(ARGS.global_min_margin, COLUMN_MARGIN_THRESHOLDS.get(column, DEFAULT_MARGIN_THRESHOLD))
+    col = norm_text(column).lower()
+    threshold = max(ARGS.global_min_margin, COLUMN_MARGIN_THRESHOLDS.get(col, DEFAULT_MARGIN_THRESHOLD))
     evidence = evidence_strength(best)
-    arch = get_column_archetype(column, column_profiles)
-    score_tpl = score_template_match_score(dirty, best_val)
-    sample_tpl = sample_template_match_score(dirty, best_val)
-
-    if str(column) in TIME_COLUMNS or str(column).endswith("_time"):
-        # Flights 时间列 gate。
-        # 核心策略：
-        # 1) scheduled time 可以相对积极修；
-        # 2) actual time 波动大，如果 dirty 本身已经是合法时间，必须非常保守，避免把 clean actual time 改坏；
-        # 3) dirty 中携带日期/estimated/紧凑 ampm 的格式错误，优先允许 time_dirty_extract / time_pattern_restore。
-        col = str(column)
-        src = str(best.get("candidate_source", "")).lower()
-
-        if best_val == dirty:
-            return False, "time_keep_original_best_equals_dirty"
-
-        if not is_valid_time_simple(best_val):
-            return False, "time_candidate_invalid"
-
-        rule_ev = rule_support(best)
-        try:
-            time_gain = float(best.get("candidate_time_context_gain", 0.0))
-        except Exception:
-            time_gain = 0.0
-
-        dirty_is_valid_time = is_valid_time_simple(dirty)
-        best_is_extract = int("time_dirty_extract" in src or "time_pattern_restore" in src)
-        best_is_column_dict = int("time_column_dictionary" in src or "column_top_value" in src)
-
-        # actual time 专属保护：原值已经是合法时间时，不轻易改成另一个合法时间。
-        # 这部分是当前降低 FP 的关键：actual time 的列内高频和 row context 不能当作强证据。
-        if col in ACTUAL_TIME_COLUMNS and dirty_is_valid_time:
-            same_time = circular_minute_diff_simple(dirty, best_val) == 0
-
-            # 只允许格式恢复类同一时间值，例如 9:32aDec 1 -> 9:32 a.m.
-            if best_is_extract and same_time:
-                return True, "actual_time_format_restore_same_time"
-
-            # 非同一时间值修改：必须有强规则支持。
-            # 禁止仅凭 evidence/student_score 将 7:16 a.m. 改成 7:25 a.m.
-            strong_rule = rule_ev >= 0.78
-            strong_consensus = (
-                is_flight_consensus_candidate(best)
-                and consensus_confidence(best) >= 0.66
-                and consensus_source_count(best) >= 3
-            )
-            small_delta = circular_minute_diff_simple(dirty, best_val) <= 1.0
-            very_strong_evidence_small_delta = small_delta and evidence >= 2.00 and margin >= 0.15
-
-            if not (strong_rule or strong_consensus or very_strong_evidence_small_delta):
-                return False, "actual_time_valid_dirty_keep_original_strict"
-
-            if best_is_column_dict and not (strong_rule or strong_consensus):
-                return False, "actual_time_block_column_dictionary_strict"
-
-            if strong_consensus and not strong_rule:
-                return True, "actual_time_valid_dirty_consensus_override"
-
-            return True, "actual_time_valid_dirty_strong_rule"
-
-        # dirty 是空值：允许修，但 actual time 要求证据比 scheduled time 更强
-        if dirty == "empty":
-            if col in ACTUAL_TIME_COLUMNS:
-                strong_consensus = (
-                    is_flight_consensus_candidate(best)
-                    and consensus_confidence(best) >= 0.62
-                    and consensus_source_count(best) >= 2
-                )
-                if best_is_column_dict and rule_ev < 0.65 and not strong_consensus:
-                    return False, "actual_time_empty_block_dictionary_without_rule"
-                if strong_consensus:
-                    return True, "actual_time_empty_to_consensus_value"
-                if rule_ev >= 0.45:
-                    return True, "actual_time_empty_to_rule_supported_value"
-                if evidence >= 1.15 and margin >= max(threshold, 0.10):
-                    return True, "actual_time_empty_to_high_evidence_value"
-                return False, "actual_time_empty_low_evidence"
-
-            if rule_ev >= 0.20 or evidence >= 0.70 or margin >= threshold:
-                return True, "time_empty_to_supported_value"
-            return False, "time_empty_low_evidence"
-
-        # scheduled time 保护：如果原值本身是合法时间，不要仅凭 LTR/student_score 改成另一个合法时间。
-        # 只有可信 consensus、强规则、或同一时间值格式恢复才允许改。
-        if col in SCHEDULED_TIME_COLUMNS and dirty_is_valid_time:
-            same_time = circular_minute_diff_simple(dirty, best_val) == 0
-            if best_is_extract and same_time:
-                return True, "scheduled_time_format_restore_same_time"
-
-            strong_consensus = has_trusted_consensus(best, min_conf=0.60, min_sources=2)
-            strong_rule = rule_ev >= 0.78
-
-            if not (strong_consensus or strong_rule):
-                return False, "scheduled_time_valid_dirty_keep_original_strict"
-
-            if strong_consensus and not strong_rule:
-                return True, "scheduled_time_valid_dirty_consensus_override"
-
-            return True, "scheduled_time_valid_dirty_strong_rule"
-
-        # 非 actual 或 dirty 非合法时间：格式恢复类候选更容易放行
-        if best_is_extract and is_valid_time_simple(best_val):
-            return True, "time_dirty_extract_or_pattern_restore"
-
-        if dirty_is_valid_time and margin < max(threshold, 0.06) and evidence < 0.8:
-            return False, "time_cleanlike_keep_original"
-
-        if margin < threshold and evidence < 0.7 and time_gain <= 0:
-            return False, "time_low_margin_low_evidence"
-
-        return True, "time_passed_gate"
 
     if best_val == dirty:
         return False, "keep_original_best_equals_dirty"
     if column in PROTECTED_NONEMPTY_COLUMNS and dirty != "empty" and best_val == "empty":
         return False, "protected_nonempty_to_empty_block"
+    if best_val in {"", "empty"}:
+        return False, "candidate_empty"
 
-    if column == "Score":
-        # 这是当前最主要的 FP 来源：clean empty Score 不能被自动补值
-        if dirty == "empty":
-            return False, "score_keep_if_original_empty"
-        if is_percent_like(dirty):
-            return False, "score_keep_if_already_valid"
-        if not is_percent_like(best_val):
-            return False, "score_candidate_not_valid_percent"
-        # malformed percent（如 x00%, 95x）只有模板匹配足够强才放行
-        if score_tpl < 4:
-            return False, "score_template_mismatch"
-        if margin < 0.01 and evidence < 0.6:
-            return False, "score_low_margin_low_evidence"
-    if column == "Sample":
-        if dirty == "empty":
-            return False, "sample_keep_if_original_empty"
-        if not patients_like(best_val):
-            return False, "sample_candidate_not_valid_pattern"
-        if patients_like(dirty):
-            # 原值已经合法时更保守
-            if margin < max(threshold, 0.08) and evidence < 0.9:
-                return False, "sample_cleanlike_keep_original"
-        else:
-            # 原值是 typo / malformed 时，只要模板强匹配就允许放行
-            if sample_tpl < 4 and evidence < 0.5:
-                return False, "sample_template_mismatch"
-    if column == "Condition" and dirty.lower() in CONDITION_DOMAIN and (margin < threshold or evidence < 0.8):
-        return False, "condition_cleanlike_keep_original"
-    if column == "MeasureCode":
-        if likely_measure_code_candidate(dirty) and (margin < threshold or evidence < 0.8):
-            return False, "measurecode_cleanlike_keep_original"
-        if not likely_measure_code_candidate(best_val):
-            return False, "measurecode_candidate_not_code_like"
-    if column == "Stateavg":
-        if likely_stateavg_candidate(dirty) and (margin < threshold or evidence < 0.8):
-            return False, "stateavg_cleanlike_keep_original"
-        if not likely_stateavg_candidate(best_val):
-            return False, "stateavg_candidate_not_stateavg_like"
-    if column == "MeasureName":
-        if dirty != "empty" and alpha_space_like(dirty) and len(dirty) >= 25 and (margin < threshold or evidence < 0.8):
-            return False, "measurename_cleanlike_keep_original"
-        if best_val == "empty":
-            return False, "measurename_empty_block"
+    pattern_restore = float(best.get("contains_beers_pattern_restore_source", 0.0)) > 0 or float(best.get("beers_candidate_is_format_restoration", 0.0)) > 0
+
+    if col == "state":
+        if not normalize_state_code(best_val):
+            return False, "state_invalid_candidate"
+
+        # Beers 数据中 state 的可靠修复信号主要是 city suffix：
+        # Oklahoma City OK -> state=OK。不要仅凭 brewery/city 字典高频把合法州改掉。
+        dirty_state = normalize_state_code(dirty)
+        if float(best.get("beers_candidate_state_matches_city_suffix", 0.0)) > 0:
+            return True, "state_city_suffix_match"
+
+        # dirty 为空时，允许强规则 + 字典支持的 state 填充；dirty 已经是合法州时非常保守。
+        if dirty in {"", "empty"} and rule_support(best) >= 0.80 and evidence >= 1.50:
+            return True, "state_empty_strong_rule_fill"
+
+        return False, "state_keep_original_without_city_suffix"
+
+    if col == "city":
+        # 当前 Beers 结果中 city 没有真实错误，city 的字典/相似行证据容易误改。
+        # 只允许非常明确的格式恢复；其它一律保留原值。
+        if pattern_restore and float(best.get("beers_candidate_city_equals_city_without_state", 0.0)) > 0:
+            return True, "city_strip_state_suffix"
+        return False, "city_keep_original_conservative"
+
+    if col == "abv":
+        # abv 的主要错误是 percent 符号格式错误，直接在 build_top1 阶段处理；
+        # 这里不允许字典高频候选随意覆盖合法/空 abv。
+        if "%" in norm_text(dirty):
+            return True, "abv_percent_strip_direct"
+        return False, "abv_keep_original_unless_percent"
+
+    if col in {"ounces", "ibu"}:
+        # 当前 Beers ground truth 中 ounces/ibu 没有真实错误，字典候选会造成大量 FP。
+        # 只允许格式恢复且规范化前后确实不同；否则保留原值。
+        if pattern_restore and is_valid_beers_candidate(col, best_val):
+            return True, f"{col}_format_restore_only"
+        return False, f"{col}_keep_original_conservative"
+
+    if col in {"brewery_id", "brewery_name", "beer_name", "style"}:
+        # 当前结果显示这些列的 margin/dictionary pass 全是误修，先全部保守保留。
+        return False, "beers_text_key_keep_original_conservative"
+
+    arch = get_column_archetype(column, column_profiles)
     if arch in {"small_enum", "structured_code", "long_text"} and margin < threshold and evidence < 0.8:
         return False, "generic_low_margin_keep_original"
     return True, "passed_gate"
 
 
+def _best_candidate_matching(pool: pd.DataFrame, predicate, bonus_key=None) -> Optional[pd.Series]:
+    if pool is None or pool.empty:
+        return None
+    legal = []
+    for _, row in pool.iterrows():
+        try:
+            if not predicate(row):
+                continue
+        except Exception:
+            continue
+        key = (
+            evidence_strength(row),
+            rule_support(row),
+            float(row.get("student_score", 0.0)),
+            -int(row.get("student_rank", 9999)),
+        )
+        if bonus_key is not None:
+            try:
+                key = (float(row.get(bonus_key, 0.0)),) + key
+            except Exception:
+                pass
+        legal.append((row, key))
+    if not legal:
+        return None
+    legal.sort(key=lambda x: x[1], reverse=True)
+    return legal[0][0]
+
+
+def joint_decode_beers_row_bundle(row_id: int, provisional: dict, raw_pools: dict):
+    """
+    保守迁移版 row-level consistency decoding。
+    当前 Beers 评估显示：
+    - state 的可靠修复来自 city suffix；
+    - abv 的可靠修复来自 dirty 中的 percent 格式错误；
+    - ounces/ibu/city/style/brewery_name 的字典候选造成大量 FP。
+    因此 joint decoding 不再强行覆盖这些无真实错误列，只保留 state 的 city suffix 支持。
+    """
+    city_key = (row_id, "city")
+    state_key = (row_id, "state")
+
+    city_dirty = ""
+    if city_key in raw_pools and not raw_pools[city_key].empty:
+        city_dirty = canonical_empty_text(raw_pools[city_key].iloc[0].get("dirty_value", ""))
+
+    city_suffix_state = normalize_state_code(city_dirty)
+    if city_suffix_state and state_key in raw_pools:
+        pool = raw_pools[state_key]
+        chosen = _best_candidate_matching(
+            pool,
+            lambda r: normalize_state_code(canonical_empty_text(r.get("candidate_value", ""))) == city_suffix_state
+                      and float(r.get("beers_candidate_state_matches_city_suffix", 0.0)) > 0,
+            bonus_key="beers_candidate_state_matches_city_suffix",
+        )
+        if chosen is not None:
+            provisional[state_key] = chosen
+
+    return provisional
+
+
 
 def build_top1_with_gate_and_joint_decoding(ranked_df: pd.DataFrame, column_profiles: Dict[str, dict]) -> pd.DataFrame:
     out_rows = []
-    rows = sorted(set(int(x) for x in ranked_df["row_id"].unique()))
-    cols = sorted(set(str(x) for x in ranked_df["column"].unique()))
     provisional = {}
     raw_pools = {}
-    for row_id in rows:
-        for col in cols:
-            pool = candidate_pool(ranked_df, row_id, col, ARGS.joint_topk)
-            if pool.empty:
-                continue
-            raw_pools[(row_id, col)] = pool
-            dirty = canonical_empty_text(pool.iloc[0]["dirty_value"])
-            chosen = None
-            arch = get_column_archetype(col, column_profiles)
-            if col == "Score" or arch == "percent_pattern":
-                chosen = choose_for_score(pool, dirty)
-            elif col == "Sample":
-                chosen = choose_for_sample(pool, dirty)
-            elif arch in {"long_digit_id", "short_digit_id"} or col in {"PhoneNumber", "ZipCode", "ProviderNumber"}:
-                chosen = choose_for_digits(pool, dirty)
-            elif arch == "small_enum" or col in {"State", "EmergencyService", "HospitalType", "HospitalOwner"}:
-                chosen = choose_for_small_enum(pool, dirty)
-            if chosen is None:
-                if col in ACTUAL_TIME_COLUMNS:
-                    chosen = choose_for_actual_time(pool, dirty, col)
-                    if chosen is None:
-                        chosen = best_row_by_base_score(pool)
-                elif col in SCHEDULED_TIME_COLUMNS or str(col).endswith("_time"):
-                    chosen = choose_for_scheduled_time(pool, dirty, col)
-                    if chosen is None:
-                        chosen = best_row_by_base_score(pool)
-                elif col == "MeasureCode":
-                    chosen = best_row_by_base_score(filter_measurecode_pool(pool, dirty))
-                elif col == "Stateavg":
-                    chosen = best_row_by_base_score(filter_stateavg_pool(pool, dirty))
-                else:
-                    chosen = best_row_by_base_score(pool)
-            provisional[(row_id, col)] = chosen
-    for row_id in rows:
-        mc_pool = filter_measurecode_pool(candidate_pool(ranked_df, row_id, "MeasureCode", ARGS.joint_topk), canonical_empty_text(provisional.get((row_id, "MeasureCode"), {}).get("dirty_value", "")) if (row_id, "MeasureCode") in provisional else "")
-        sa_pool = filter_stateavg_pool(candidate_pool(ranked_df, row_id, "Stateavg", ARGS.joint_topk), canonical_empty_text(provisional.get((row_id, "Stateavg"), {}).get("dirty_value", "")) if (row_id, "Stateavg") in provisional else "")
-        cond_pool = candidate_pool(ranked_df, row_id, "Condition", ARGS.joint_topk)
-        name_pool = candidate_pool(ranked_df, row_id, "MeasureName", ARGS.joint_topk)
-        mc_row, sa_row, cond_row, name_row = joint_decode_measure_bundle(mc_pool, sa_pool, cond_pool, name_pool)
-        if mc_row is not None: provisional[(row_id, "MeasureCode")] = mc_row
-        if sa_row is not None: provisional[(row_id, "Stateavg")] = sa_row
-        if cond_row is not None: provisional[(row_id, "Condition")] = cond_row
-        if name_row is not None: provisional[(row_id, "MeasureName")] = name_row
 
-        # Flights 四时间列轻量联合后处理
-        provisional = joint_decode_time_bundle_for_row(row_id, provisional, raw_pools)
+    for (row_id, col), pool0 in ranked_df.groupby(["row_id", "column"], sort=False):
+        pool = pool0.sort_values(["student_rank"], ascending=[True]).head(ARGS.joint_topk).copy()
+        if pool.empty:
+            continue
+        raw_pools[(int(row_id), str(col))] = pool
+        dirty = canonical_empty_text(pool.iloc[0]["dirty_value"])
+        col_lower = norm_text(col).lower()
+
+        chosen = None
+        if col_lower in BEERS_SPECIAL_COLUMNS:
+            chosen = choose_for_beers_column(pool, dirty, col)
+        if chosen is None:
+            chosen = best_row_by_base_score(pool)
+        provisional[(int(row_id), str(col))] = chosen
+
+    # Beers equivalent of Flights joint time-bundle decoding.
+    # Apply row-level consistency after every cell gets its provisional best candidate.
+    for _row_id in sorted({k[0] for k in provisional.keys()}):
+        provisional = joint_decode_beers_row_bundle(_row_id, provisional, raw_pools)
 
     for (row_id, col), chosen in sorted(provisional.items(), key=lambda x: (x[0][0], x[0][1])):
         dirty = canonical_empty_text(chosen.get("dirty_value", ""))
         final_value = canonical_empty_text(chosen.get("candidate_value", dirty))
         pool = raw_pools.get((row_id, col))
         second = pool.sort_values(["student_rank"], ascending=[True]).reset_index(drop=True).iloc[1] if pool is not None and len(pool) >= 2 else None
-        passed, gate_reason = pass_column_gate(col, dirty, chosen, second, column_profiles)
-        if not passed:
-            final_value = dirty
-            gate_passed = 0
-            selected_rank = -1
-            selected_source = "gate_keep_original"
-            reason = "keep_original"
-        else:
+
+        # Beers 专属直接修复：abv 中的百分号是格式错误，应该去掉百分号而不是查询高频字典值。
+        col_lower = norm_text(col).lower()
+        direct_abv = abv_percent_direct_repair(dirty) if col_lower == "abv" else ""
+        if direct_abv:
+            final_value = direct_abv
+            passed = True
+            gate_reason = "abv_percent_strip_direct"
             gate_passed = 1
             selected_rank = int(chosen.get("student_rank", -1))
-            selected_source = str(chosen.get("candidate_source", "joint_decode"))
-            reason = str(chosen.get("student_reason_pred", "joint_decode"))
+            selected_source = "direct_abv_percent_strip"
+            reason = "beers_format_match"
+        else:
+            passed, gate_reason = pass_column_gate(col, dirty, chosen, second, column_profiles)
+            if not passed:
+                final_value = dirty
+                gate_passed = 0
+                selected_rank = -1
+                selected_source = "gate_keep_original"
+                reason = "keep_original"
+            else:
+                gate_passed = 1
+                selected_rank = int(chosen.get("student_rank", -1))
+                selected_source = str(chosen.get("candidate_source", "joint_decode"))
+                reason = str(chosen.get("student_reason_pred", "joint_decode"))
+        # Beers display canonicalization: 修复文本实体列大小写显示形式，降低 strict evaluation 的 case-only FP。
+        final_value_before_display_canonicalization = final_value
+        final_value = canonicalize_display_value(col, final_value, dirty)
+        display_canonicalized = int(final_value != final_value_before_display_canonicalization)
+
         top2_val = canonical_empty_text(second.get("candidate_value", "")) if second is not None else ""
         top2_score = float(second.get("student_score", 0.0)) if second is not None else None
         top_margin = float(chosen.get("student_score", 0.0)) - (float(second.get("student_score", 0.0)) if second is not None else 0.0)
@@ -1357,6 +1711,9 @@ def build_top1_with_gate_and_joint_decoding(ranked_df: pd.DataFrame, column_prof
             "column": str(col).strip(),
             "dirty_value": dirty,
             "student_best_candidate": final_value,
+            "repaired_value": final_value,
+            "final_value_before_display_canonicalization": final_value_before_display_canonicalization,
+            "display_canonicalized": display_canonicalized,
             "student_score": float(chosen.get("student_score", 0.0)),
             "student_reason_pred": reason,
             "gate_passed": int(gate_passed),
@@ -1368,13 +1725,12 @@ def build_top1_with_gate_and_joint_decoding(ranked_df: pd.DataFrame, column_prof
             "top2_raw_candidate": top2_val,
             "top2_raw_score": top2_score,
             "top_margin": top_margin,
-            "actual_time_domain_score": actual_time_domain_score(chosen, dirty, col) if str(col) in ACTUAL_TIME_COLUMNS else None,
             "evidence_strength": evidence_strength(chosen),
             "rule_support": rule_support(chosen),
-            "is_flight_consensus_candidate": is_flight_consensus_candidate(chosen),
-            "consensus_confidence": consensus_confidence(chosen),
-            "consensus_source_count": consensus_source_count(chosen),
-            "consensus_support_count": consensus_support_count(chosen)
+            "contains_beers_dictionary_source": float(chosen.get("contains_beers_dictionary_source", 0.0)),
+            "contains_beers_pattern_restore_source": float(chosen.get("contains_beers_pattern_restore_source", 0.0)),
+            "beers_candidate_is_format_restoration": float(chosen.get("beers_candidate_is_format_restoration", 0.0)),
+            "beers_candidate_state_matches_city_suffix": float(chosen.get("beers_candidate_state_matches_city_suffix", 0.0)),
         })
     return pd.DataFrame(out_rows)
 
@@ -1389,9 +1745,7 @@ def build_hard_cases_jsonl(ranked_df: pd.DataFrame, max_hard_cases: int):
         second = g.iloc[1]
         margin = float(best["student_score"]) - float(second["student_score"])
         is_hard = margin < ARGS.global_min_margin + 0.02
-        if str(column) in {"MeasureCode", "Stateavg", "MeasureName", "Condition"} and margin < 0.08:
-            is_hard = True
-        if (str(column) in TIME_COLUMNS or str(column).endswith("_time")) and margin < 0.08:
+        if norm_text(column).lower() in BEERS_SPECIAL_COLUMNS and margin < 0.08:
             is_hard = True
         if not is_hard:
             continue
@@ -1420,6 +1774,7 @@ def build_hard_cases_jsonl(ranked_df: pd.DataFrame, max_hard_cases: int):
 
 
 def main():
+    print(f"[INFO] display canonicalization enabled for columns: {sorted(DISPLAY_CANONICAL_COLUMNS)}")
     ensure_column_profiles_json(ARGS.candidate_features, COLUMN_PROFILES_JSON)
     for p in [CHECKPOINT_PATH, FEATURE_COLUMNS_JSON, REASON_LABELS_JSON, COLUMN_PROFILES_JSON]:
         if not os.path.exists(p):

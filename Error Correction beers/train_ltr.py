@@ -1,3 +1,15 @@
+"""
+Beers LTR training script, adapted from the Flights repair training pipeline.
+
+Migration principle:
+- Keep the original Flights pairwise-LTR framework: feature alignment, pairwise materialization,
+  shared scorer MLP, reason auxiliary head, rule regularization, checkpoint/log outputs.
+- Replace Flights-specific supervision priors:
+  flight/time consensus -> beers dictionary/context/pattern support
+  sched/actual time column weights -> state/city/ounces/abv/ibu/brewery/beer/style weights
+  time format restoration -> beers format restoration such as city suffix strip, ounces/abv/ibu normalization.
+"""
+
 import os
 import json
 import math
@@ -19,7 +31,7 @@ def parse_args():
     p = argparse.ArgumentParser(description="Train / resume pairwise LTR student")
     p.add_argument("--candidate_features", default="repair_candidate_features_v2.csv")
     p.add_argument("--pairwise_responses", default="repair_pairwise_responses_v2.jsonl")
-    p.add_argument("--output_dir", default="pairwise_ltr_student_output_flights")
+    p.add_argument("--output_dir", default="pairwise_ltr_student_output_beers")
     p.add_argument("--resume_checkpoint", default=None)
     p.add_argument("--epochs", type=int, default=30)
     p.add_argument("--batch_size", type=int, default=256)
@@ -50,10 +62,15 @@ USE_RULE_REGULARIZATION = True
 RULE_REG_STRENGTH = 0.05
 
 COLUMN_WEIGHT_MAP = {
-    "sched_dep_time": 2.3,
-    "act_dep_time": 2.0,
-    "sched_arr_time": 2.3,
-    "act_arr_time": 2.0,
+    "state": 2.4,
+    "city": 2.0,
+    "ounces": 2.2,
+    "abv": 2.1,
+    "ibu": 2.1,
+    "brewery_id": 1.9,
+    "brewery_name": 1.9,
+    "beer_name": 1.7,
+    "style": 1.8,
 }
 DEFAULT_SAMPLE_WEIGHT = 1.0
 
@@ -144,10 +161,90 @@ def safe_float(x, default=0.0):
 def is_empty_token(x: str) -> int:
     return int(norm_text(x).lower() in EMPTY_TOKENS)
 
+US_STATE_CODES = {
+    "al","ak","az","ar","ca","co","ct","de","fl","ga","hi","ia","id","il","in","ks","ky","la","ma","md","me",
+    "mi","mn","mo","ms","mt","nc","nd","ne","nh","nj","nm","nv","ny","oh","ok","or","pa","ri","sc","sd","tn",
+    "tx","ut","va","vt","wa","wi","wv","wy","dc"
+}
 
-TIME_COLUMNS = {"sched_dep_time", "act_dep_time", "sched_arr_time", "act_arr_time"}
-ACTUAL_TIME_COLUMNS = {"act_dep_time", "act_arr_time"}
-SCHEDULED_TIME_COLUMNS = {"sched_dep_time", "sched_arr_time"}
+def normalize_state_code(x: str) -> str:
+    s = norm_text(x).lower()
+    if s in EMPTY_TOKENS:
+        return ""
+    if s in US_STATE_CODES:
+        return s.upper()
+    m = re.search(r"\b([a-z]{2})\b$", s)
+    if m and m.group(1) in US_STATE_CODES:
+        return m.group(1).upper()
+    return ""
+
+def strip_state_suffix_city(x: str) -> str:
+    s = norm_text(x)
+    parts = s.split()
+    if len(parts) >= 2 and parts[-1].lower().strip(".,;:()[]{}") in US_STATE_CODES:
+        return " ".join(parts[:-1]).strip()
+    return s
+
+def normalize_ounces(x: str) -> str:
+    s = norm_text(x).lower()
+    if s in EMPTY_TOKENS:
+        return ""
+    m = re.search(r"(-?\d+(?:\.\d+)?)", s)
+    if not m:
+        return ""
+    v = safe_float(m.group(1), None)
+    if v is None or v <= 0 or v > 100:
+        return ""
+    return f"{v:.1f} oz."
+
+def normalize_abv(x: str) -> str:
+    s = norm_text(x).lower().replace("abv", "").replace(" ", "")
+    if s in EMPTY_TOKENS:
+        return ""
+    m = re.search(r"(-?\d+(?:\.\d+)?)", s)
+    if not m:
+        return ""
+    v = safe_float(m.group(1), None)
+    if v is None:
+        return ""
+    if "%" in s or v > 1.0:
+        v = v / 100.0
+    if v < 0 or v > 1:
+        return ""
+    return f"{v:.3f}".rstrip("0").rstrip(".")
+
+def normalize_ibu(x: str) -> str:
+    s = norm_text(x).lower().replace("ibu", "")
+    if s in EMPTY_TOKENS:
+        return ""
+    m = re.search(r"(-?\d+(?:\.\d+)?)", s)
+    if not m:
+        return ""
+    v = safe_float(m.group(1), None)
+    if v is None or v < 0 or v > 1000:
+        return ""
+    return str(int(round(v))) if abs(v - round(v)) < 1e-9 else f"{v:.1f}".rstrip("0").rstrip(".")
+
+def beers_norm_for_column(column: str, value: str) -> str:
+    c = norm_text(column).lower()
+    if c == "state":
+        return normalize_state_code(value)
+    if c == "city":
+        return strip_state_suffix_city(value)
+    if c == "ounces":
+        return normalize_ounces(value)
+    if c == "abv":
+        return normalize_abv(value)
+    if c == "ibu":
+        return normalize_ibu(value)
+    return norm_text(value)
+
+
+
+TIME_COLUMNS = set()
+ACTUAL_TIME_COLUMNS = set()
+SCHEDULED_TIME_COLUMNS = set()
+BEERS_SPECIAL_COLUMNS = {"state", "city", "ounces", "abv", "ibu", "brewery_id", "brewery_name", "beer_name", "style"}
 
 
 def is_time_column_name(column: str) -> int:
@@ -369,7 +466,7 @@ def infer_column_profiles(df: pd.DataFrame):
 NON_FEATURE_COLUMNS = {
     "row_id", "column", "dirty_value", "candidate_value",
     "candidate_rank", "candidate_source", "extra_info",
-    "neighbor_majority_value", "suggested_correct_value",
+    "neighbor_majority_value", "suggested_correct_value", "beers_dirty_norm", "beers_candidate_norm",
     "main_rule_type", "main_usage_role", "semantic_type"
 }
 
@@ -397,19 +494,15 @@ def add_derived_features(df: pd.DataFrame) -> pd.DataFrame:
         (out["original_is_empty"] == 1) & (out["candidate_is_empty"] == 0)
     ).astype(int)
 
-    for col_name in ["Score", "Sample", "Stateavg", "MeasureCode", "MeasureName", "Condition"]:
-        out[f"is_col_{col_name}"] = (out["column"] == col_name).astype(int)
+    for col_name in ["state", "city", "ounces", "abv", "ibu", "brewery_id", "brewery_name", "beer_name", "style"]:
+        out[f"is_col_{col_name}"] = (out["column"].str.lower() == col_name).astype(int)
 
-    # Flights 时间列派生特征。若上游特征文件中已经有 candidate_is_valid_time / candidate_time_context_gain，
-    # 这里不会覆盖，只是补充统一的模型输入特征。
-    for col_name in ["sched_dep_time", "act_dep_time", "sched_arr_time", "act_arr_time"]:
-        out[f"is_col_{col_name}"] = (out["column"] == col_name).astype(int)
-    out["is_time_column_derived"] = out["column"].map(is_time_column_name)
-    out["dirty_is_valid_time_derived"] = out["dirty_value"].map(is_valid_time_simple)
-    out["candidate_is_valid_time_derived"] = out["candidate_value"].map(is_valid_time_simple)
-    out["candidate_dirty_time_diff_derived"] = [
-        circular_minute_diff_simple(d, c) for d, c in zip(out["dirty_value"], out["candidate_value"])
-    ]
+    out["beers_dirty_norm"] = [beers_norm_for_column(col, val) for col, val in zip(out["column"], out["dirty_value"])]
+    out["beers_candidate_norm"] = [beers_norm_for_column(col, val) for col, val in zip(out["column"], out["candidate_value"])]
+    out["beers_norm_equal"] = (out["beers_dirty_norm"].map(norm_text) == out["beers_candidate_norm"].map(norm_text)).astype(int)
+    out["beers_candidate_norm_nonempty"] = out["beers_candidate_norm"].map(lambda x: int(norm_text(x) != ""))
+    out["beers_dirty_norm_nonempty"] = out["beers_dirty_norm"].map(lambda x: int(norm_text(x) != ""))
+    out["beers_is_special_column_derived"] = out["column"].map(lambda x: int(norm_text(x).lower() in BEERS_SPECIAL_COLUMNS))
     return out
 
 
@@ -453,31 +546,33 @@ def build_candidate_index(df: pd.DataFrame, feature_columns: List[str]):
     for _, row in df.iterrows():
         key = (int(row["row_id"]), str(row["column"]), norm_text(row["candidate_value"]))
 
-        column = str(row["column"])
+        column = norm_text(row["column"]).lower()
         sample_weight = float(COLUMN_WEIGHT_MAP.get(column, DEFAULT_SAMPLE_WEIGHT))
 
-        # consensus 版特征：多源共识候选应该在 pairwise 学习中更有权重，
-        # 但 actual time 不无限放大，避免过拟合某个 source 先验。
-        is_consensus = max(
-            safe_float(row.get("is_from_flight_consensus", 0.0), 0.0),
-            safe_float(row.get("contains_flight_consensus_source", 0.0), 0.0),
-            safe_float(row.get("contains_trusted_flight_consensus_source", 0.0), 0.0),
-        )
-        consensus_conf = safe_float(row.get("flight_consensus_confidence", row.get("allowed_consensus_confidence", 0.0)), 0.0)
-        consensus_sources = safe_float(row.get("flight_consensus_source_count", row.get("allowed_consensus_source_count", 0.0)), 0.0)
-
-        if is_consensus > 0:
-            boost = 1.0 + 0.6 * min(max(consensus_conf, 0.0), 1.0) + 0.05 * min(consensus_sources, 6.0)
-            if column in ACTUAL_TIME_COLUMNS:
-                boost = min(boost, 1.8)
-            else:
-                boost = min(boost, 2.1)
-            sample_weight *= boost
-
-        # 从 dirty 自身恢复出来的时间候选通常是格式修复信号，也适当加权。
         src = str(row.get("candidate_source", row.get("candidate_source_text", ""))).lower()
-        if "time_dirty_extract" in src or "time_pattern_restore" in src or "trusted_flight_source_weighted_consensus" in src:
+
+        # Beers 专属：结构字典、格式恢复、规则支持的候选在 pairwise 学习中更重要。
+        if safe_float(row.get("contains_beers_dictionary_source", 0.0), 0.0) > 0:
+            sample_weight *= 1.35
+        if safe_float(row.get("contains_beers_pattern_restore_source", 0.0), 0.0) > 0:
+            sample_weight *= 1.35
+        if safe_float(row.get("is_rule_and_dictionary_supported", 0.0), 0.0) > 0:
             sample_weight *= 1.25
+        if safe_float(row.get("candidate_rule_support_ratio", 0.0), 0.0) >= 0.5:
+            sample_weight *= 1.15
+
+        # Beers 特定来源补充加权
+        if any(x in src for x in [
+            "state_from_city_suffix",
+            "pattern_restore_city_strip_state",
+            "pattern_restore_ounces",
+            "pattern_restore_abv",
+            "pattern_restore_ibu",
+            "brewery_id_to_state",
+            "brewery_name_to_state",
+            "beer_name_to_style",
+        ]):
+            sample_weight *= 1.20
 
         idx[key] = {
             "features": row[feature_columns].astype(float).values.astype(np.float32),

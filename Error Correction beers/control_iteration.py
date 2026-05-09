@@ -11,12 +11,12 @@ from openai import OpenAI
 def parse_args():
     p = argparse.ArgumentParser(description="Iterative repair controller: wide train, build infer whitelist features, then whitelist inference")
     p.add_argument("--candidate_features", default="repair_candidate_features_v2.csv")
-    p.add_argument("--allowed_cells_csv", default="predicted_error_positions_consensus_augmented.csv")
+    p.add_argument("--allowed_cells_csv", default="predicted_error_positions.csv")
     p.add_argument("--initial_pairwise_responses", default="repair_pairwise_responses_v2.jsonl")
     p.add_argument("--train_script", default="train_ltr.py")
     p.add_argument("--infer_script", default="infer_ltr.py")
     p.add_argument("--build_infer_features_script", default="build_infer_candidate_features_from_whitelist.py")
-    p.add_argument("--work_dir", default="repair_iterative_workdir_flights")
+    p.add_argument("--work_dir", default="repair_iterative_workdir_beers")
     p.add_argument("--max_iterations", type=int, default=3)
     p.add_argument("--max_hard_cases_per_iter", type=int, default=200)
     p.add_argument("--epochs", type=int, default=20)
@@ -101,21 +101,22 @@ def get_client():
 
 
 def build_column_specific_instruction(column: str) -> str:
-    column = str(column)
-    if column in {"sched_dep_time", "act_dep_time", "sched_arr_time", "act_arr_time"} or column.endswith("_time"):
-        return "本列是航班时间列。优先选择合法时间格式；优先相信规则强支持、可信多源 flight consensus 高置信支持、与 flight 和同一行实际/计划起降时间一致的候选；不要仅因为列内高频就选择。"
-    if column in {"MeasureCode", "Stateavg"}:
-        return "本列是结构化编码列。优先看 family/prefix/suffix 是否一致，以及它是否与同行的 State / MeasureCode / Stateavg 保持结构一致；不要只因为字符串相似就选择 sibling code。"
-    if column == "Condition":
-        return "本列是疾病/主题分类列。优先看它是否与 MeasureCode family 一致：hf->heart failure, ami->heart attack, pn->pneumonia, scip->surgical infection prevention。"
-    if column == "MeasureName":
-        return "本列是长文本 canonical phrase。优先看它是否与 MeasureCode 和 Condition 一致，不要只因为词面相似就选择语义不匹配的候选。"
-    if column == "Score":
-        return "本列是百分比。已经是合法百分号格式的原值要非常谨慎改动；优先恢复 malformed percent（例如 95x -> 95%），不要无根据把合法分数改成别的合法分数。"
-    if column == "Sample":
-        return "本列通常应符合 '\\d+ patients' 模式。优先恢复 pattern typo，不要随意补空值，也不要选择不符合样式的候选。"
+    column = str(column).strip().lower()
+    if column == "state":
+        return "本列是美国州缩写列。把 Flights 的 source consensus 思路迁移为 Beers 的 city/brewery context consensus：优先合法州缩写，并参考 city 后缀、brewery_id、brewery_name 对 state 的支持。"
+    if column == "city":
+        return "本列是城市列。把 Flights 的 time format restoration 迁移为 Beers 的 city/state 格式恢复：例如 Ashland OR 应优先恢复为 Ashland。"
+    if column == "ounces":
+        return "本列是容量列。把 Flights 的 time canonicalization 迁移为 Beers 的 numeric-unit canonicalization：例如 16 oz 应规范为 16.0 oz.，同时参考 beer_name/style。"
+    if column == "abv":
+        return "本列是 abv，通常为 0 到 1 之间的小数。6.3% 通常应规范为 0.063；需要结合 beer_name/style 上下文。"
+    if column == "ibu":
+        return "本列是 IBU 数值。优先考虑合法数值和格式规范化，例如 35 ibu -> 35，同时参考 beer_name/style。"
+    if column in {"brewery_id", "brewery_name"}:
+        return "本列是 brewery 相关属性。把 Flights 的 flight-key consistency 迁移为 brewery-key consistency：优先选择与 brewery_id/brewery_name/city/state 一致的候选。"
+    if column in {"beer_name", "style"}:
+        return "本列是 beer_name/style。优先选择与 id、style、ounces、abv、ibu 上下文一致的候选。"
     return "优先考虑规则一致性、同行上下文一致性、统计支持和合理的拼写/模式变换。"
-
 
 def build_pair_prompt(obj):
     column_instruction = build_column_specific_instruction(obj.get("column", ""))
@@ -143,7 +144,7 @@ def build_pair_prompt(obj):
 JSON 格式如下：
 {{
   "winner": "A" 或 "B" 或 "Unknown",
-  "reason_type": "rule_consistency" / "context_match" / "cooccurrence_support" / "spelling_similarity" / "pattern_match" / "uncertain" / "other",
+  "reason_type": "rule_consistency" / "context_match" / "beers_format_match" / "cooccurrence_support" / "spelling_similarity" / "pattern_match" / "uncertain" / "other",
   "reason": "一句简短原因"
 }}
 

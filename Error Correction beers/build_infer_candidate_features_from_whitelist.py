@@ -14,9 +14,9 @@ INPUT_CANDIDATE_FEATURES = "repair_candidate_features_v2.csv"
 # A. allowed_cells_from_detection.csv：至少包含 row_id,column
 # B. predicted_error_positions.csv：至少包含 row_id,column，可选 value/final_pred_label
 # C. inference_all_predictions.csv：包含 final_pred_label / final_pred_label_name，会自动筛选最终预测为 error 的 cell
-# 默认使用候选生成 consensus 版输出的增强白名单。
-# 如果没有使用 consensus 版候选生成，可以改回 predicted_error_positions.csv 或 inference_all_predictions.csv。
-INPUT_ALLOWED_CELLS = "predicted_error_positions_consensus_augmented.csv"
+# 默认使用 Beers 错误位置文件 predicted_error_positions.csv。
+# 如果直接使用检测输出 inference_all_predictions.csv，也会自动按 final_pred_label 筛选。
+INPUT_ALLOWED_CELLS = "predicted_error_positions.csv"
 
 # 输出：如果是相对路径，会输出到当前运行目录
 OUTPUT_INFER_FEATURES = "repair_candidate_features_infer_whitelist.csv"
@@ -30,13 +30,12 @@ OUTPUT_FILTERED_OUT_FEATURES = True
 # 如果 INPUT_ALLOWED_CELLS 不存在，按顺序尝试这些 fallback。
 # 这样你可以在不用 consensus 的时候仍然直接运行。
 FALLBACK_ALLOWED_CELLS = [
-    "predicted_error_positions.csv",
-    "/mnt/mydata/dq/projects/Splittree/test/Error Detection flights/active_cleaning_loop_runs_flights_v4/iter_3/infer/inference_all_predictions.csv",
+    "/mnt/mydata/dq/projects/Splittree/test/Error Detection beers/active_cleaning_loop_runs_beers_v4/iter_3/infer/inference_all_predictions.csv",
 ]
 
 # 如果 INPUT_CANDIDATE_FEATURES 不存在，按顺序尝试这些 fallback。
 FALLBACK_CANDIDATE_FEATURES = [
-    "/mnt/mydata/dq/projects/Splittree/test/Error Correction flights/repair_candidate_features_v2.csv",
+    "/mnt/mydata/dq/projects/Splittree/test/Error Correction beers/repair_candidate_features_v2.csv",
 ]
 
 
@@ -93,7 +92,7 @@ def normalize_key_columns(df, file_name):
 def filter_allowed_cells(allow_df):
     """
     自动兼容不同白名单输入：
-    1. consensus augmented whitelist：没有预测标签列，直接作为白名单；
+    1. predicted_error_positions.csv / allowed_cells_from_detection.csv：没有预测标签列，直接作为白名单；
     2. inference_all_predictions.csv：有 final_pred_label / final_pred_label_name，自动筛 error；
     3. 兼容 pred_label / pred_label_name / detector_pred_label 等字段。
     """
@@ -164,39 +163,66 @@ def build_whitelist_features(
 
     allow_unique = allow[["row_id", "column"]].drop_duplicates().copy()
 
-    # 保留 consensus 白名单里的诊断字段，merge 到输出中便于后续排查。
+    # 保留 Beers 检测/定位阶段的诊断字段，merge 到输出中便于后续排查。
     allow_meta_cols = [
         c for c in [
             "row_id", "column",
             "value",
-            "flight",
-            "src",
-            "consensus_value",
-            "consensus_confidence",
-            "consensus_margin",
-            "consensus_support_count",
-            "consensus_source_count",
-            "consensus_sources",
-            "time_diff_to_consensus",
-            "consensus_reason",
+            "semantic_type",
+            "violation_count",
+            "conflict_score",
+            "numeric_value",
+            "neighbor_majority_value",
+            "neighbor_majority_ratio",
+            "prior_error_probability",
+            "posterior_error_probability",
+            "main_rule_type",
+            "main_usage_role",
+            "strong_rule_count",
+            "candidate_generation_rule_count",
+            "fd_like_count",
+            "context_rule_count",
+            "global_rule_count",
+            "rare_value_count",
+            "typo_rule_count",
+            "pattern_rule_count",
+            "schema_rule_count",
+            "numeric_window_rule_count",
+            "numeric_window_bucket",
+            "numeric_value_bucket",
+            "rare_only_signal",
+            "is_weak_only",
+            "is_fp_risk_col",
+            "rule_neighbor_conflict",
+            "numeric_borderline_hardcase",
+            "semantic_recovery_hardcase",
+            "persistent_fp_high_risk",
+            "ounces_canonical_reject_hardcase",
+            "is_hard_case",
+            "is_high_risk",
+            "final_pred_label",
+            "final_pred_label_name",
+            "final_pred_error_prob",
+            "detector_pred_error_prob",
+            "verifier_decision",
         ]
         if c in allow.columns
     ]
 
     allow_meta = allow[allow_meta_cols].drop_duplicates(subset=["row_id", "column"], keep="first").copy()
 
-    # trusted-source consensus 诊断字段。
-    # 如果候选生成中 consensus_reason = trusted_flight_source_weighted_consensus，
-    # 则在白名单输出中显式保留 allowed_is_trusted_consensus=1。
-    if not allow_meta.empty and "consensus_reason" in allow_meta.columns:
-        allow_meta["is_trusted_consensus"] = (
-            allow_meta["consensus_reason"]
-            .astype(str)
-            .str.contains("trusted_flight_source_weighted_consensus", case=False, na=False)
-            .astype(int)
-        )
-    elif not allow_meta.empty:
-        allow_meta["is_trusted_consensus"] = 0
+    # Beers 专属诊断标记：用于看哪些白名单 cell 来自数值边界/语义恢复/ounces 规范化风险。
+    if not allow_meta.empty:
+        for flag_col in [
+            "numeric_borderline_hardcase",
+            "semantic_recovery_hardcase",
+            "persistent_fp_high_risk",
+            "ounces_canonical_reject_hardcase",
+            "is_hard_case",
+            "is_high_risk",
+        ]:
+            if flag_col not in allow_meta.columns:
+                allow_meta[flag_col] = 0
 
     # ------------------------------------------------------------
     # C. 统计过滤前信息
@@ -268,7 +294,7 @@ def build_whitelist_features(
     # ------------------------------------------------------------
     # H. 打印统计信息
     # ------------------------------------------------------------
-    print("\n========== Build infer candidate features from whitelist ==========")
+    print("\n========== Build Beers infer candidate features from whitelist ==========")
     print(f"input_candidate_features: {candidate_features_file}")
     print(f"input_allowed_cells: {allowed_cells_file}")
     print(f"output_infer_features: {output_path}")
@@ -292,24 +318,26 @@ def build_whitelist_features(
     if filtered_out_path is not None:
         print(f"[INFO] filtered-out candidate features saved to: {filtered_out_path}")
 
-    if "allowed_consensus_value" in merged.columns:
-        consensus_cells_kept = (
-            merged[merged["allowed_consensus_value"].notna()][["row_id", "column"]]
-            .drop_duplicates()
-            .shape[0]
-        )
+    beers_diag_cols = [
+        "allowed_numeric_borderline_hardcase",
+        "allowed_semantic_recovery_hardcase",
+        "allowed_persistent_fp_high_risk",
+        "allowed_ounces_canonical_reject_hardcase",
+        "allowed_is_hard_case",
+        "allowed_is_high_risk",
+    ]
+    existing_diag_cols = [c for c in beers_diag_cols if c in merged.columns]
+    if existing_diag_cols:
         print("")
-        print("---- Consensus whitelist statistics ----")
-        print(f"consensus_allowed_cells_kept: {consensus_cells_kept}")
-
-        if "allowed_is_trusted_consensus" in merged.columns:
-            trusted_cells_kept = (
-                merged[pd.to_numeric(merged["allowed_is_trusted_consensus"], errors="coerce").fillna(0).astype(int) == 1]
+        print("---- Beers whitelist diagnostic statistics ----")
+        for c in existing_diag_cols:
+            cnt = (
+                merged[pd.to_numeric(merged[c], errors="coerce").fillna(0).astype(int) == 1]
                 [["row_id", "column"]]
                 .drop_duplicates()
                 .shape[0]
             )
-            print(f"trusted_consensus_allowed_cells_kept: {trusted_cells_kept}")
+            print(f"{c}_cells_kept: {cnt}")
 
     print(f"[OK] saved to: {output_path.resolve()}")
 

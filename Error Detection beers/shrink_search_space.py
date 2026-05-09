@@ -2,7 +2,7 @@ import json
 import math
 import re
 from collections import Counter
-from typing import Dict, Any, List, Tuple, Optional
+from typing import Optional
 
 import pandas as pd
 
@@ -18,7 +18,6 @@ MISSING_TOKENS = {
 }
 SKIP_NULL_FOR_NON_NOTNULL_RULES = True
 MAX_FD_MAPPING_SIZE = 200000
-MAX_CONTEXT_MAPPING_SIZE = 200000
 
 PRIORITY_WEIGHT = {"high": 1.5, "medium": 1.0, "low": 0.6}
 RULE_TYPE_WEIGHT = {
@@ -33,13 +32,15 @@ RULE_TYPE_WEIGHT = {
     "dominant_value_by_context_pair": 1.0,
     "high_risk_missing": 0.9,
     "paired_missing_consistency": 0.8,
-    "time_format": 0.85,
-    "datetime_time_format": 0.85,
-    "time_loose_pattern": 0.8,
-    "temporal_pair_consistency": 0.95,
-    "delay_window": 0.95,
-    "duration_consistency_window": 1.0,
-    "actual_time_global_candidate": 0.45,
+    "ounces_unit_format": 0.85,
+    "ounces_loose_pattern": 0.75,
+    "abv_numeric_format": 0.85,
+    "ibu_numeric_or_na_format": 0.80,
+    "state_abbr_format": 0.90,
+    "numeric_range_window": 0.95,
+    "ounces_canonical_format": 1.60,
+    "abv_canonical_format": 1.55,
+    "city_state_suffix_pollution": 1.45,
 }
 
 
@@ -107,44 +108,79 @@ def rule_weight(rule):
     return round((0.1 + conf) * support_part * priority_w * type_w, 6)
 
 
-def parse_time_like(s: Optional[str]) -> Optional[int]:
+def parse_abv_like(s: Optional[str]) -> Optional[float]:
+    if s is None:
+        return None
+    s = str(s).strip().lower().replace("%", "")
+    m = re.search(r"(\d+(?:\.\d+)?)", s)
+    if not m:
+        return None
+    try:
+        return float(m.group(1))
+    except Exception:
+        return None
+
+
+def parse_ibu_like(s: Optional[str]) -> Optional[float]:
     if s is None:
         return None
     s = str(s).strip().lower()
-    s = re.sub(r"\s+", " ", s)
-    for junk in ["(estimated runway)", "(estimated)", "(actual)", "(gate)", "(runway)", "(+8:00)", "(-00:00)"]:
-        s = s.replace(junk, "").strip()
-    s = re.sub(r"\bdec\s+\d{1,2}\b", "", s).strip()
-    m = re.search(r"(\d{1,2}:\d{2})\s*(a\.m\.|p\.m\.)", s)
+    if s in MISSING_TOKENS:
+        return None
+    m = re.search(r"(\d+(?:\.\d+)?)", s)
     if not m:
         return None
-    hhmm = m.group(1); ap = m.group(2)
-    hh, mm = map(int, hhmm.split(":"))
-    if ap == "p.m." and hh != 12:
-        hh += 12
-    if ap == "a.m." and hh == 12:
-        hh = 0
-    return hh * 60 + mm
-
-
-def circ_diff(a: Optional[int], b: Optional[int]) -> Optional[int]:
-    if a is None or b is None:
+    try:
+        return float(m.group(1))
+    except Exception:
         return None
-    d = a - b
-    while d <= -720:
-        d += 1440
-    while d > 720:
-        d -= 1440
-    return d
 
 
-def duration(start: Optional[int], end: Optional[int]) -> Optional[int]:
-    if start is None or end is None:
+def parse_ounces_like(s: Optional[str]) -> Optional[float]:
+    if s is None:
         return None
-    d = end - start
-    if d < 0:
-        d += 1440
-    return d
+    s = str(s).strip().lower()
+    m = re.search(r"(\d+(?:\.\d+)?)", s)
+    if not m:
+        return None
+    try:
+        return float(m.group(1))
+    except Exception:
+        return None
+
+
+def canonicalize_ounces_value(s: Optional[str]) -> Optional[str]:
+    num = parse_ounces_like(s)
+    if num is None:
+        return None
+    if abs(num - round(num)) < 1e-9:
+        return str(int(round(num)))
+    return f"{num:.6f}".rstrip("0").rstrip(".")
+
+
+def canonicalize_abv_value(s: Optional[str]) -> Optional[str]:
+    num = parse_abv_like(s)
+    if num is None:
+        return None
+    return f"{num:.15f}".rstrip("0").rstrip(".")
+
+
+def strip_city_state_suffix(s: Optional[str]) -> Optional[str]:
+    if s is None:
+        return None
+    s = str(s).strip().lower()
+    s2 = re.sub(r"\s+[a-z]{2}$", "", s).strip()
+    return s2 if s2 != s else None
+
+
+def parse_numeric_by_column(col: str, s: Optional[str]) -> Optional[float]:
+    if col == "abv":
+        return parse_abv_like(s)
+    if col == "ibu":
+        return parse_ibu_like(s)
+    if col == "ounces":
+        return parse_ounces_like(s)
+    return None
 
 
 def build_fd_majority_mapping(df, lhs, rhs):
@@ -223,20 +259,28 @@ def add_violation(cell_map, violation):
     if "expected_value" in violation:
         info["expected_value"] = violation["expected_value"]
     if key not in cell_map:
-        cell_map[key] = {"row_id": row_id, "column": column, "value": violation.get("value"), "violated_rules": [], "conflict_score": 0.0}
+        cell_map[key] = {
+            "row_id": row_id,
+            "column": column,
+            "value": violation.get("value"),
+            "violated_rules": [],
+            "conflict_score": 0.0,
+        }
     cell_map[key]["violated_rules"].append(info)
     cell_map[key]["conflict_score"] += rule_weight(rule)
 
 
 def check_not_null_rule(row_idx, row, rule):
-    col = rule["column"]; val = row.get(col)
+    col = rule["column"]
+    val = row.get(col)
     if pd.isna(val) or val is None:
         return {"row_id": row_idx, "column": col, "value": val, "rule": rule, "reason": "value is null but rule requires non-null"}
     return None
 
 
 def check_pattern_rule(row_idx, row, rule):
-    col = rule["column"]; val = row.get(col)
+    col = rule["column"]
+    val = row.get(col)
     if (pd.isna(val) or val is None) and SKIP_NULL_FOR_NON_NOTNULL_RULES:
         return None
     observed = detect_basic_pattern(val)
@@ -263,12 +307,20 @@ def check_fd_like_rule(row_idx, row, rule):
         return None
     expected_rhs, majority_cnt, total_cnt = mapping[lhs_key]
     if rhs_val != expected_rhs:
-        return {"row_id": row_idx, "column": rhs, "value": rhs_val, "rule": rule, "reason": f"{rule['rule_type']} violation: lhs={lhs_key} suggests rhs={expected_rhs}, observed={rhs_val}", "expected_value": expected_rhs}
+        return {
+            "row_id": row_idx,
+            "column": rhs,
+            "value": rhs_val,
+            "rule": rule,
+            "reason": f"{rule['rule_type']} violation: lhs={lhs_key} suggests rhs={expected_rhs}, observed={rhs_val}",
+            "expected_value": expected_rhs,
+        }
     return None
 
 
 def check_rare_value_rule(row_idx, row, rule):
-    col = rule["column"]; val = row.get(col)
+    col = rule["column"]
+    val = row.get(col)
     if pd.isna(val) or val is None:
         return None
     if val in set(rule.get("rare_values", [])):
@@ -277,7 +329,8 @@ def check_rare_value_rule(row_idx, row, rule):
 
 
 def check_rare_pattern_rule(row_idx, row, rule):
-    col = rule["column"]; val = row.get(col)
+    col = rule["column"]
+    val = row.get(col)
     if pd.isna(val) or val is None:
         return None
     observed = detect_basic_pattern(val)
@@ -287,21 +340,31 @@ def check_rare_pattern_rule(row_idx, row, rule):
 
 
 def check_global_dominant_rule(row_idx, row, rule):
-    col = rule["column"]; val = row.get(col)
+    col = rule["column"]
+    val = row.get(col)
     if pd.isna(val) or val is None:
         return None
     dominant = rule.get("dominant_value")
     if dominant is not None and val != dominant:
-        return {"row_id": row_idx, "column": col, "value": val, "rule": rule, "reason": f"value differs from global dominant value: dominant={dominant}, observed={val}", "expected_value": dominant}
+        return {
+            "row_id": row_idx,
+            "column": col,
+            "value": val,
+            "rule": rule,
+            "reason": f"value differs from global dominant value: dominant={dominant}, observed={val}",
+            "expected_value": dominant,
+        }
     return None
 
 
 def check_context_dominant_rule(row_idx, row, rule):
-    lhs = rule.get("lhs", []); rhs = rule.get("rhs")
+    lhs = rule.get("lhs", [])
+    rhs = rule.get("rhs")
     if len(lhs) != 1 or rhs is None:
         return None
     ctx_col = lhs[0]
-    ctx_val = row.get(ctx_col); tgt_val = row.get(rhs)
+    ctx_val = row.get(ctx_col)
+    tgt_val = row.get(rhs)
     if ctx_val is None or tgt_val is None:
         return None
     mapping = rule.get("_context_mapping", {})
@@ -309,12 +372,20 @@ def check_context_dominant_rule(row_idx, row, rule):
         return None
     dominant_val, support, dominant_ratio = mapping[ctx_val]
     if tgt_val != dominant_val:
-        return {"row_id": row_idx, "column": rhs, "value": tgt_val, "rule": rule, "reason": f"context dominant mismatch: {ctx_col}={ctx_val} suggests {rhs}={dominant_val}, observed={tgt_val}", "expected_value": dominant_val}
+        return {
+            "row_id": row_idx,
+            "column": rhs,
+            "value": tgt_val,
+            "rule": rule,
+            "reason": f"context dominant mismatch: {ctx_col}={ctx_val} suggests {rhs}={dominant_val}, observed={tgt_val}",
+            "expected_value": dominant_val,
+        }
     return None
 
 
 def check_pair_context_rule(row_idx, row, rule):
-    lhs = rule.get("lhs", []); rhs = rule.get("rhs")
+    lhs = rule.get("lhs", [])
+    rhs = rule.get("rhs")
     if len(lhs) != 2 or rhs is None:
         return None
     vals = [row.get(lhs[0]), row.get(lhs[1])]
@@ -329,12 +400,20 @@ def check_pair_context_rule(row_idx, row, rule):
         return None
     dominant_val, support, dominant_ratio = mapping[key]
     if tgt_val != dominant_val:
-        return {"row_id": row_idx, "column": rhs, "value": tgt_val, "rule": rule, "reason": f"context pair dominant mismatch: {lhs}={vals} suggests {rhs}={dominant_val}, observed={tgt_val}", "expected_value": dominant_val}
+        return {
+            "row_id": row_idx,
+            "column": rhs,
+            "value": tgt_val,
+            "rule": rule,
+            "reason": f"context pair dominant mismatch: {lhs}={vals} suggests {rhs}={dominant_val}, observed={tgt_val}",
+            "expected_value": dominant_val,
+        }
     return None
 
 
 def check_high_risk_missing_rule(row_idx, row, rule):
-    col = rule["column"]; val = row.get(col)
+    col = rule["column"]
+    val = row.get(col)
     if pd.isna(val) or val is None:
         return {"row_id": row_idx, "column": col, "value": val, "rule": rule, "reason": "value is null under high_risk_missing rule"}
     return None
@@ -353,7 +432,8 @@ def check_paired_missing_consistency_rule(row_idx, row, rule):
 
 
 def check_regex_rule(row_idx, row, rule):
-    col = rule["column"]; val = row.get(col)
+    col = rule["column"]
+    val = row.get(col)
     if pd.isna(val) or val is None:
         return None
     pattern = rule.get("regex")
@@ -362,60 +442,77 @@ def check_regex_rule(row_idx, row, rule):
     return None
 
 
-def check_temporal_pair_rule(row_idx, row, rule):
-    cols = rule.get("columns", [])
-    if len(cols) != 2:
-        return None
-    start_col, end_col = cols
-    start_v = row.get(start_col); end_v = row.get(end_col)
-    if start_v is None or end_v is None:
-        return None
-    s = parse_time_like(start_v); e = parse_time_like(end_v)
-    if s is None:
-        return {"row_id": row_idx, "column": start_col, "value": start_v, "rule": rule, "reason": f"cannot parse start time for temporal consistency: {start_v}"}
-    if e is None:
-        return {"row_id": row_idx, "column": end_col, "value": end_v, "rule": rule, "reason": f"cannot parse end time for temporal consistency: {end_v}"}
-    if e <= s:
-        return {"row_id": row_idx, "column": end_col, "value": end_v, "rule": rule, "reason": f"temporal inconsistency: {end_col}={end_v} is not later than {start_col}={start_v}"}
-    return None
-
-
-def check_delay_window_rule(row_idx, row, rule):
-    ref_col = rule["reference_column"]; tgt_col = rule["target_column"]
-    ref_v = row.get(ref_col); tgt_v = row.get(tgt_col)
-    if ref_v is None or tgt_v is None:
-        return None
-    ref_t = parse_time_like(ref_v); tgt_t = parse_time_like(tgt_v)
-    if ref_t is None or tgt_t is None:
-        return None
-    d = circ_diff(tgt_t, ref_t)
-    if d is None:
-        return None
-    if d < rule["lower_bound"] or d > rule["upper_bound"]:
-        return {"row_id": row_idx, "column": tgt_col, "value": tgt_v, "rule": rule, "reason": f"delay window violation: diff={d}, expected in [{rule['lower_bound']}, {rule['upper_bound']}]"}
-    return None
-
-
-def check_duration_consistency_rule(row_idx, row, rule):
-    sd = parse_time_like(row.get(rule["sched_start_column"]))
-    sa = parse_time_like(row.get(rule["sched_end_column"]))
-    ad = parse_time_like(row.get(rule["act_start_column"]))
-    aa = parse_time_like(row.get(rule["act_end_column"]))
-    if sd is None or sa is None or ad is None or aa is None:
-        return None
-    sched_dur = duration(sd, sa)
-    act_dur = duration(ad, aa)
-    if sched_dur is None or act_dur is None:
-        return None
-    diff = act_dur - sched_dur
-    if diff < rule["lower_bound"] or diff > rule["upper_bound"]:
-        return {"row_id": row_idx, "column": rule["act_end_column"], "value": row.get(rule["act_end_column"]), "rule": rule, "reason": f"duration consistency violation: diff={diff}, expected in [{rule['lower_bound']}, {rule['upper_bound']}]"}
-    return None
-
-
-def check_actual_time_global_candidate_rule(row_idx, row, rule):
+def check_numeric_window_rule(row_idx, row, rule):
     col = rule["column"]
-    return {"row_id": row_idx, "column": col, "value": row.get(col), "rule": rule, "reason": "actual time global candidate rule for high recall"}
+    val = row.get(col)
+    if val is None:
+        return None
+    num = parse_numeric_by_column(col, val)
+    if num is None:
+        return {"row_id": row_idx, "column": col, "value": val, "rule": rule, "reason": f"cannot parse numeric value for {col}: {val}"}
+    low = float(rule["lower_bound"])
+    high = float(rule["upper_bound"])
+    if num < low or num > high:
+        return {"row_id": row_idx, "column": col, "value": val, "rule": rule, "reason": f"numeric window violation: value={num}, expected in [{low}, {high}]"}
+    return None
+
+
+def check_ounces_canonical_rule(row_idx, row, rule):
+    col = rule["column"]
+    val = row.get(col)
+    if val is None:
+        return None
+    canonical = canonicalize_ounces_value(val)
+    if canonical is None:
+        return None
+    if str(val).strip().lower() != canonical:
+        return {
+            "row_id": row_idx,
+            "column": col,
+            "value": val,
+            "rule": rule,
+            "reason": f"canonical format mismatch: canonical={canonical}, observed={val}",
+            "expected_value": canonical,
+        }
+    return None
+
+
+def check_abv_canonical_rule(row_idx, row, rule):
+    col = rule["column"]
+    val = row.get(col)
+    if val is None:
+        return None
+    canonical = canonicalize_abv_value(val)
+    if canonical is None:
+        return None
+    if str(val).strip().lower() != canonical:
+        return {
+            "row_id": row_idx,
+            "column": col,
+            "value": val,
+            "rule": rule,
+            "reason": f"canonical format mismatch: canonical={canonical}, observed={val}",
+            "expected_value": canonical,
+        }
+    return None
+
+
+def check_city_state_suffix_pollution_rule(row_idx, row, rule):
+    col = rule["column"]
+    val = row.get(col)
+    if val is None:
+        return None
+    stripped = strip_city_state_suffix(val)
+    if stripped is None:
+        return None
+    return {
+        "row_id": row_idx,
+        "column": col,
+        "value": val,
+        "rule": rule,
+        "reason": f"city appears to contain trailing state suffix: cleaned_city={stripped}, observed={val}",
+        "expected_value": stripped,
+    }
 
 
 def shrink_search_space(input_csv, rule_json, output_jsonl, output_csv):
@@ -423,6 +520,7 @@ def shrink_search_space(input_csv, rule_json, output_jsonl, output_csv):
     df = maybe_drop_unnamed_columns(df)
     for col in df.columns:
         df[col] = normalize_series(df[col])
+
     rules = load_rule_pool(rule_json)
 
     not_null_rules = [r for r in rules if r.get("rule_type") == "not_null"]
@@ -435,13 +533,17 @@ def shrink_search_space(input_csv, rule_json, output_jsonl, output_csv):
     pair_context_rules = prepare_pair_context_rule_runtime(rules)
     high_risk_missing_rules = [r for r in rules if r.get("rule_type") == "high_risk_missing"]
     paired_missing_rules = [r for r in rules if r.get("rule_type") == "paired_missing_consistency"]
-    regex_rules = [r for r in rules if r.get("rule_type") in {"time_format", "datetime_time_format", "time_loose_pattern"}]
-    temporal_pair_rules = [r for r in rules if r.get("rule_type") == "temporal_pair_consistency"]
-    delay_window_rules = [r for r in rules if r.get("rule_type") == "delay_window"]
-    duration_rules = [r for r in rules if r.get("rule_type") == "duration_consistency_window"]
-    act_global_rules = [r for r in rules if r.get("rule_type") == "actual_time_global_candidate"]
+    regex_rules = [r for r in rules if r.get("rule_type") in {
+        "ounces_unit_format", "ounces_loose_pattern", "abv_numeric_format",
+        "ibu_numeric_or_na_format", "state_abbr_format"
+    }]
+    numeric_window_rules = [r for r in rules if r.get("rule_type") == "numeric_range_window"]
+    ounces_canonical_rules = [r for r in rules if r.get("rule_type") == "ounces_canonical_format"]
+    abv_canonical_rules = [r for r in rules if r.get("rule_type") == "abv_canonical_format"]
+    city_suffix_rules = [r for r in rules if r.get("rule_type") == "city_state_suffix_pollution"]
 
     cell_map = {}
+
     for row_idx, row in df.iterrows():
         for group, fn in [
             (not_null_rules, check_not_null_rule),
@@ -455,10 +557,10 @@ def shrink_search_space(input_csv, rule_json, output_jsonl, output_csv):
             (high_risk_missing_rules, check_high_risk_missing_rule),
             (paired_missing_rules, check_paired_missing_consistency_rule),
             (regex_rules, check_regex_rule),
-            (temporal_pair_rules, check_temporal_pair_rule),
-            (delay_window_rules, check_delay_window_rule),
-            (duration_rules, check_duration_consistency_rule),
-            (act_global_rules, check_actual_time_global_candidate_rule),
+            (numeric_window_rules, check_numeric_window_rule),
+            (ounces_canonical_rules, check_ounces_canonical_rule),
+            (abv_canonical_rules, check_abv_canonical_rule),
+            (city_suffix_rules, check_city_state_suffix_pollution_rule),
         ]:
             for rule in group:
                 v = fn(row_idx, row, rule)
@@ -469,6 +571,7 @@ def shrink_search_space(input_csv, rule_json, output_jsonl, output_csv):
     for item in candidates:
         item["conflict_score"] = round(item["conflict_score"], 6)
         item["violation_count"] = len(item["violated_rules"])
+
     candidates.sort(key=lambda x: (x["conflict_score"], x["violation_count"]), reverse=True)
 
     with open(output_jsonl, "w", encoding="utf-8") as f:
@@ -489,6 +592,7 @@ def shrink_search_space(input_csv, rule_json, output_jsonl, output_csv):
             "usage_roles": "|".join([str(r.get("usage_role")) for r in item["violated_rules"]]),
             "reasons": " || ".join([str(r["reason"]) for r in item["violated_rules"]]),
         })
+
     pd.DataFrame(csv_rows).to_csv(output_csv, index=False, encoding="utf-8-sig")
 
     print(f"[OK] Candidate cells saved to: {output_jsonl}")
