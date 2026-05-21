@@ -6,14 +6,14 @@ import numpy as np
 # 1. 用户配置区
 # ============================================================
 
-# 输入1：整个候选范围的上下文结果（beers 新版）
-INPUT_FULL_CANDIDATE_CSV = "candidate_llm_contexts_flat_beers.csv"
+# 输入1：整个候选范围的上下文结果（flights 新版）
+INPUT_FULL_CANDIDATE_CSV = "candidate_llm_contexts_flat_flights.csv"
 
 # 输入2：聚类采样结果（字段更完整，用来回填 bucket / cluster 等信息）
-INPUT_CLUSTERED_CSV = "candidate_clustered_beers.csv"
+INPUT_CLUSTERED_CSV = "candidate_clustered_flights.csv"
 
 # 输出：和训练格式尽量对齐的推理输入文件
-OUTPUT_INFER_READY_CSV = "candidate_infer_ready_beers.csv"
+OUTPUT_INFER_READY_CSV = "candidate_infer_ready_flights.csv"
 
 
 # 一些阈值
@@ -30,8 +30,8 @@ DEFAULT_IS_OUTSIDE_CANDIDATE = 0
 DEFAULT_PATTERN_BUCKET = "unknown"
 DEFAULT_RARITY_BUCKET = "unknown"
 DEFAULT_NEIGHBOR_BUCKET = "unknown"
-DEFAULT_NUMERIC_WINDOW_BUCKET = "unknown"
-DEFAULT_NUMERIC_VALUE_BUCKET = "unknown"
+DEFAULT_TIME_WINDOW_BUCKET = "unknown"
+DEFAULT_TIME_VALUE_BUCKET = "unknown"
 DEFAULT_BUCKET_ID = "full_candidate"
 DEFAULT_CLUSTER_ID = -1
 DEFAULT_DIST_TO_CENTER = 0.0
@@ -104,7 +104,7 @@ def load_full_candidate_csv(path: str) -> pd.DataFrame:
         "fd_like_count", "context_rule_count", "global_rule_count",
         "rare_value_count", "typo_rule_count",
         "pattern_rule_count", "schema_rule_count",
-        "numeric_window_rule_count", "numeric_value",
+        "time_window_rule_count", "time_value_minutes",
     ]
     missing = [c for c in required_cols if c not in df.columns]
     if missing:
@@ -114,8 +114,8 @@ def load_full_candidate_csv(path: str) -> pd.DataFrame:
         "pattern_bucket": "",
         "rarity_bucket": "",
         "neighbor_bucket": "",
-        "numeric_window_bucket": "",
-        "numeric_value_bucket": "",
+        "time_window_bucket": "",
+        "time_value_bucket": "",
         "bucket_id": "",
         "cluster_id": np.nan,
         "dist_to_center": np.nan,
@@ -138,8 +138,8 @@ def load_full_candidate_csv(path: str) -> pd.DataFrame:
         "pattern_bucket",
         "rarity_bucket",
         "neighbor_bucket",
-        "numeric_window_bucket",
-        "numeric_value_bucket",
+        "time_window_bucket",
+        "time_value_bucket",
         "bucket_id",
         "sample_role",
     ]
@@ -157,7 +157,7 @@ def load_full_candidate_csv(path: str) -> pd.DataFrame:
         "typo_rule_count",
         "pattern_rule_count",
         "schema_rule_count",
-        "numeric_window_rule_count",
+        "time_window_rule_count",
         "cluster_id",
         "is_sampled",
     ]
@@ -168,7 +168,7 @@ def load_full_candidate_csv(path: str) -> pd.DataFrame:
         "conflict_score",
         "value_frequency",
         "value_frequency_rank",
-        "numeric_value",
+        "time_value_minutes",
         "neighbor_majority_ratio",
         "prior_error_probability",
         "posterior_error_probability",
@@ -187,10 +187,10 @@ def load_clustered_csv(path: str) -> pd.DataFrame:
     needed_cols = [
         "row_id", "column",
         "pattern_bucket", "rarity_bucket", "neighbor_bucket",
-        "numeric_window_bucket", "numeric_value_bucket",
+        "time_window_bucket", "time_value_bucket",
         "bucket_id", "cluster_id", "dist_to_center", "sample_role", "is_sampled",
         "rare_value_count", "typo_rule_count", "pattern_rule_count", "schema_rule_count",
-        "numeric_window_rule_count", "numeric_value",
+        "time_window_rule_count", "time_value_minutes",
     ]
     for col in needed_cols:
         if col not in df.columns:
@@ -220,8 +220,8 @@ def merge_cluster_fields(full_df: pd.DataFrame, clustered_df: pd.DataFrame) -> p
         "pattern_bucket",
         "rarity_bucket",
         "neighbor_bucket",
-        "numeric_window_bucket",
-        "numeric_value_bucket",
+        "time_window_bucket",
+        "time_value_bucket",
         "bucket_id",
         "cluster_id",
         "dist_to_center",
@@ -231,8 +231,8 @@ def merge_cluster_fields(full_df: pd.DataFrame, clustered_df: pd.DataFrame) -> p
         "typo_rule_count",
         "pattern_rule_count",
         "schema_rule_count",
-        "numeric_window_rule_count",
-        "numeric_value",
+        "time_window_rule_count",
+        "time_value_minutes",
     ]:
         cluster_col = f"{col}_from_cluster"
         if cluster_col in df.columns:
@@ -297,48 +297,30 @@ def build_neighbor_bucket(row: pd.Series) -> str:
             return "weak_support_current"
 
 
-def build_numeric_window_bucket(row: pd.Series) -> str:
-    cnt = safe_int(row.get("numeric_window_rule_count"), 0)
+def build_time_window_bucket(row: pd.Series) -> str:
+    cnt = safe_int(row.get("time_window_rule_count"), 0)
     if cnt <= 0:
-        return "no_numeric_window_signal"
+        return "no_time_window_signal"
     elif cnt == 1:
-        return "single_numeric_window_signal"
+        return "single_time_window_signal"
     else:
-        return "multi_numeric_window_signal"
+        return "multi_time_window_signal"
 
 
-def build_numeric_value_bucket(row: pd.Series) -> str:
-    nv = safe_float(row.get("numeric_value"), np.nan)
-    col = safe_str(row.get("column"), "")
+def build_time_value_bucket(row: pd.Series) -> str:
+    tv = safe_float(row.get("time_value_minutes"), np.nan)
+    if pd.isna(tv):
+        return "unparsed_time"
 
-    if pd.isna(nv):
-        return "unparsed_numeric"
-
-    if col == "abv":
-        if nv < 0.04:
-            return "abv_low"
-        elif nv < 0.07:
-            return "abv_mid"
-        else:
-            return "abv_high"
-
-    if col == "ibu":
-        if nv < 20:
-            return "ibu_low"
-        elif nv < 50:
-            return "ibu_mid"
-        else:
-            return "ibu_high"
-
-    if col == "ounces":
-        if nv < 12:
-            return "ounces_small"
-        elif nv <= 12:
-            return "ounces_standard"
-        else:
-            return "ounces_large"
-
-    return "generic_numeric"
+    hour = int(tv) // 60
+    if 0 <= hour < 6:
+        return "late_night"
+    elif 6 <= hour < 12:
+        return "morning"
+    elif 12 <= hour < 18:
+        return "afternoon"
+    else:
+        return "evening"
 
 
 def fill_bucket_fields(df: pd.DataFrame) -> pd.DataFrame:
@@ -360,17 +342,17 @@ def fill_bucket_fields(df: pd.DataFrame) -> pd.DataFrame:
     need_fill_neighbor = df["neighbor_bucket"].eq("")
     df.loc[need_fill_neighbor, "neighbor_bucket"] = df[need_fill_neighbor].apply(build_neighbor_bucket, axis=1)
 
-    if "numeric_window_bucket" not in df.columns:
-        df["numeric_window_bucket"] = np.nan
-    df["numeric_window_bucket"] = df["numeric_window_bucket"].fillna("")
-    need_fill_numeric_window = df["numeric_window_bucket"].eq("")
-    df.loc[need_fill_numeric_window, "numeric_window_bucket"] = df[need_fill_numeric_window].apply(build_numeric_window_bucket, axis=1)
+    if "time_window_bucket" not in df.columns:
+        df["time_window_bucket"] = np.nan
+    df["time_window_bucket"] = df["time_window_bucket"].fillna("")
+    need_fill_time_window = df["time_window_bucket"].eq("")
+    df.loc[need_fill_time_window, "time_window_bucket"] = df[need_fill_time_window].apply(build_time_window_bucket, axis=1)
 
-    if "numeric_value_bucket" not in df.columns:
-        df["numeric_value_bucket"] = np.nan
-    df["numeric_value_bucket"] = df["numeric_value_bucket"].fillna("")
-    need_fill_numeric_value = df["numeric_value_bucket"].eq("")
-    df.loc[need_fill_numeric_value, "numeric_value_bucket"] = df[need_fill_numeric_value].apply(build_numeric_value_bucket, axis=1)
+    if "time_value_bucket" not in df.columns:
+        df["time_value_bucket"] = np.nan
+    df["time_value_bucket"] = df["time_value_bucket"].fillna("")
+    need_fill_time_value = df["time_value_bucket"].eq("")
+    df.loc[need_fill_time_value, "time_value_bucket"] = df[need_fill_time_value].apply(build_time_value_bucket, axis=1)
 
     if "bucket_id" not in df.columns:
         df["bucket_id"] = DEFAULT_BUCKET_ID
@@ -520,7 +502,7 @@ def add_derived_features(df: pd.DataFrame) -> pd.DataFrame:
         + df["typo_rule_count"].astype(float)
         + df["pattern_rule_count"].astype(float)
         + df["schema_rule_count"].astype(float)
-        + df["numeric_window_rule_count"].astype(float)
+        + df["time_window_rule_count"].astype(float)
     )
 
     df["candidate_rule_dominant"] = np.where(
@@ -555,7 +537,7 @@ def reorder_columns(df: pd.DataFrame) -> pd.DataFrame:
         "conflict_score",
         "value_frequency",
         "value_frequency_rank",
-        "numeric_value",
+        "time_value_minutes",
         "neighbor_majority_value",
         "neighbor_majority_ratio",
         "prior_error_probability",
@@ -572,7 +554,7 @@ def reorder_columns(df: pd.DataFrame) -> pd.DataFrame:
         "typo_rule_count",
         "pattern_rule_count",
         "schema_rule_count",
-        "numeric_window_rule_count",
+        "time_window_rule_count",
 
         "candidate_rule_ratio",
         "has_neighbor_signal",
@@ -592,8 +574,8 @@ def reorder_columns(df: pd.DataFrame) -> pd.DataFrame:
         "pattern_bucket",
         "rarity_bucket",
         "neighbor_bucket",
-        "numeric_window_bucket",
-        "numeric_value_bucket",
+        "time_window_bucket",
+        "time_value_bucket",
 
         "bucket_id",
         "cluster_id",
@@ -647,7 +629,7 @@ def main():
         "semantic_type",
         "violation_count", "conflict_score",
         "pattern_bucket", "rarity_bucket", "neighbor_bucket",
-        "numeric_window_bucket", "numeric_value_bucket",
+        "time_window_bucket", "time_value_bucket",
         "bucket_id", "cluster_id", "dist_to_center",
         "candidate_rule_ratio", "has_neighbor_signal",
         "high_neighbor_consistency", "is_rare_value",

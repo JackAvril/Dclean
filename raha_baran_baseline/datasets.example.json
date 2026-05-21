@@ -1,0 +1,12 @@
+[
+  {
+    "name": "hospital",
+    "dirty": "/mnt/mydata/dq/projects/Splittree/hospital/dirty.csv",
+    "clean": "/mnt/mydata/dq/projects/Splittree/hospital/clean.csv"
+  },
+  {
+    "name": "flights",
+    "dirty": "/mnt/mydata/dq/projects/Splittree/flights/dirty.csv",
+    "clean": "/mnt/mydata/dq/projects/Splittree/flights/clean.csv"
+  }
+]

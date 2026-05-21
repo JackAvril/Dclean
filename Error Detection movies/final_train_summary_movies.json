@@ -1,0 +1,51 @@
+{
+  "total_rows": 156,
+  "error_count": 84,
+  "correct_count": 72,
+  "label_source_counter": {
+    "llm": 89,
+    "outside_clean": 67
+  },
+  "outside_candidate_count": 67,
+  "inside_candidate_count": 89,
+  "column_counter_top20": {
+    "Year": 65,
+    "Duration": 17,
+    "RatingValue": 15,
+    "RatingCount": 13,
+    "Filming Locations": 11,
+    "Genre": 10,
+    "ReviewCount": 7,
+    "Cast": 5,
+    "Release Date": 5,
+    "Creator": 4,
+    "Actors": 3,
+    "Name": 1
+  },
+  "label_by_source": [
+    {
+      "label_source": "llm",
+      "label": "correct",
+      "count": 5
+    },
+    {
+      "label_source": "llm",
+      "label": "error",
+      "count": 84
+    },
+    {
+      "label_source": "outside_clean",
+      "label": "correct",
+      "count": 67
+    }
+  ],
+  "config": {
+    "MAX_FINAL_TRAIN_ROWS": 2500,
+    "MAX_PROPAGATED_TRAIN_ROWS": 500,
+    "MAX_OUTSIDE_CLEAN_TOTAL": 600,
+    "MAX_CORRECT_TO_ERROR_RATIO": 1.3,
+    "MAX_OUTSIDE_CLEAN_TO_ERROR_RATIO": 0.8,
+    "CLUSTER_PROP_MIN_CONF": 0.9,
+    "KNN_PROP_MIN_CONF": 0.93
+  }
+}

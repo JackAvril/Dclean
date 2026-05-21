@@ -1,0 +1,23 @@
+{
+  "total_rows": 1759,
+  "error_count": 1141,
+  "correct_count": 618,
+  "label_source_counter": {
+    "llm": 911,
+    "outside_clean": 556,
+    "knn_propagation": 292
+  },
+  "outside_candidate_count": 556,
+  "inside_candidate_count": 1203,
+  "column_counter_top20": {
+    "article_jcreated_at": 378,
+    "article_language": 354,
+    "journal_issn": 265,
+    "jounral_abbreviation": 180,
+    "article_jissue": 171,
+    "article_jvolumn": 150,
+    "article_pagination": 111,
+    "journal_title": 88,
+    "author_list": 62
+  }
+}

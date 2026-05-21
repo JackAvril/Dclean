@@ -99,3 +99,35 @@ Error Detection/mlp_model_output_enhanced/
 Error Correction hospital/built_cooccurrence_dict.json
 Error Correction hospital/built_cooccurrence_dict_v2.json
 Error Correction beers/built_cooccurrence_dict_v2.json
+
+# Large generated dictionaries
+Error Correction movies/built_cooccurrence_dict_v2.json
+Error Correction rayyan/built_cooccurrence_dict_v2.json
+
+# =========================
+# Large generated files
+# =========================
+
+# Zip archives
+*.zip
+
+# Large candidate files
+candidate_cells_*.csv
+candidate_cells_*.jsonl
+candidate_llm_contexts_*.jsonl
+
+# Large repair/correction generated files
+repair_candidate_features*.csv
+repair_candidate_features_*.csv
+repair_candidate_features_infer_whitelist.csv
+inference_all_candidate_ranked.csv
+inference_all_candidate_scores.csv
+repair_pairwise_requests*.jsonl
+repair_pairwise_requests_*.jsonl
+
+# Large cooccurrence dictionaries
+built_cooccurrence_dict*.json
+built_cooccurrence_dict_v2.json
+
+# Iterative repair workdirs
+repair_iterative_workdir_*/
