@@ -1,0 +1,81 @@
+{
+  "dataset": "soccer",
+  "total_rows": 1370,
+  "error_count": 804,
+  "correct_count": 566,
+  "error_ratio": 0.5868613138686132,
+  "label_source_counter": {
+    "outside_clean": 565,
+    "llm": 350,
+    "cluster_propagation": 290,
+    "knn_propagation": 165
+  },
+  "outside_candidate_count": 565,
+  "inside_candidate_count": 805,
+  "column_counter_top20": {
+    "position": 200,
+    "birthyear": 195,
+    "season": 195,
+    "team": 170,
+    "stadium": 165,
+    "surname": 145,
+    "birthplace": 103,
+    "city": 67,
+    "name": 65,
+    "manager": 65
+  },
+  "label_by_source": [
+    {
+      "label_source": "cluster_propagation",
+      "label": "error",
+      "count": 290
+    },
+    {
+      "label_source": "knn_propagation",
+      "label": "error",
+      "count": 165
+    },
+    {
+      "label_source": "llm",
+      "label": "correct",
+      "count": 1
+    },
+    {
+      "label_source": "llm",
+      "label": "error",
+      "count": 349
+    },
+    {
+      "label_source": "outside_clean",
+      "label": "correct",
+      "count": 565
+    }
+  ],
+  "config": {
+    "input_table_csv": "/mnt/mydata/dq/projects/Splittree/soccer/soccer_dirty.csv",
+    "input_clustered_csv": "candidate_clustered_soccer.csv",
+    "input_labeled_csv": "candidate_sampled_labeled_soccer.csv",
+    "input_propagated_csv": "propagated_labels_soccer.csv",
+    "cluster_prop_min_conf": 0.9,
+    "knn_prop_min_conf": 0.92,
+    "enable_outside_clean": true,
+    "outside_clean_per_column": 70,
+    "outside_clean_min_per_column": 10,
+    "enable_balance": true,
+    "max_correct_to_error_ratio": 1.2,
+    "min_correct_keep": 80,
+    "dataset_gate": "soccer",
+    "max_propagated_train_rows": 700,
+    "max_outside_clean_total": 600
+  },
+  "soccer_attribution_bucket_counter": {
+    "outside_clean_primary_target": 565,
+    "primary_target_other": 427,
+    "format_pattern_conflict": 234,
+    "birthyear_season_age_conflict": 128,
+    "birthyear_invalid": 8,
+    "season_invalid": 4,
+    "position_invalid": 2,
+    "fd_like_conflict": 2
+  }
+}

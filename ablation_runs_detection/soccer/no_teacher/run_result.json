@@ -1,0 +1,19 @@
+{
+  "dataset": "soccer",
+  "variant": "no_teacher",
+  "dataset_dir": "/mnt/mydata/dq/projects/Splittree/test/Error Detection soccer",
+  "run_dir": "/mnt/mydata/dq/projects/Splittree/test/ablation_runs_detection/soccer/no_teacher",
+  "status": "success",
+  "elapsed_sec": 0.0012373924255371094,
+  "summary_path": "/mnt/mydata/dq/projects/Splittree/test/Error Detection soccer/eval_outputs_soccer_v4_with_verifier/evaluation_summary.csv",
+  "precision": 0.809307427138828,
+  "recall": 0.8142192795775203,
+  "f1": 0.8117559231464383,
+  "candidate_coverage": 0.8209978718373138,
+  "candidate_precision": 0.13824591208324485,
+  "final_predicted_errors": null,
+  "tp": 10330,
+  "fp": 2434,
+  "fn": 2357,
+  "error_message": ""
+}

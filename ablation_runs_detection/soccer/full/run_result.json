@@ -1,0 +1,20 @@
+{
+  "dataset": "soccer",
+  "variant": "full",
+  "dataset_dir": "/mnt/mydata/dq/projects/Splittree/test/Error Detection soccer",
+  "run_dir": "/mnt/mydata/dq/projects/Splittree/test/ablation_runs_detection/soccer/full",
+  "status": "failed",
+  "failed_stage": "build_final_training_set.py",
+  "elapsed_sec": 503.0081293582916,
+  "summary_path": "",
+  "precision": null,
+  "recall": null,
+  "f1": null,
+  "candidate_coverage": null,
+  "candidate_precision": null,
+  "final_predicted_errors": null,
+  "tp": null,
+  "fp": null,
+  "fn": null,
+  "error_message": "stage failed: build_final_training_set.py, exit=1"
+}

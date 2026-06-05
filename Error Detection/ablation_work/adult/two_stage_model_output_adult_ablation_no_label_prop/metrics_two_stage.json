@@ -1,0 +1,88 @@
+{
+  "stage1_best_epoch": 1,
+  "stage1_best_threshold": 0.4600000000000001,
+  "stage1_metrics": {
+    "threshold": 0.4600000000000001,
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "auc": 1.0,
+    "confusion_matrix": [
+      [
+        27,
+        0
+      ],
+      [
+        0,
+        23
+      ]
+    ]
+  },
+  "stage2_best_epoch": 1,
+  "stage2_best_threshold": 0.4800000000000001,
+  "stage2_metrics": {
+    "threshold": 0.4800000000000001,
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "auc": 1.0,
+    "confusion_matrix": [
+      [
+        27,
+        0
+      ],
+      [
+        0,
+        23
+      ]
+    ]
+  },
+  "verifier_train_metrics": {
+    "threshold": 0.5,
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "auc": NaN,
+    "confusion_matrix": [
+      [
+        23
+      ]
+    ]
+  },
+  "verifier_val_metrics": {
+    "threshold": 0.5,
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "auc": NaN,
+    "confusion_matrix": [
+      [
+        23
+      ]
+    ]
+  },
+  "verifier_best_threshold": 0.1,
+  "final_metrics_with_verifier": {
+    "verifier_threshold": 0.1,
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "confusion_matrix": [
+      [
+        27,
+        0
+      ],
+      [
+        0,
+        23
+      ]
+    ],
+    "detector_positive": 23,
+    "final_positive": 23
+  }
+}

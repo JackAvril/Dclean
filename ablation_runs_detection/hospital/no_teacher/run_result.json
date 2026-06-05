@@ -1,0 +1,19 @@
+{
+  "dataset": "hospital",
+  "variant": "no_teacher",
+  "dataset_dir": "/mnt/mydata/dq/projects/Splittree/test/Error Detection hospital",
+  "run_dir": "/mnt/mydata/dq/projects/Splittree/test/ablation_runs_detection/hospital/no_teacher",
+  "status": "success",
+  "elapsed_sec": 0.0011112689971923828,
+  "summary_path": "/mnt/mydata/dq/projects/Splittree/test/Error Detection hospital/eval_outputs_v4_with_verifier/evaluation_summary.csv",
+  "precision": 0.9374167776298269,
+  "recall": 0.9565217391304348,
+  "f1": 0.9468728984532616,
+  "candidate_coverage": 1.0,
+  "candidate_precision": 0.3012689316414245,
+  "final_predicted_errors": null,
+  "tp": 704,
+  "fp": 47,
+  "fn": 32,
+  "error_message": ""
+}

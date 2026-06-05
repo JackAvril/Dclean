@@ -1,0 +1,80 @@
+{
+  "input_candidates": 75344,
+  "sampled_candidates": 350,
+  "sample_ratio": 0.004645,
+  "bucket_count": 118,
+  "cluster_count": 452,
+  "column_distribution_input": {
+    "team": 61321,
+    "stadium": 3642,
+    "birthyear": 2522,
+    "surname": 1561,
+    "position": 1084,
+    "birthplace": 1078,
+    "name": 1071,
+    "season": 1029,
+    "city": 1025,
+    "manager": 1011
+  },
+  "column_distribution_sampled": {
+    "position": 50,
+    "birthyear": 45,
+    "season": 45,
+    "surname": 45,
+    "team": 45,
+    "stadium": 43,
+    "birthplace": 26,
+    "name": 24,
+    "manager": 15,
+    "city": 12
+  },
+  "rule_distribution_input": {
+    "team_name_pattern": 60345,
+    "not_null": 10226,
+    "stadium_name_pattern": 2630,
+    "birthyear_season_age_consistency": 1455,
+    "surname_pattern": 547,
+    "functional_dependency": 38,
+    "birthyear_numeric_range": 37,
+    "season_numeric_range": 34,
+    "position_domain": 20,
+    "name_pattern": 9,
+    "manager_name_pattern": 2,
+    "birthplace_location_pattern": 1
+  },
+  "rule_distribution_sampled": {
+    "not_null": 220,
+    "team_name_pattern": 43,
+    "surname_pattern": 32,
+    "stadium_name_pattern": 26,
+    "name_pattern": 9,
+    "birthyear_numeric_range": 7,
+    "season_numeric_range": 4,
+    "manager_name_pattern": 2,
+    "position_domain": 2,
+    "functional_dependency": 2,
+    "birthyear_season_age_consistency": 2,
+    "birthplace_location_pattern": 1
+  },
+  "global_sample_budget": 350,
+  "max_weak_rule_samples": 45,
+  "soccer_signal_distribution_sampled": {
+    "strong_rule_signal": 173,
+    "format_signal": 93,
+    "birthyear_season_age_signal": 69,
+    "birthyear_invalid_signal": 7,
+    "season_invalid_signal": 4,
+    "position_invalid_signal": 2,
+    "fd_signal": 2
+  },
+  "soccer_attribution_distribution_sampled": {
+    "primary_target_other": 173,
+    "format_pattern_conflict": 93,
+    "birthyear_season_age_conflict": 69,
+    "birthyear_invalid": 7,
+    "season_invalid": 4,
+    "position_invalid": 2,
+    "fd_like_conflict": 2
+  },
+  "weak_rule_sampled_count": 0
+}

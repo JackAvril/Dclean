@@ -1,0 +1,56 @@
+{
+  "dataset": "adult",
+  "total_rows": 250,
+  "error_count": 114,
+  "correct_count": 136,
+  "error_ratio": 0.456,
+  "label_source_counter": {
+    "outside_clean": 134,
+    "llm": 116
+  },
+  "outside_candidate_count": 134,
+  "inside_candidate_count": 116,
+  "column_counter_top20": {
+    "sex": 140,
+    "relationship": 110
+  },
+  "label_by_source": [
+    {
+      "label_source": "llm",
+      "label": "correct",
+      "count": 2
+    },
+    {
+      "label_source": "llm",
+      "label": "error",
+      "count": 114
+    },
+    {
+      "label_source": "outside_clean",
+      "label": "correct",
+      "count": 134
+    }
+  ],
+  "config": {
+    "input_table_csv": "/mnt/mydata/dq/projects/Splittree/adult/adult_dirty.csv",
+    "input_clustered_csv": "candidate_clustered_adult.csv",
+    "input_labeled_csv": "candidate_sampled_labeled_adult.csv",
+    "input_propagated_csv": "propagated_labels_adult.csv",
+    "cluster_prop_min_conf": 0.9,
+    "knn_prop_min_conf": 0.92,
+    "enable_outside_clean": true,
+    "outside_clean_per_column": 80,
+    "outside_clean_min_per_column": 15,
+    "enable_balance": true,
+    "max_correct_to_error_ratio": 1.2,
+    "min_correct_keep": 80,
+    "dataset_gate": "adult",
+    "max_propagated_train_rows": 700,
+    "max_outside_clean_total": 500
+  },
+  "adult_v2_attribution_bucket_counter": {
+    "outside_clean_primary_target": 134,
+    "primary_target_other": 60,
+    "relationship_v2_rule": 56
+  }
+}

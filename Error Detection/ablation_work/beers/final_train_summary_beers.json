@@ -1,0 +1,56 @@
+{
+  "dataset": "beers",
+  "total_rows": 1424,
+  "error_count": 692,
+  "correct_count": 732,
+  "error_ratio": 0.4859550561797753,
+  "label_source_counter": {
+    "outside_clean": 720,
+    "llm": 704
+  },
+  "outside_candidate_count": 720,
+  "inside_candidate_count": 704,
+  "column_counter_top20": {
+    "abv": 277,
+    "ibu": 241,
+    "city": 227,
+    "ounces": 221,
+    "state": 183,
+    "style": 141,
+    "brewery_name": 134
+  },
+  "label_by_source": [
+    {
+      "label_source": "llm",
+      "label": "correct",
+      "count": 12
+    },
+    {
+      "label_source": "llm",
+      "label": "error",
+      "count": 692
+    },
+    {
+      "label_source": "outside_clean",
+      "label": "correct",
+      "count": 720
+    }
+  ],
+  "config": {
+    "input_table_csv": "/mnt/mydata/dq/projects/Splittree/beers/beers_dirty.csv",
+    "input_clustered_csv": "candidate_clustered_beers.csv",
+    "input_labeled_csv": "candidate_sampled_labeled_beers.csv",
+    "input_propagated_csv": "propagated_labels_beers.csv",
+    "cluster_prop_min_conf": 0.9,
+    "knn_prop_min_conf": 0.95,
+    "enable_outside_clean": true,
+    "outside_clean_per_column": 120,
+    "outside_clean_min_per_column": 20,
+    "enable_balance": true,
+    "max_correct_to_error_ratio": 1.5,
+    "min_correct_keep": null,
+    "dataset_gate": "generic",
+    "max_propagated_train_rows": null,
+    "max_outside_clean_total": null
+  }
+}

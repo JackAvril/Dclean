@@ -1,0 +1,21 @@
+{
+  "dataset": "rayyan",
+  "variant": "no_evidence",
+  "variant_display_name": "w/o Evidence",
+  "use_structured_evidence": false,
+  "use_multi_view_context": false,
+  "use_neighbor_evidence": false,
+  "use_bayesian_evidence": false,
+  "use_evidence_reliability_gate": false,
+  "use_precision_post_gate": false,
+  "use_teacher": true,
+  "use_deepseek_teacher": true,
+  "use_llm_labels": true,
+  "use_weak_rule_teacher": false,
+  "use_label_propagation": true,
+  "use_propagated_labels": true,
+  "use_hardcase_feedback": true,
+  "use_active_loop": true,
+  "max_active_iterations": null,
+  "sampling_strategy": "cluster"
+}

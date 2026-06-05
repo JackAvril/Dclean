@@ -1,0 +1,58 @@
+{
+  "verifier_train_metrics": {
+    "threshold": 0.5,
+    "accuracy": 0.8936170212765957,
+    "precision": 1.0,
+    "recall": 0.8920863309352518,
+    "f1": 0.9429657794676806,
+    "auc": 1.0,
+    "confusion_matrix": [
+      [
+        2,
+        0
+      ],
+      [
+        15,
+        124
+      ]
+    ]
+  },
+  "verifier_val_metrics": {
+    "threshold": 0.5,
+    "accuracy": 0.935251798561151,
+    "precision": 1.0,
+    "recall": 0.9347826086956522,
+    "f1": 0.9662921348314607,
+    "auc": 0.9927536231884058,
+    "confusion_matrix": [
+      [
+        1,
+        0
+      ],
+      [
+        9,
+        129
+      ]
+    ]
+  },
+  "best_verifier_threshold_on_final_val": 0.30000000000000004,
+  "final_pipeline_metrics_with_verifier": {
+    "verifier_threshold": 0.30000000000000004,
+    "accuracy": 0.9964912280701754,
+    "precision": 1.0,
+    "recall": 0.9927536231884058,
+    "f1": 0.9963636363636363,
+    "confusion_matrix": [
+      [
+        147,
+        0
+      ],
+      [
+        1,
+        137
+      ]
+    ],
+    "detector_positive": 139,
+    "final_positive": 137
+  }
+}

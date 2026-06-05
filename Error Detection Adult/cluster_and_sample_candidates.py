@@ -43,21 +43,53 @@ SAMPLE_OUTLIER = True
 # 如果钱包紧张，可改成 120；如果想更稳，可改成 250。
 MAX_TOTAL_SAMPLES = 180
 
+# Adult v2：真实错误主要集中在 sex / relationship / 少量 education。
+# 因此采样预算向 primary target 倾斜，context-only 列只保留极少数强非法值样本。
+PRIMARY_TARGET_COLUMNS = {
+    "sex",
+    "relationship",
+    "education",
+}
+
+CONTEXT_ONLY_COLUMNS = {
+    "age",
+    "workclass",
+    "maritalstatus",
+    "occupation",
+    "race",
+    "hoursperweek",
+    "country",
+    "income",
+}
+
+RELATIONSHIP_V2_RULE_TYPES = {
+    "relationship_marital_spouse_conflict",
+    "relationship_age_spouse_conflict",
+    "relationship_sex_spouse_conflict",
+    "relationship_context_dominant",
+}
+
+EDUCATION_V2_RULE_TYPES = {
+    "education_age_extreme_conflict",
+}
+
 # 每列最多采样多少个。
 MAX_SAMPLES_PER_COLUMN = {
-    "age": 20,
-    "workclass": 16,
-    "education": 22,
-    "maritalstatus": 20,
-    "occupation": 22,
-    "relationship": 22,
-    "race": 14,
-    "sex": 14,
-    "hoursperweek": 22,
-    "country": 18,
-    "income": 18,
+    "relationship": 80,
+    "sex": 60,
+    "education": 30,
+
+    # context-only 列仅用于兜底观察强非法值，不再平均分配 token。
+    "age": 3,
+    "workclass": 3,
+    "maritalstatus": 3,
+    "occupation": 3,
+    "race": 3,
+    "hoursperweek": 3,
+    "country": 3,
+    "income": 3,
 }
-DEFAULT_MAX_SAMPLES_PER_COLUMN = 18
+DEFAULT_MAX_SAMPLES_PER_COLUMN = 3
 
 # 每个 bucket 最多采样多少个，防止某个大桶吞掉预算。
 MAX_SAMPLES_PER_BUCKET = 4
@@ -71,7 +103,8 @@ MAX_SAMPLES_PER_CLUSTER = 2
 PRIORITIZE_STRONG_SIGNAL = True
 
 # 最少覆盖：尽量保证每个列至少有若干样本。
-MIN_SAMPLES_PER_COLUMN_IF_AVAILABLE = 5
+MIN_SAMPLES_PER_PRIMARY_COLUMN_IF_AVAILABLE = 10
+MIN_SAMPLES_PER_CONTEXT_COLUMN_IF_AVAILABLE = 0
 
 # 对非常弱且 token 价值低的样本做降采样。
 ENABLE_WEAK_SIGNAL_DOWNSAMPLE = True
@@ -171,6 +204,61 @@ def build_domain_bucket(row: pd.Series) -> str:
     return "domain_unknown"
 
 
+def as_int01(x: Any) -> int:
+    if pd.isna(x):
+        return 0
+    s = str(x).strip().lower()
+    if s in {"1", "true", "yes"}:
+        return 1
+    if s in {"0", "false", "no"}:
+        return 0
+    try:
+        return int(float(x))
+    except Exception:
+        return 0
+
+
+def extract_adult_v2_features_from_detail(detail_obj: Dict[str, Any]) -> Dict[str, Any]:
+    """兼容 build_llm_context_adult_v2.py 新增的归因字段。
+    如果 JSONL 里没有 adult_v2_attribution_features，则返回默认值。
+    """
+    feats = detail_obj.get("adult_v2_attribution_features", {}) or {}
+    return {
+        "target_is_primary_column": as_int01(feats.get("target_is_primary_column", 0)),
+        "target_is_context_only_column": as_int01(feats.get("target_is_context_only_column", 0)),
+        "is_relationship_spouse_value": as_int01(feats.get("is_relationship_spouse_value", 0)),
+        "relationship_marital_conflict": as_int01(feats.get("relationship_marital_conflict", 0)),
+        "relationship_age_conflict": as_int01(feats.get("relationship_age_conflict", 0)),
+        "relationship_sex_conflict": as_int01(feats.get("relationship_sex_conflict", 0)),
+        "sex_value_invalid": as_int01(feats.get("sex_value_invalid", 0)),
+        "education_age_extreme_conflict": as_int01(feats.get("education_age_extreme_conflict", 0)),
+        "has_relationship_v2_rule": as_int01(feats.get("has_relationship_v2_rule", 0)),
+        "has_education_v2_rule": as_int01(feats.get("has_education_v2_rule", 0)),
+    }
+
+
+def build_adult_v2_attribution_bucket(row: pd.Series) -> str:
+    col = str(row.get("column", ""))
+    rule = str(row.get("main_rule_type", ""))
+    if as_int01(row.get("relationship_marital_conflict", 0)) == 1:
+        return "relationship_marital_conflict"
+    if as_int01(row.get("relationship_age_conflict", 0)) == 1:
+        return "relationship_age_conflict"
+    if as_int01(row.get("relationship_sex_conflict", 0)) == 1:
+        return "relationship_sex_conflict"
+    if as_int01(row.get("has_relationship_v2_rule", 0)) == 1 or rule in RELATIONSHIP_V2_RULE_TYPES:
+        return "relationship_v2_rule"
+    if as_int01(row.get("sex_value_invalid", 0)) == 1:
+        return "sex_value_invalid"
+    if as_int01(row.get("education_age_extreme_conflict", 0)) == 1 or rule in EDUCATION_V2_RULE_TYPES:
+        return "education_age_extreme_conflict"
+    if col in PRIMARY_TARGET_COLUMNS:
+        return "primary_target_other"
+    if col in CONTEXT_ONLY_COLUMNS:
+        return "context_only_other"
+    return "unknown_attribution"
+
+
 # ============================================================
 # 4. 通用分桶字段
 # ============================================================
@@ -254,7 +342,7 @@ def build_hours_bucket_for_sampling(hours_lower: Any, hours_upper: Any) -> str:
 # ============================================================
 
 def load_summary_csv(summary_csv: str, detail_map: Dict[Tuple[int, str], Dict[str, Any]]) -> pd.DataFrame:
-    df = pd.read_csv(summary_csv)
+    df = pd.read_csv(summary_csv, low_memory=False)
 
     df["row_id"] = df["row_id"].astype(int)
     df["column"] = df["column"].astype(str)
@@ -263,6 +351,7 @@ def load_summary_csv(summary_csv: str, detail_map: Dict[Tuple[int, str], Dict[st
     main_usage_roles = []
     pattern_buckets = []
     adult_consistency_buckets = []
+    adult_v2_feature_rows = []
 
     for _, row in df.iterrows():
         key = (int(row["row_id"]), row["column"])
@@ -280,11 +369,50 @@ def load_summary_csv(summary_csv: str, detail_map: Dict[Tuple[int, str], Dict[st
         main_usage_roles.append(current_main_usage_role)
         pattern_buckets.append(build_pattern_bucket(detail_obj))
         adult_consistency_buckets.append(build_adult_consistency_bucket(detail_obj))
+        adult_v2_feature_rows.append(extract_adult_v2_features_from_detail(detail_obj))
 
     df["main_rule_type"] = main_rule_types
     df["main_usage_role"] = main_usage_roles
     df["pattern_bucket"] = pattern_buckets
     df["adult_consistency_bucket"] = adult_consistency_buckets
+
+    if adult_v2_feature_rows:
+        adult_v2_df = pd.DataFrame(adult_v2_feature_rows)
+        for col in adult_v2_df.columns:
+            # 如果 flat CSV 已经有该字段，以 flat CSV 为准；否则从 JSONL 补。
+            if col not in df.columns:
+                df[col] = adult_v2_df[col].values
+            else:
+                df[col] = pd.to_numeric(df[col], errors="coerce").fillna(adult_v2_df[col]).astype(int)
+    else:
+        for col in [
+            "target_is_primary_column", "target_is_context_only_column",
+            "is_relationship_spouse_value", "relationship_marital_conflict",
+            "relationship_age_conflict", "relationship_sex_conflict",
+            "sex_value_invalid", "education_age_extreme_conflict",
+            "has_relationship_v2_rule", "has_education_v2_rule",
+        ]:
+            if col not in df.columns:
+                df[col] = 0
+
+    # 如果没有 v2 上下文文件，也可通过 column/rule_type 兜底构造。
+    df["target_is_primary_column"] = df.apply(
+        lambda r: 1 if str(r.get("column")) in PRIMARY_TARGET_COLUMNS else as_int01(r.get("target_is_primary_column", 0)),
+        axis=1
+    )
+    df["target_is_context_only_column"] = df.apply(
+        lambda r: 1 if str(r.get("column")) in CONTEXT_ONLY_COLUMNS else as_int01(r.get("target_is_context_only_column", 0)),
+        axis=1
+    )
+    df["has_relationship_v2_rule"] = df.apply(
+        lambda r: 1 if str(r.get("main_rule_type")) in RELATIONSHIP_V2_RULE_TYPES else as_int01(r.get("has_relationship_v2_rule", 0)),
+        axis=1
+    )
+    df["has_education_v2_rule"] = df.apply(
+        lambda r: 1 if str(r.get("main_rule_type")) in EDUCATION_V2_RULE_TYPES else as_int01(r.get("has_education_v2_rule", 0)),
+        axis=1
+    )
+    df["adult_v2_attribution_bucket"] = df.apply(build_adult_v2_attribution_bucket, axis=1)
 
     df["rarity_bucket"] = df.apply(
         lambda r: build_rarity_bucket(r.get("value_frequency"), r.get("value_frequency_rank")),
@@ -338,6 +466,16 @@ def load_summary_csv(summary_csv: str, detail_map: Dict[Tuple[int, str], Dict[st
         "education_order",
         "adult_profile_inconsistency_count",
         "adult_consistency_score",
+        "target_is_primary_column",
+        "target_is_context_only_column",
+        "is_relationship_spouse_value",
+        "relationship_marital_conflict",
+        "relationship_age_conflict",
+        "relationship_sex_conflict",
+        "sex_value_invalid",
+        "education_age_extreme_conflict",
+        "has_relationship_v2_rule",
+        "has_education_v2_rule",
     ]
     for col in numeric_defaults:
         if col not in df.columns:
@@ -361,6 +499,7 @@ def get_bucket_keys() -> List[str]:
         "neighbor_bucket",
         "domain_bucket",
         "adult_consistency_bucket",
+        "adult_v2_attribution_bucket",
         "age_sampling_bucket",
         "hours_sampling_bucket",
     ]
@@ -417,6 +556,16 @@ FEATURE_COLUMNS_NUMERIC = [
     "education_order",
     "adult_profile_inconsistency_count",
     "adult_consistency_score",
+    "target_is_primary_column",
+    "target_is_context_only_column",
+    "is_relationship_spouse_value",
+    "relationship_marital_conflict",
+    "relationship_age_conflict",
+    "relationship_sex_conflict",
+    "sex_value_invalid",
+    "education_age_extreme_conflict",
+    "has_relationship_v2_rule",
+    "has_education_v2_rule",
 ]
 
 FEATURE_COLUMNS_CATEGORICAL = [
@@ -432,6 +581,7 @@ FEATURE_COLUMNS_CATEGORICAL = [
     "age_sampling_bucket",
     "hours_sampling_bucket",
     "adult_value_bucket",
+    "adult_v2_attribution_bucket",
 ]
 
 
@@ -515,8 +665,30 @@ def cluster_bucket(bucket_df: pd.DataFrame) -> pd.DataFrame:
 def compute_signal_priority(row: pd.Series) -> float:
     """
     分数越高，越优先保留给 LLM。
+    Adult v2 中优先采 relationship/sex/education 的强归因样本；
+    context-only 列仅在 domain/format 明确非法时保留少量样本。
     """
     score = 0.0
+
+    col_name = str(row.get("column", ""))
+
+    if col_name == "relationship":
+        score += 6.0
+    elif col_name == "sex":
+        score += 5.0
+    elif col_name == "education":
+        score += 3.0
+    elif col_name in CONTEXT_ONLY_COLUMNS:
+        score -= 4.0
+
+    # v2 归因信号：这是本轮 Adult 修改后最重要的采样优先级。
+    score += float(pd.to_numeric(row.get("relationship_marital_conflict", 0), errors="coerce") or 0) * 8.0
+    score += float(pd.to_numeric(row.get("relationship_age_conflict", 0), errors="coerce") or 0) * 7.0
+    score += float(pd.to_numeric(row.get("relationship_sex_conflict", 0), errors="coerce") or 0) * 6.0
+    score += float(pd.to_numeric(row.get("has_relationship_v2_rule", 0), errors="coerce") or 0) * 5.0
+    score += float(pd.to_numeric(row.get("sex_value_invalid", 0), errors="coerce") or 0) * 5.5
+    score += float(pd.to_numeric(row.get("education_age_extreme_conflict", 0), errors="coerce") or 0) * 4.5
+    score += float(pd.to_numeric(row.get("has_education_v2_rule", 0), errors="coerce") or 0) * 3.5
 
     score += float(pd.to_numeric(row.get("strong_rule_count", 0), errors="coerce") or 0) * 3.0
     score += float(pd.to_numeric(row.get("adult_domain_rule_count", 0), errors="coerce") or 0) * 2.8
@@ -525,8 +697,8 @@ def compute_signal_priority(row: pd.Series) -> float:
     score += float(pd.to_numeric(row.get("schema_rule_count", 0), errors="coerce") or 0) * 1.8
     score += float(pd.to_numeric(row.get("fd_like_count", 0), errors="coerce") or 0) * 1.2
     score += float(pd.to_numeric(row.get("context_rule_count", 0), errors="coerce") or 0) * 1.0
-    score += float(pd.to_numeric(row.get("rare_value_count", 0), errors="coerce") or 0) * 0.4
-    score += float(pd.to_numeric(row.get("rare_value_count", 0), errors="coerce") or 0) * 0.4
+    score += float(pd.to_numeric(row.get("rare_value_count", 0), errors="coerce") or 0) * 0.2
+    score += float(pd.to_numeric(row.get("pattern_rule_count", 0), errors="coerce") or 0) * 0.4
 
     score += min(float(pd.to_numeric(row.get("conflict_score", 0), errors="coerce") or 0) / 20.0, 5.0)
     score += float(pd.to_numeric(row.get("adult_consistency_score", 0), errors="coerce") or 0) * 1.5
@@ -570,7 +742,15 @@ def is_weak_signal_row(row: pd.Series) -> bool:
     fd = 0 if pd.isna(fd) else fd
     ctx = 0 if pd.isna(ctx) else ctx
 
-    return (strong + domain + fmt + cons + schema + fd + ctx) <= 0
+    rel_v2 = pd.to_numeric(row.get("has_relationship_v2_rule", 0), errors="coerce")
+    edu_v2 = pd.to_numeric(row.get("has_education_v2_rule", 0), errors="coerce")
+    sex_invalid = pd.to_numeric(row.get("sex_value_invalid", 0), errors="coerce")
+
+    rel_v2 = 0 if pd.isna(rel_v2) else rel_v2
+    edu_v2 = 0 if pd.isna(edu_v2) else edu_v2
+    sex_invalid = 0 if pd.isna(sex_invalid) else sex_invalid
+
+    return (strong + domain + fmt + cons + schema + fd + ctx + rel_v2 + edu_v2 + sex_invalid) <= 0
 
 
 # ============================================================
@@ -694,7 +874,8 @@ def enforce_column_budget(sampled_df: pd.DataFrame) -> pd.DataFrame:
 
 def ensure_min_column_coverage(sampled_df: pd.DataFrame, clustered_df: pd.DataFrame) -> pd.DataFrame:
     """
-    在总预算允许的情况下，给每个列补足少量样本，避免某些列完全没有 LLM 标签。
+    Adult v2：只强制保证 primary target 有最少 LLM 标签。
+    context-only 列不再强制补样，避免 token 被 age/income/race/country 等正常列消耗。
     """
     if len(clustered_df) == 0:
         return sampled_df
@@ -705,8 +886,16 @@ def ensure_min_column_coverage(sampled_df: pd.DataFrame, clustered_df: pd.DataFr
     add_parts = []
 
     for col, pool in clustered_df.groupby("column", sort=False):
+        if col in PRIMARY_TARGET_COLUMNS:
+            min_need = MIN_SAMPLES_PER_PRIMARY_COLUMN_IF_AVAILABLE
+        else:
+            min_need = MIN_SAMPLES_PER_CONTEXT_COLUMN_IF_AVAILABLE
+
+        if min_need <= 0:
+            continue
+
         current_n = int((sampled_df["column"] == col).sum()) if len(sampled_df) > 0 else 0
-        need = max(0, MIN_SAMPLES_PER_COLUMN_IF_AVAILABLE - current_n)
+        need = max(0, min_need - current_n)
         if need <= 0:
             continue
 
@@ -881,11 +1070,23 @@ def row_to_summary_context(row: pd.Series) -> Dict[str, Any]:
         "neighbor_bucket",
         "domain_bucket",
         "adult_consistency_bucket",
+        "adult_v2_attribution_bucket",
         "age_sampling_bucket",
         "hours_sampling_bucket",
         "time_window_rule_count",
         "time_window_bucket",
         "time_value_bucket",
+        "target_is_primary_column",
+        "target_is_context_only_column",
+        "is_relationship_spouse_value",
+        "relationship_marital_conflict",
+        "relationship_age_conflict",
+        "relationship_sex_conflict",
+        "sex_value_invalid",
+        "education_age_extreme_conflict",
+        "has_relationship_v2_rule",
+        "has_education_v2_rule",
+        "adult_v2_attribution_bucket",
     ]
     return {k: json_safe_value(row.get(k)) for k in keys if k in row.index}
 
@@ -924,6 +1125,7 @@ def main():
                 "neighbor_bucket": str(cluster_df["neighbor_bucket"].iloc[0]) if "neighbor_bucket" in cluster_df.columns else "unknown",
                 "domain_bucket": str(cluster_df["domain_bucket"].iloc[0]) if "domain_bucket" in cluster_df.columns else "unknown",
                 "adult_consistency_bucket": str(cluster_df["adult_consistency_bucket"].iloc[0]) if "adult_consistency_bucket" in cluster_df.columns else "unknown",
+                "adult_v2_attribution_bucket": str(cluster_df["adult_v2_attribution_bucket"].iloc[0]) if "adult_v2_attribution_bucket" in cluster_df.columns else "unknown",
                 "age_sampling_bucket": str(cluster_df["age_sampling_bucket"].iloc[0]) if "age_sampling_bucket" in cluster_df.columns else "unknown",
                 "hours_sampling_bucket": str(cluster_df["hours_sampling_bucket"].iloc[0]) if "hours_sampling_bucket" in cluster_df.columns else "unknown",
             })
@@ -983,6 +1185,7 @@ def main():
         "sampled_by_column": sampled_df["column"].value_counts(dropna=False).to_dict() if len(sampled_df) else {},
         "sample_role_distribution": sampled_df["sample_role"].value_counts(dropna=False).to_dict() if len(sampled_df) else {},
         "main_rule_type_distribution_top30": sampled_df["main_rule_type"].value_counts(dropna=False).head(30).to_dict() if len(sampled_df) else {},
+        "adult_v2_attribution_bucket_distribution": sampled_df["adult_v2_attribution_bucket"].value_counts(dropna=False).to_dict() if len(sampled_df) and "adult_v2_attribution_bucket" in sampled_df.columns else {},
     }
 
     with open(OUTPUT_SAMPLE_BUDGET_SUMMARY_JSON, "w", encoding="utf-8") as f:

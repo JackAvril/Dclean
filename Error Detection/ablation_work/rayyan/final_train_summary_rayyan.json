@@ -1,0 +1,64 @@
+{
+  "dataset": "rayyan",
+  "total_rows": 1600,
+  "error_count": 976,
+  "correct_count": 624,
+  "error_ratio": 0.61,
+  "label_source_counter": {
+    "llm": 798,
+    "outside_clean": 556,
+    "knn_propagation": 246
+  },
+  "outside_candidate_count": 556,
+  "inside_candidate_count": 1044,
+  "column_counter_top20": {
+    "article_jcreated_at": 351,
+    "journal_issn": 298,
+    "article_language": 227,
+    "article_pagination": 201,
+    "article_jissue": 173,
+    "article_jvolumn": 156,
+    "jounral_abbreviation": 91,
+    "journal_title": 78,
+    "author_list": 25
+  },
+  "label_by_source": [
+    {
+      "label_source": "knn_propagation",
+      "label": "error",
+      "count": 246
+    },
+    {
+      "label_source": "llm",
+      "label": "correct",
+      "count": 68
+    },
+    {
+      "label_source": "llm",
+      "label": "error",
+      "count": 730
+    },
+    {
+      "label_source": "outside_clean",
+      "label": "correct",
+      "count": 556
+    }
+  ],
+  "config": {
+    "input_table_csv": "/mnt/mydata/dq/projects/Splittree/rayyan/rayyan_dirty.csv",
+    "input_clustered_csv": "candidate_clustered_rayyan.csv",
+    "input_labeled_csv": "candidate_sampled_labeled_rayyan.csv",
+    "input_propagated_csv": "propagated_labels_rayyan.csv",
+    "cluster_prop_min_conf": 0.9,
+    "knn_prop_min_conf": 0.95,
+    "enable_outside_clean": true,
+    "outside_clean_per_column": 120,
+    "outside_clean_min_per_column": 20,
+    "enable_balance": true,
+    "max_correct_to_error_ratio": 1.5,
+    "min_correct_keep": null,
+    "dataset_gate": "generic",
+    "max_propagated_train_rows": null,
+    "max_outside_clean_total": null
+  }
+}

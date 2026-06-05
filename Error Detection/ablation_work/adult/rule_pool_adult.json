@@ -1,0 +1,2837 @@
+{
+  "metadata": {
+    "source_file": "/mnt/mydata/dq/projects/Splittree/adult/adult_dirty.csv",
+    "row_count": 90444,
+    "column_count": 11,
+    "design_goal": "high_recall_candidate_generation_for_adult",
+    "target_candidate_columns": [
+      "education",
+      "relationship",
+      "sex"
+    ],
+    "primary_target_columns": [
+      "education",
+      "relationship",
+      "sex"
+    ],
+    "context_only_columns": [
+      "age",
+      "country",
+      "hoursperweek",
+      "income",
+      "maritalstatus",
+      "occupation",
+      "race",
+      "workclass"
+    ],
+    "notes": [
+      "candidate inclusion is determined only by violating rules in this pool",
+      "adult v2 focuses candidate generation on sex, relationship, and education based on evaluation error distribution",
+      "global dominant, rare value, rare pattern, and generic context-dominant rules are disabled to avoid excessive false positives",
+      "relationship-specific attribution rules target Husband/Wife conflicts with maritalstatus, age, and sex",
+      "FD and soft FD rules are mined only for primary target RHS columns and should be used as weak evidence rather than final labels"
+    ]
+  },
+  "column_profiles": {
+    "age": {
+      "column": "age",
+      "missing_rate": 0.0,
+      "non_null_count": 90444,
+      "unique_count": 5,
+      "unique_ratio": 5.5e-05,
+      "numeric_parse_ratio": 0.0,
+      "entropy": 1.799275,
+      "detected_type": "categorical",
+      "semantic_type": "age_bucket",
+      "index_like": false,
+      "avg_length": 4.594622,
+      "top_values": [
+        {
+          "value": "31-50",
+          "count": 44578,
+          "ratio": 0.49288
+        },
+        {
+          "value": "22-30",
+          "count": 20714,
+          "ratio": 0.229026
+        },
+        {
+          "value": ">50",
+          "count": 17346,
+          "ratio": 0.191787
+        },
+        {
+          "value": "18-21",
+          "count": 6820,
+          "ratio": 0.075406
+        },
+        {
+          "value": "<18",
+          "count": 986,
+          "ratio": 0.010902
+        }
+      ],
+      "top_patterns": [
+        {
+          "pattern": "D2S1D2",
+          "count": 72112,
+          "ratio": 0.797311
+        },
+        {
+          "pattern": "S1D2",
+          "count": 18332,
+          "ratio": 0.202689
+        }
+      ],
+      "value_counter": {
+        "<18": 986,
+        "18-21": 6820,
+        "22-30": 20714,
+        "31-50": 44578,
+        ">50": 17346
+      }
+    },
+    "workclass": {
+      "column": "workclass",
+      "missing_rate": 0.0,
+      "non_null_count": 90444,
+      "unique_count": 7,
+      "unique_ratio": 7.7e-05,
+      "numeric_parse_ratio": 0.0,
+      "entropy": 1.420171,
+      "detected_type": "categorical",
+      "semantic_type": "workclass_category",
+      "index_like": false,
+      "avg_length": 8.286852,
+      "top_values": [
+        {
+          "value": "Private",
+          "count": 66614,
+          "ratio": 0.736522
+        },
+        {
+          "value": "Self-emp-not-inc",
+          "count": 7592,
+          "ratio": 0.083941
+        },
+        {
+          "value": "Local-gov",
+          "count": 6200,
+          "ratio": 0.068551
+        },
+        {
+          "value": "State-gov",
+          "count": 3892,
+          "ratio": 0.043032
+        },
+        {
+          "value": "Self-emp-inc",
+          "count": 3292,
+          "ratio": 0.036398
+        },
+        {
+          "value": "Federal-gov",
+          "count": 2812,
+          "ratio": 0.031091
+        },
+        {
+          "value": "Without-pay",
+          "count": 42,
+          "ratio": 0.000464
+        }
+      ],
+      "top_patterns": [
+        {
+          "pattern": "L7",
+          "count": 66614,
+          "ratio": 0.736522
+        },
+        {
+          "pattern": "L5S1L3",
+          "count": 10092,
+          "ratio": 0.111583
+        },
+        {
+          "pattern": "L4S1L3S1L3S1L3",
+          "count": 7592,
+          "ratio": 0.083941
+        },
+        {
+          "pattern": "L4S1L3S1L3",
+          "count": 3292,
+          "ratio": 0.036398
+        },
+        {
+          "pattern": "L7S1L3",
+          "count": 2854,
+          "ratio": 0.031555
+        }
+      ],
+      "value_counter": {
+        "Private": 66614,
+        "Local-gov": 6200,
+        "Self-emp-not-inc": 7592,
+        "Self-emp-inc": 3292,
+        "Federal-gov": 2812,
+        "State-gov": 3892,
+        "Without-pay": 42
+      }
+    },
+    "education": {
+      "column": "education",
+      "missing_rate": 0.0,
+      "non_null_count": 90444,
+      "unique_count": 16,
+      "unique_ratio": 0.000177,
+      "numeric_parse_ratio": 0.0,
+      "entropy": 2.915941,
+      "detected_type": "categorical",
+      "semantic_type": "education_category",
+      "index_like": false,
+      "avg_length": 8.426076,
+      "top_values": [
+        {
+          "value": "HS-grad",
+          "count": 29564,
+          "ratio": 0.326876
+        },
+        {
+          "value": "Some-college",
+          "count": 19800,
+          "ratio": 0.21892
+        },
+        {
+          "value": "Bachelors",
+          "count": 15140,
+          "ratio": 0.167396
+        },
+        {
+          "value": "Masters",
+          "count": 5028,
+          "ratio": 0.055592
+        },
+        {
+          "value": "Assoc-voc",
+          "count": 3918,
+          "ratio": 0.04332
+        },
+        {
+          "value": "11th",
+          "count": 3238,
+          "ratio": 0.035801
+        },
+        {
+          "value": "Assoc-acdm",
+          "count": 3014,
+          "ratio": 0.033324
+        },
+        {
+          "value": "10th",
+          "count": 2446,
+          "ratio": 0.027044
+        },
+        {
+          "value": "7th-8th",
+          "count": 1646,
+          "ratio": 0.018199
+        },
+        {
+          "value": "Prof-school",
+          "count": 1570,
+          "ratio": 0.017359
+        },
+        {
+          "value": "9th",
+          "count": 1352,
+          "ratio": 0.014948
+        },
+        {
+          "value": "12th",
+          "count": 1154,
+          "ratio": 0.012759
+        },
+        {
+          "value": "Doctorate",
+          "count": 1088,
+          "ratio": 0.01203
+        },
+        {
+          "value": "5th-6th",
+          "count": 898,
+          "ratio": 0.009929
+        },
+        {
+          "value": "1st-4th",
+          "count": 444,
+          "ratio": 0.004909
+        },
+        {
+          "value": "Preschool",
+          "count": 144,
+          "ratio": 0.001592
+        }
+      ],
+      "top_patterns": [
+        {
+          "pattern": "L2S1L4",
+          "count": 29564,
+          "ratio": 0.326876
+        },
+        {
+          "pattern": "L4S1L7",
+          "count": 19800,
+          "ratio": 0.21892
+        },
+        {
+          "pattern": "L9",
+          "count": 16372,
+          "ratio": 0.181018
+        },
+        {
+          "pattern": "D2L2",
+          "count": 6838,
+          "ratio": 0.075605
+        },
+        {
+          "pattern": "L7",
+          "count": 5028,
+          "ratio": 0.055592
+        },
+        {
+          "pattern": "L5S1L3",
+          "count": 3918,
+          "ratio": 0.04332
+        },
+        {
+          "pattern": "L5S1L4",
+          "count": 3014,
+          "ratio": 0.033324
+        },
+        {
+          "pattern": "D1L2S1D1L2",
+          "count": 2988,
+          "ratio": 0.033037
+        },
+        {
+          "pattern": "L4S1L6",
+          "count": 1570,
+          "ratio": 0.017359
+        },
+        {
+          "pattern": "D1L2",
+          "count": 1352,
+          "ratio": 0.014948
+        }
+      ],
+      "value_counter": {
+        "10th": 2446,
+        "11th": 3238,
+        "7th-8th": 1646,
+        "12th": 1154,
+        "HS-grad": 29564,
+        "9th": 1352,
+        "5th-6th": 898,
+        "Some-college": 19800,
+        "Masters": 5028,
+        "Preschool": 144,
+        "Assoc-acdm": 3014,
+        "Assoc-voc": 3918,
+        "Bachelors": 15140,
+        "1st-4th": 444,
+        "Doctorate": 1088,
+        "Prof-school": 1570
+      }
+    },
+    "maritalstatus": {
+      "column": "maritalstatus",
+      "missing_rate": 0.0,
+      "non_null_count": 90444,
+      "unique_count": 7,
+      "unique_ratio": 7.7e-05,
+      "numeric_parse_ratio": 0.0,
+      "entropy": 1.822512,
+      "detected_type": "categorical",
+      "semantic_type": "maritalstatus_category",
+      "index_like": false,
+      "avg_length": 14.437973,
+      "top_values": [
+        {
+          "value": "Married-civ-spouse",
+          "count": 42110,
+          "ratio": 0.465592
+        },
+        {
+          "value": "Never-married",
+          "count": 29196,
+          "ratio": 0.322807
+        },
+        {
+          "value": "Divorced",
+          "count": 12594,
+          "ratio": 0.139246
+        },
+        {
+          "value": "Separated",
+          "count": 2822,
+          "ratio": 0.031202
+        },
+        {
+          "value": "Widowed",
+          "count": 2554,
+          "ratio": 0.028238
+        },
+        {
+          "value": "Married-spouse-absent",
+          "count": 1104,
+          "ratio": 0.012206
+        },
+        {
+          "value": "Married-AF-spouse",
+          "count": 64,
+          "ratio": 0.000708
+        }
+      ],
+      "top_patterns": [
+        {
+          "pattern": "L7S1L3S1L6",
+          "count": 42110,
+          "ratio": 0.465592
+        },
+        {
+          "pattern": "L5S1L7",
+          "count": 29196,
+          "ratio": 0.322807
+        },
+        {
+          "pattern": "L8",
+          "count": 12594,
+          "ratio": 0.139246
+        },
+        {
+          "pattern": "L9",
+          "count": 2822,
+          "ratio": 0.031202
+        },
+        {
+          "pattern": "L7",
+          "count": 2554,
+          "ratio": 0.028238
+        },
+        {
+          "pattern": "L7S1L6S1L6",
+          "count": 1104,
+          "ratio": 0.012206
+        },
+        {
+          "pattern": "L7S1L2S1L6",
+          "count": 64,
+          "ratio": 0.000708
+        }
+      ],
+      "value_counter": {
+        "Never-married": 29196,
+        "Married-spouse-absent": 1104,
+        "Married-civ-spouse": 42110,
+        "Divorced": 12594,
+        "Married-AF-spouse": 64,
+        "Separated": 2822,
+        "Widowed": 2554
+      }
+    },
+    "occupation": {
+      "column": "occupation",
+      "missing_rate": 0.0,
+      "non_null_count": 90444,
+      "unique_count": 14,
+      "unique_ratio": 0.000155,
+      "numeric_parse_ratio": 0.0,
+      "entropy": 3.401485,
+      "detected_type": "categorical",
+      "semantic_type": "occupation_category",
+      "index_like": false,
+      "avg_length": 12.869665,
+      "top_values": [
+        {
+          "value": "Craft-repair",
+          "count": 12040,
+          "ratio": 0.133121
+        },
+        {
+          "value": "Prof-specialty",
+          "count": 12016,
+          "ratio": 0.132856
+        },
+        {
+          "value": "Exec-managerial",
+          "count": 11968,
+          "ratio": 0.132325
+        },
+        {
+          "value": "Adm-clerical",
+          "count": 11080,
+          "ratio": 0.122507
+        },
+        {
+          "value": "Sales",
+          "count": 10816,
+          "ratio": 0.119588
+        },
+        {
+          "value": "Other-service",
+          "count": 9616,
+          "ratio": 0.10632
+        },
+        {
+          "value": "Machine-op-inspct",
+          "count": 5940,
+          "ratio": 0.065676
+        },
+        {
+          "value": "Transport-moving",
+          "count": 4632,
+          "ratio": 0.051214
+        },
+        {
+          "value": "Handlers-cleaners",
+          "count": 4092,
+          "ratio": 0.045243
+        },
+        {
+          "value": "Farming-fishing",
+          "count": 2960,
+          "ratio": 0.032727
+        },
+        {
+          "value": "Tech-support",
+          "count": 2840,
+          "ratio": 0.031401
+        },
+        {
+          "value": "Protective-serv",
+          "count": 1952,
+          "ratio": 0.021582
+        },
+        {
+          "value": "Priv-house-serv",
+          "count": 464,
+          "ratio": 0.00513
+        },
+        {
+          "value": "Armed-Forces",
+          "count": 28,
+          "ratio": 0.00031
+        }
+      ],
+      "top_patterns": [
+        {
+          "pattern": "L5S1L6",
+          "count": 12068,
+          "ratio": 0.133431
+        },
+        {
+          "pattern": "L4S1L9",
+          "count": 12016,
+          "ratio": 0.132856
+        },
+        {
+          "pattern": "L4S1L10",
+          "count": 11968,
+          "ratio": 0.132325
+        },
+        {
+          "pattern": "L3S1L8",
+          "count": 11080,
+          "ratio": 0.122507
+        },
+        {
+          "pattern": "L5",
+          "count": 10816,
+          "ratio": 0.119588
+        },
+        {
+          "pattern": "L5S1L7",
+          "count": 9616,
+          "ratio": 0.10632
+        },
+        {
+          "pattern": "L7S1L2S1L6",
+          "count": 5940,
+          "ratio": 0.065676
+        },
+        {
+          "pattern": "L9S1L6",
+          "count": 4632,
+          "ratio": 0.051214
+        },
+        {
+          "pattern": "L8S1L8",
+          "count": 4092,
+          "ratio": 0.045243
+        },
+        {
+          "pattern": "L7S1L7",
+          "count": 2960,
+          "ratio": 0.032727
+        }
+      ],
+      "value_counter": {
+        "Machine-op-inspct": 5940,
+        "Sales": 10816,
+        "Farming-fishing": 2960,
+        "Other-service": 9616,
+        "Adm-clerical": 11080,
+        "Handlers-cleaners": 4092,
+        "Priv-house-serv": 464,
+        "Transport-moving": 4632,
+        "Craft-repair": 12040,
+        "Prof-specialty": 12016,
+        "Exec-managerial": 11968,
+        "Protective-serv": 1952,
+        "Tech-support": 2840,
+        "Armed-Forces": 28
+      }
+    },
+    "relationship": {
+      "column": "relationship",
+      "missing_rate": 0.0,
+      "non_null_count": 90444,
+      "unique_count": 6,
+      "unique_ratio": 6.6e-05,
+      "numeric_parse_ratio": 0.0,
+      "entropy": 2.120974,
+      "detected_type": "categorical",
+      "semantic_type": "relationship_category",
+      "index_like": false,
+      "avg_length": 9.098912,
+      "top_values": [
+        {
+          "value": "Husband",
+          "count": 38201,
+          "ratio": 0.422372
+        },
+        {
+          "value": "Not-in-family",
+          "count": 23122,
+          "ratio": 0.25565
+        },
+        {
+          "value": "Own-child",
+          "count": 12999,
+          "ratio": 0.143724
+        },
+        {
+          "value": "Unmarried",
+          "count": 9374,
+          "ratio": 0.103644
+        },
+        {
+          "value": "Wife",
+          "count": 4088,
+          "ratio": 0.045199
+        },
+        {
+          "value": "Other-relative",
+          "count": 2660,
+          "ratio": 0.02941
+        }
+      ],
+      "top_patterns": [
+        {
+          "pattern": "L7",
+          "count": 38201,
+          "ratio": 0.422372
+        },
+        {
+          "pattern": "L3S1L2S1L6",
+          "count": 23122,
+          "ratio": 0.25565
+        },
+        {
+          "pattern": "L3S1L5",
+          "count": 12999,
+          "ratio": 0.143724
+        },
+        {
+          "pattern": "L9",
+          "count": 9374,
+          "ratio": 0.103644
+        },
+        {
+          "pattern": "L4",
+          "count": 4088,
+          "ratio": 0.045199
+        },
+        {
+          "pattern": "L5S1L8",
+          "count": 2660,
+          "ratio": 0.02941
+        }
+      ],
+      "value_counter": {
+        "Not-in-family": 23122,
+        "Own-child": 12999,
+        "Other-relative": 2660,
+        "Husband": 38201,
+        "Unmarried": 9374,
+        "Wife": 4088
+      }
+    },
+    "race": {
+      "column": "race",
+      "missing_rate": 0.0,
+      "non_null_count": 90444,
+      "unique_count": 5,
+      "unique_ratio": 5.5e-05,
+      "numeric_parse_ratio": 0.0,
+      "entropy": 0.772996,
+      "detected_type": "categorical",
+      "semantic_type": "race_category",
+      "index_like": false,
+      "avg_length": 5.499624,
+      "top_values": [
+        {
+          "value": "White",
+          "count": 77806,
+          "ratio": 0.860267
+        },
+        {
+          "value": "Black",
+          "count": 8456,
+          "ratio": 0.093494
+        },
+        {
+          "value": "Asian-Pac-Islander",
+          "count": 2606,
+          "ratio": 0.028813
+        },
+        {
+          "value": "Amer-Indian-Eskimo",
+          "count": 870,
+          "ratio": 0.009619
+        },
+        {
+          "value": "Other",
+          "count": 706,
+          "ratio": 0.007806
+        }
+      ],
+      "top_patterns": [
+        {
+          "pattern": "L5",
+          "count": 86968,
+          "ratio": 0.961567
+        },
+        {
+          "pattern": "L5S1L3S1L8",
+          "count": 2606,
+          "ratio": 0.028813
+        },
+        {
+          "pattern": "L4S1L6S1L6",
+          "count": 870,
+          "ratio": 0.009619
+        }
+      ],
+      "value_counter": {
+        "White": 77806,
+        "Black": 8456,
+        "Amer-Indian-Eskimo": 870,
+        "Other": 706,
+        "Asian-Pac-Islander": 2606
+      }
+    },
+    "sex": {
+      "column": "sex",
+      "missing_rate": 0.0,
+      "non_null_count": 90444,
+      "unique_count": 104,
+      "unique_ratio": 0.00115,
+      "numeric_parse_ratio": 0.0,
+      "entropy": 1.035825,
+      "detected_type": "categorical",
+      "semantic_type": "sex_category",
+      "index_like": false,
+      "avg_length": 4.650226,
+      "top_values": [
+        {
+          "value": "Male",
+          "count": 60124,
+          "ratio": 0.664765
+        },
+        {
+          "value": "Female",
+          "count": 29390,
+          "ratio": 0.324952
+        },
+        {
+          "value": "Mael",
+          "count": 159,
+          "ratio": 0.001758
+        },
+        {
+          "value": "ale",
+          "count": 141,
+          "ratio": 0.001559
+        },
+        {
+          "value": "Mlae",
+          "count": 87,
+          "ratio": 0.000962
+        },
+        {
+          "value": "Mae",
+          "count": 78,
+          "ratio": 0.000862
+        },
+        {
+          "value": "Mle",
+          "count": 75,
+          "ratio": 0.000829
+        },
+        {
+          "value": "aMle",
+          "count": 67,
+          "ratio": 0.000741
+        },
+        {
+          "value": "Mmale",
+          "count": 7,
+          "ratio": 7.7e-05
+        },
+        {
+          "value": "Madle",
+          "count": 7,
+          "ratio": 7.7e-05
+        },
+        {
+          "value": "Maple",
+          "count": 7,
+          "ratio": 7.7e-05
+        },
+        {
+          "value": "eMale",
+          "count": 6,
+          "ratio": 6.6e-05
+        },
+        {
+          "value": "Malve",
+          "count": 6,
+          "ratio": 6.6e-05
+        },
+        {
+          "value": "Moale",
+          "count": 6,
+          "ratio": 6.6e-05
+        },
+        {
+          "value": "Mqale",
+          "count": 6,
+          "ratio": 6.6e-05
+        },
+        {
+          "value": "Mlale",
+          "count": 5,
+          "ratio": 5.5e-05
+        },
+        {
+          "value": "Malne",
+          "count": 5,
+          "ratio": 5.5e-05
+        },
+        {
+          "value": "vMale",
+          "count": 5,
+          "ratio": 5.5e-05
+        },
+        {
+          "value": "Mafle",
+          "count": 5,
+          "ratio": 5.5e-05
+        },
+        {
+          "value": "Malre",
+          "count": 5,
+          "ratio": 5.5e-05
+        }
+      ],
+      "top_patterns": [
+        {
+          "pattern": "L4",
+          "count": 60437,
+          "ratio": 0.668226
+        },
+        {
+          "pattern": "L6",
+          "count": 29390,
+          "ratio": 0.324952
+        },
+        {
+          "pattern": "L5",
+          "count": 323,
+          "ratio": 0.003571
+        },
+        {
+          "pattern": "L3",
+          "count": 294,
+          "ratio": 0.003251
+        }
+      ],
+      "value_counter": {
+        "Male": 60124,
+        "Female": 29390,
+        "ale": 141,
+        "Malse": 2,
+        "Mae": 78,
+        "aMle": 67,
+        "Malxe": 2,
+        "Mlale": 5,
+        "Mael": 159,
+        "Maxle": 2,
+        "Mavle": 4,
+        "Mlae": 87,
+        "wMale": 3,
+        "Mazle": 3,
+        "oMale": 3,
+        "Mle": 75,
+        "Mfale": 3,
+        "Marle": 3,
+        "Masle": 2,
+        "Malne": 5,
+        "vMale": 5,
+        "Mamle": 1,
+        "eMale": 6,
+        "Maile": 4,
+        "Majle": 2,
+        "Mnale": 2,
+        "Mafle": 5,
+        "tMale": 4,
+        "fMale": 3,
+        "Malre": 5,
+        "Malve": 6,
+        "Magle": 4,
+        "gMale": 5,
+        "mMale": 2,
+        "Mayle": 3,
+        "Maqle": 5,
+        "Malhe": 4,
+        "dMale": 3,
+        "Maale": 5,
+        "Malje": 1,
+        "rMale": 3,
+        "Msale": 3,
+        "aMale": 4,
+        "Mahle": 4,
+        "nMale": 3,
+        "Miale": 5,
+        "Muale": 5,
+        "Mdale": 2,
+        "Maele": 2,
+        "Moale": 6,
+        "Malwe": 5,
+        "Malze": 5,
+        "Makle": 5,
+        "Malce": 3,
+        "Malee": 4,
+        "lMale": 3,
+        "Mbale": 5,
+        "cMale": 4,
+        "Malge": 2,
+        "Mvale": 4,
+        "Mwale": 3,
+        "Mmale": 7,
+        "Malye": 5,
+        "Mrale": 3,
+        "Malue": 4,
+        "Mkale": 5,
+        "Mawle": 3,
+        "Madle": 7,
+        "Manle": 4,
+        "kMale": 4,
+        "Matle": 2,
+        "Malle": 4,
+        "Malie": 3,
+        "hMale": 1,
+        "Malte": 1,
+        "Mhale": 5,
+        "Mable": 5,
+        "yMale": 1,
+        "Mtale": 3,
+        "Malqe": 2,
+        "Mqale": 6,
+        "Malae": 1,
+        "Mgale": 3,
+        "Maole": 2,
+        "Mcale": 1,
+        "Maple": 7,
+        "bMale": 2,
+        "Malke": 3,
+        "Malbe": 2,
+        "zMale": 3,
+        "jMale": 3,
+        "Mpale": 4,
+        "Meale": 2,
+        "Mjale": 4,
+        "Macle": 2,
+        "xMale": 2,
+        "Maloe": 2,
+        "iMale": 2,
+        "Mxale": 1,
+        "Malme": 2,
+        "Malpe": 3,
+        "Maule": 3,
+        "Malde": 1,
+        "Mzale": 1
+      }
+    },
+    "hoursperweek": {
+      "column": "hoursperweek",
+      "missing_rate": 0.0,
+      "non_null_count": 90444,
+      "unique_count": 93,
+      "unique_ratio": 0.001028,
+      "numeric_parse_ratio": 0.960771,
+      "entropy": 3.414383,
+      "detected_type": "numeric_or_range",
+      "semantic_type": "hours_range",
+      "index_like": false,
+      "avg_length": 2.107846,
+      "top_values": [
+        {
+          "value": "40",
+          "count": 42716,
+          "ratio": 0.472292
+        },
+        {
+          "value": "50",
+          "count": 8188,
+          "ratio": 0.090531
+        },
+        {
+          "value": "45",
+          "count": 5204,
+          "ratio": 0.057538
+        },
+        {
+          "value": "60",
+          "count": 4170,
+          "ratio": 0.046106
+        },
+        {
+          "value": "35",
+          "count": 3552,
+          "ratio": 0.039273
+        },
+        {
+          "value": "18-21",
+          "count": 3548,
+          "ratio": 0.039229
+        },
+        {
+          "value": "30",
+          "count": 2934,
+          "ratio": 0.03244
+        },
+        {
+          "value": "55",
+          "count": 2040,
+          "ratio": 0.022555
+        },
+        {
+          "value": "25",
+          "count": 1640,
+          "ratio": 0.018133
+        },
+        {
+          "value": "48",
+          "count": 1466,
+          "ratio": 0.016209
+        },
+        {
+          "value": "38",
+          "count": 1362,
+          "ratio": 0.015059
+        },
+        {
+          "value": "15",
+          "count": 1038,
+          "ratio": 0.011477
+        },
+        {
+          "value": "70",
+          "count": 836,
+          "ratio": 0.009243
+        },
+        {
+          "value": "32",
+          "count": 742,
+          "ratio": 0.008204
+        },
+        {
+          "value": "65",
+          "count": 698,
+          "ratio": 0.007717
+        },
+        {
+          "value": "10",
+          "count": 664,
+          "ratio": 0.007342
+        },
+        {
+          "value": "42",
+          "count": 652,
+          "ratio": 0.007209
+        },
+        {
+          "value": "36",
+          "count": 616,
+          "ratio": 0.006811
+        },
+        {
+          "value": "24",
+          "count": 608,
+          "ratio": 0.006722
+        },
+        {
+          "value": "44",
+          "count": 602,
+          "ratio": 0.006656
+        }
+      ],
+      "top_patterns": [
+        {
+          "pattern": "D2",
+          "count": 86006,
+          "ratio": 0.950931
+        },
+        {
+          "pattern": "D2S1D2",
+          "count": 3548,
+          "ratio": 0.039229
+        },
+        {
+          "pattern": "D1",
+          "count": 890,
+          "ratio": 0.00984
+        }
+      ],
+      "value_counter": {
+        "40": 42716,
+        "25": 1640,
+        "18-21": 3548,
+        "36": 616,
+        "26": 74,
+        "7": 64,
+        "15": 1038,
+        "12": 402,
+        "8": 304,
+        "5": 120,
+        "32": 742,
+        "45": 5204,
+        "10": 664,
+        "14": 82,
+        "16": 506,
+        "23": 68,
+        "22": 112,
+        "24": 608,
+        "6": 118,
+        "30": 2934,
+        "4": 94,
+        "13": 44,
+        "35": 3552,
+        "17": 80,
+        "50": 8188,
+        "48": 1466,
+        "28": 246,
+        "9": 48,
+        "33": 118,
+        "64": 42,
+        "27": 78,
+        "55": 2040,
+        "3": 70,
+        "11": 32,
+        "38": 1362,
+        "56": 266,
+        "60": 4170,
+        "37": 472,
+        "49": 72,
+        "54": 116,
+        "42": 652,
+        "2": 48,
+        "70": 836,
+        "34": 94,
+        "46": 254,
+        "47": 164,
+        "78": 26,
+        "80": 378,
+        "53": 68,
+        "75": 200,
+        "43": 438,
+        "66": 44,
+        "58": 74,
+        "52": 400,
+        "99": 246,
+        "39": 124,
+        "44": 602,
+        "72": 194,
+        "29": 24,
+        "84": 130,
+        "57": 38,
+        "65": 698,
+        "1": 24,
+        "98": 28,
+        "41": 112,
+        "68": 32,
+        "96": 18,
+        "90": 82,
+        "31": 24,
+        "95": 4,
+        "62": 46,
+        "51": 40,
+        "88": 8,
+        "77": 18,
+        "85": 34,
+        "63": 28,
+        "97": 4,
+        "73": 6,
+        "76": 8,
+        "91": 6,
+        "61": 8,
+        "87": 2,
+        "94": 2,
+        "59": 12,
+        "86": 8,
+        "69": 2,
+        "92": 6,
+        "81": 6,
+        "67": 12,
+        "89": 6,
+        "74": 6,
+        "82": 2,
+        "79": 2
+      }
+    },
+    "country": {
+      "column": "country",
+      "missing_rate": 0.0,
+      "non_null_count": 90444,
+      "unique_count": 41,
+      "unique_ratio": 0.000453,
+      "numeric_parse_ratio": 0.0,
+      "entropy": 0.821788,
+      "detected_type": "categorical",
+      "semantic_type": "country_category",
+      "index_like": false,
+      "avg_length": 12.507872,
+      "top_values": [
+        {
+          "value": "United-States",
+          "count": 82584,
+          "ratio": 0.913095
+        },
+        {
+          "value": "Mexico",
+          "count": 1806,
+          "ratio": 0.019968
+        },
+        {
+          "value": "Philippines",
+          "count": 566,
+          "ratio": 0.006258
+        },
+        {
+          "value": "Germany",
+          "count": 386,
+          "ratio": 0.004268
+        },
+        {
+          "value": "Puerto-Rico",
+          "count": 350,
+          "ratio": 0.00387
+        },
+        {
+          "value": "Canada",
+          "count": 326,
+          "ratio": 0.003604
+        },
+        {
+          "value": "El-Salvador",
+          "count": 294,
+          "ratio": 0.003251
+        },
+        {
+          "value": "India",
+          "count": 294,
+          "ratio": 0.003251
+        },
+        {
+          "value": "Cuba",
+          "count": 266,
+          "ratio": 0.002941
+        },
+        {
+          "value": "England",
+          "count": 238,
+          "ratio": 0.002631
+        },
+        {
+          "value": "China",
+          "count": 226,
+          "ratio": 0.002499
+        },
+        {
+          "value": "Jamaica",
+          "count": 206,
+          "ratio": 0.002278
+        },
+        {
+          "value": "South",
+          "count": 202,
+          "ratio": 0.002233
+        },
+        {
+          "value": "Italy",
+          "count": 200,
+          "ratio": 0.002211
+        },
+        {
+          "value": "Dominican-Republic",
+          "count": 194,
+          "ratio": 0.002145
+        },
+        {
+          "value": "Japan",
+          "count": 178,
+          "ratio": 0.001968
+        },
+        {
+          "value": "Guatemala",
+          "count": 172,
+          "ratio": 0.001902
+        },
+        {
+          "value": "Vietnam",
+          "count": 166,
+          "ratio": 0.001835
+        },
+        {
+          "value": "Columbia",
+          "count": 164,
+          "ratio": 0.001813
+        },
+        {
+          "value": "Poland",
+          "count": 162,
+          "ratio": 0.001791
+        }
+      ],
+      "top_patterns": [
+        {
+          "pattern": "L6S1L6",
+          "count": 82584,
+          "ratio": 0.913095
+        },
+        {
+          "pattern": "L6",
+          "count": 2574,
+          "ratio": 0.02846
+        },
+        {
+          "pattern": "L5",
+          "count": 1238,
+          "ratio": 0.013688
+        },
+        {
+          "pattern": "L7",
+          "count": 1190,
+          "ratio": 0.013157
+        },
+        {
+          "pattern": "L11",
+          "count": 566,
+          "ratio": 0.006258
+        },
+        {
+          "pattern": "L4",
+          "count": 566,
+          "ratio": 0.006258
+        },
+        {
+          "pattern": "L8",
+          "count": 476,
+          "ratio": 0.005263
+        },
+        {
+          "pattern": "L6S1L4",
+          "count": 350,
+          "ratio": 0.00387
+        },
+        {
+          "pattern": "L2S1L8",
+          "count": 294,
+          "ratio": 0.003251
+        },
+        {
+          "pattern": "L9",
+          "count": 268,
+          "ratio": 0.002963
+        }
+      ],
+      "value_counter": {
+        "United-States": 82584,
+        "Mexico": 1806,
+        "Columbia": 164,
+        "Puerto-Rico": 350,
+        "El-Salvador": 294,
+        "Philippines": 566,
+        "Guatemala": 172,
+        "Canada": 326,
+        "Haiti": 138,
+        "Poland": 162,
+        "England": 238,
+        "Peru": 90,
+        "India": 294,
+        "Germany": 386,
+        "Cuba": 266,
+        "Italy": 200,
+        "Dominican-Republic": 194,
+        "Scotland": 40,
+        "Honduras": 38,
+        "Jamaica": 206,
+        "Yugoslavia": 46,
+        "Vietnam": 166,
+        "Thailand": 58,
+        "Japan": 178,
+        "Nicaragua": 96,
+        "South": 202,
+        "Hong": 56,
+        "Laos": 42,
+        "Outlying-US(Guam-USVI-etc)": 44,
+        "Ecuador": 86,
+        "China": 226,
+        "Portugal": 124,
+        "France": 72,
+        "Taiwan": 110,
+        "Greece": 98,
+        "Iran": 112,
+        "Trinadad&Tobago": 52,
+        "Ireland": 72,
+        "Hungary": 36,
+        "Cambodia": 52,
+        "Holand-Netherlands": 2
+      }
+    },
+    "income": {
+      "column": "income",
+      "missing_rate": 0.0,
+      "non_null_count": 90444,
+      "unique_count": 2,
+      "unique_ratio": 2.2e-05,
+      "numeric_parse_ratio": 0.0,
+      "entropy": 0.807843,
+      "detected_type": "categorical",
+      "semantic_type": "income_category",
+      "index_like": false,
+      "avg_length": 11.0,
+      "top_values": [
+        {
+          "value": "LessThan50K",
+          "count": 68028,
+          "ratio": 0.752156
+        },
+        {
+          "value": "MoreThan50K",
+          "count": 22416,
+          "ratio": 0.247844
+        }
+      ],
+      "top_patterns": [
+        {
+          "pattern": "L8D2L1",
+          "count": 90444,
+          "ratio": 1.0
+        }
+      ],
+      "value_counter": {
+        "LessThan50K": 68028,
+        "MoreThan50K": 22416
+      }
+    }
+  },
+  "rules": {
+    "schema_rules": [
+      {
+        "rule_id": "SCHEMA_1",
+        "rule_type": "age_bucket_format",
+        "column": "age",
+        "description": "age should be a bucket such as <18, 18-21, 22-25, ..., >70",
+        "valid_values": [
+          "18-21",
+          "22-25",
+          "26-30",
+          "31-35",
+          "36-40",
+          "41-45",
+          "46-50",
+          "51-55",
+          "56-60",
+          "61-65",
+          "66-70",
+          "<18",
+          ">70"
+        ],
+        "regex": "^(<\\s*\\d+|>\\s*\\d+|\\d+\\s*-\\s*\\d+|\\d+)$",
+        "confidence": 0.92,
+        "support": 90444,
+        "usage_role": "strong_rule",
+        "target_scope": "context_only_format_guard",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_2",
+        "rule_type": "workclass_domain",
+        "column": "workclass",
+        "description": "workclass should be in a known adult domain",
+        "valid_values": [
+          "Federal-gov",
+          "Local-gov",
+          "Never-worked",
+          "Private",
+          "Self-emp-inc",
+          "Self-emp-not-inc",
+          "State-gov",
+          "Without-pay"
+        ],
+        "confidence": 0.9,
+        "support": 90444,
+        "usage_role": "strong_rule",
+        "target_scope": "context_only_domain_guard",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_3",
+        "rule_type": "not_null",
+        "column": "education",
+        "description": "education should not be null",
+        "confidence": 1.0,
+        "support": 90444,
+        "usage_role": "candidate_generation_rule",
+        "target_scope": "primary_target",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_4",
+        "rule_type": "education_domain",
+        "column": "education",
+        "description": "education should be in a known adult domain",
+        "valid_values": [
+          "10th",
+          "11th",
+          "12th",
+          "1st-4th",
+          "5th-6th",
+          "7th-8th",
+          "9th",
+          "Assoc-acdm",
+          "Assoc-voc",
+          "Bachelors",
+          "Doctorate",
+          "HS-grad",
+          "Masters",
+          "Preschool",
+          "Prof-school",
+          "Some-college"
+        ],
+        "confidence": 0.94,
+        "support": 90444,
+        "usage_role": "strong_rule",
+        "target_scope": "primary_target",
+        "priority": "high"
+      },
+      {
+        "rule_id": "SCHEMA_5",
+        "rule_type": "maritalstatus_domain",
+        "column": "maritalstatus",
+        "description": "maritalstatus should be in a known adult domain",
+        "valid_values": [
+          "Divorced",
+          "Married-AF-spouse",
+          "Married-civ-spouse",
+          "Married-spouse-absent",
+          "Never-married",
+          "Separated",
+          "Widowed"
+        ],
+        "confidence": 0.9,
+        "support": 90444,
+        "usage_role": "strong_rule",
+        "target_scope": "context_only_domain_guard",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_6",
+        "rule_type": "occupation_domain",
+        "column": "occupation",
+        "description": "occupation should be in a known adult domain",
+        "valid_values": [
+          "Adm-clerical",
+          "Armed-Forces",
+          "Craft-repair",
+          "Exec-managerial",
+          "Farming-fishing",
+          "Handlers-cleaners",
+          "Machine-op-inspct",
+          "Other-service",
+          "Priv-house-serv",
+          "Prof-specialty",
+          "Protective-serv",
+          "Sales",
+          "Tech-support",
+          "Transport-moving"
+        ],
+        "confidence": 0.9,
+        "support": 90444,
+        "usage_role": "strong_rule",
+        "target_scope": "context_only_domain_guard",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_7",
+        "rule_type": "not_null",
+        "column": "relationship",
+        "description": "relationship should not be null",
+        "confidence": 1.0,
+        "support": 90444,
+        "usage_role": "candidate_generation_rule",
+        "target_scope": "primary_target",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_8",
+        "rule_type": "relationship_domain",
+        "column": "relationship",
+        "description": "relationship should be in a known adult domain",
+        "valid_values": [
+          "Husband",
+          "Not-in-family",
+          "Other-relative",
+          "Own-child",
+          "Unmarried",
+          "Wife"
+        ],
+        "confidence": 0.94,
+        "support": 90444,
+        "usage_role": "strong_rule",
+        "target_scope": "primary_target",
+        "priority": "high"
+      },
+      {
+        "rule_id": "SCHEMA_9",
+        "rule_type": "race_domain",
+        "column": "race",
+        "description": "race should be in a known adult domain",
+        "valid_values": [
+          "Amer-Indian-Eskimo",
+          "Asian-Pac-Islander",
+          "Black",
+          "Other",
+          "White"
+        ],
+        "confidence": 0.9,
+        "support": 90444,
+        "usage_role": "strong_rule",
+        "target_scope": "context_only_domain_guard",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_10",
+        "rule_type": "not_null",
+        "column": "sex",
+        "description": "sex should not be null",
+        "confidence": 1.0,
+        "support": 90444,
+        "usage_role": "candidate_generation_rule",
+        "target_scope": "primary_target",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_11",
+        "rule_type": "sex_domain",
+        "column": "sex",
+        "description": "sex should be in a known adult domain",
+        "valid_values": [
+          "Female",
+          "Male"
+        ],
+        "confidence": 0.94,
+        "support": 90444,
+        "usage_role": "strong_rule",
+        "target_scope": "primary_target",
+        "priority": "high"
+      },
+      {
+        "rule_id": "SCHEMA_12",
+        "rule_type": "hours_per_week_format_range",
+        "column": "hoursperweek",
+        "description": "hoursperweek should be numeric or a numeric range and broadly within 0..120",
+        "lower_bound": 0,
+        "upper_bound": 120,
+        "regex": "^(\\d+|\\d+\\s*-\\s*\\d+)$",
+        "confidence": 0.9,
+        "support": 90444,
+        "usage_role": "strong_rule",
+        "target_scope": "context_only_format_guard",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_13",
+        "rule_type": "country_domain",
+        "column": "country",
+        "description": "country should be in a known adult domain",
+        "valid_values": [
+          "Cambodia",
+          "Canada",
+          "China",
+          "Columbia",
+          "Cuba",
+          "Dominican-Republic",
+          "Ecuador",
+          "El-Salvador",
+          "England",
+          "France",
+          "Germany",
+          "Greece",
+          "Guatemala",
+          "Haiti",
+          "Holand-Netherlands",
+          "Honduras",
+          "Hong",
+          "Hungary",
+          "India",
+          "Iran",
+          "Ireland",
+          "Italy",
+          "Jamaica",
+          "Japan",
+          "Laos",
+          "Mexico",
+          "Nicaragua",
+          "Outlying-US(Guam-USVI-etc)",
+          "Peru",
+          "Philippines",
+          "Poland",
+          "Portugal",
+          "Puerto-Rico",
+          "Scotland",
+          "South",
+          "Taiwan",
+          "Thailand",
+          "Trinadad&Tobago",
+          "United-States",
+          "Vietnam",
+          "Yugoslavia"
+        ],
+        "confidence": 0.9,
+        "support": 90444,
+        "usage_role": "strong_rule",
+        "target_scope": "context_only_domain_guard",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_14",
+        "rule_type": "income_domain",
+        "column": "income",
+        "description": "income should be in a known adult domain",
+        "valid_values": [
+          "<50K",
+          "<=50K",
+          ">50K",
+          ">=50K",
+          "LessThan50K",
+          "MoreThan50K"
+        ],
+        "confidence": 0.9,
+        "support": 90444,
+        "usage_role": "strong_rule",
+        "target_scope": "context_only_domain_guard",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_15",
+        "rule_type": "income_canonical_format",
+        "column": "income",
+        "description": "income should canonicalize to LessThan50K or MoreThan50K",
+        "confidence": 0.92,
+        "support": 90444,
+        "usage_role": "strong_rule",
+        "target_scope": "context_only_format_guard",
+        "priority": "medium"
+      }
+    ],
+    "fd_rules": [],
+    "soft_fd_rules": [
+      {
+        "rule_id": "CAND_SOFTFD_1",
+        "rule_type": "soft_functional_dependency",
+        "lhs": [
+          "occupation",
+          "relationship"
+        ],
+        "rhs": "sex",
+        "description": "soft FD: occupation, relationship -> sex",
+        "confidence": 0.816837,
+        "support": 90444,
+        "usage_role": "candidate_generation_rule",
+        "priority": "low"
+      }
+    ],
+    "candidate_rules": [
+      {
+        "rule_id": "CAND_HRMISS_1",
+        "rule_type": "high_risk_missing",
+        "column": "sex",
+        "target_column": "sex",
+        "description": "sex missing values are suspicious in candidate generation",
+        "confidence": 0.82,
+        "support": 90444,
+        "usage_role": "candidate_generation_rule",
+        "priority": "medium",
+        "target_scope": "primary_target"
+      },
+      {
+        "rule_id": "CAND_HRMISS_2",
+        "rule_type": "high_risk_missing",
+        "column": "education",
+        "target_column": "education",
+        "description": "education missing values are suspicious in candidate generation",
+        "confidence": 0.82,
+        "support": 90444,
+        "usage_role": "candidate_generation_rule",
+        "priority": "medium",
+        "target_scope": "primary_target"
+      },
+      {
+        "rule_id": "CAND_HRMISS_3",
+        "rule_type": "high_risk_missing",
+        "column": "relationship",
+        "target_column": "relationship",
+        "description": "relationship missing values are suspicious in candidate generation",
+        "confidence": 0.82,
+        "support": 90444,
+        "usage_role": "candidate_generation_rule",
+        "priority": "medium",
+        "target_scope": "primary_target"
+      },
+      {
+        "rule_id": "CAND_RELCTX_1",
+        "rule_type": "relationship_context_dominant",
+        "lhs": [
+          "age",
+          "maritalstatus",
+          "sex"
+        ],
+        "rhs": "relationship",
+        "target_column": "relationship",
+        "description": "relationship context dominant: age, maritalstatus, sex -> relationship",
+        "mapping_size": 23,
+        "majority_map": {
+          "18-21||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 207,
+            "ratio": 0.855072
+          },
+          "22-30||Married-civ-spouse||Female": {
+            "dominant_value": "Wife",
+            "group_size": 946,
+            "ratio": 0.866808
+          },
+          "22-30||Married-civ-spouse||Mael": {
+            "dominant_value": "Husband",
+            "group_size": 29,
+            "ratio": 1.0
+          },
+          "22-30||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 4789,
+            "ratio": 0.963667
+          },
+          "31-50||Married-civ-spouse||Female": {
+            "dominant_value": "Wife",
+            "group_size": 2622,
+            "ratio": 0.936308
+          },
+          "31-50||Married-civ-spouse||Mae": {
+            "dominant_value": "Husband",
+            "group_size": 49,
+            "ratio": 1.0
+          },
+          "31-50||Married-civ-spouse||Mael": {
+            "dominant_value": "Husband",
+            "group_size": 99,
+            "ratio": 1.0
+          },
+          "31-50||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 22046,
+            "ratio": 0.993377
+          },
+          "31-50||Married-civ-spouse||Mlae": {
+            "dominant_value": "Husband",
+            "group_size": 55,
+            "ratio": 1.0
+          },
+          "31-50||Married-civ-spouse||Mle": {
+            "dominant_value": "Husband",
+            "group_size": 42,
+            "ratio": 1.0
+          },
+          "31-50||Married-civ-spouse||aMle": {
+            "dominant_value": "Husband",
+            "group_size": 39,
+            "ratio": 1.0
+          },
+          "31-50||Married-civ-spouse||ale": {
+            "dominant_value": "Husband",
+            "group_size": 84,
+            "ratio": 1.0
+          },
+          "<18||Never-married||Female": {
+            "dominant_value": "Own-child",
+            "group_size": 488,
+            "ratio": 0.903689
+          },
+          "<18||Never-married||Male": {
+            "dominant_value": "Own-child",
+            "group_size": 492,
+            "ratio": 0.886179
+          },
+          ">50||Divorced||Male": {
+            "dominant_value": "Not-in-family",
+            "group_size": 1056,
+            "ratio": 0.765152
+          },
+          ">50||Married-civ-spouse||Female": {
+            "dominant_value": "Wife",
+            "group_size": 788,
+            "ratio": 0.930203
+          },
+          ">50||Married-civ-spouse||Mael": {
+            "dominant_value": "Husband",
+            "group_size": 29,
+            "ratio": 1.0
+          },
+          ">50||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 9711,
+            "ratio": 0.997323
+          },
+          ">50||Married-civ-spouse||Mle": {
+            "dominant_value": "Husband",
+            "group_size": 24,
+            "ratio": 1.0
+          },
+          ">50||Married-civ-spouse||aMle": {
+            "dominant_value": "Husband",
+            "group_size": 20,
+            "ratio": 1.0
+          },
+          ">50||Married-civ-spouse||ale": {
+            "dominant_value": "Husband",
+            "group_size": 37,
+            "ratio": 1.0
+          },
+          ">50||Married-spouse-absent||Male": {
+            "dominant_value": "Not-in-family",
+            "group_size": 116,
+            "ratio": 0.810345
+          },
+          ">50||Never-married||Male": {
+            "dominant_value": "Not-in-family",
+            "group_size": 566,
+            "ratio": 0.777385
+          }
+        },
+        "confidence": 0.86,
+        "support": 44334,
+        "usage_role": "candidate_generation_rule",
+        "priority": "medium",
+        "only_trigger_observed_values": [
+          "Husband",
+          "Wife"
+        ],
+        "min_group_size": 20,
+        "min_ratio": 0.75
+      },
+      {
+        "rule_id": "CAND_RELCTX_2",
+        "rule_type": "relationship_context_dominant",
+        "lhs": [
+          "education",
+          "maritalstatus",
+          "sex"
+        ],
+        "rhs": "relationship",
+        "target_column": "relationship",
+        "description": "relationship context dominant: education, maritalstatus, sex -> relationship",
+        "mapping_size": 54,
+        "majority_map": {
+          "10th||Married-civ-spouse||Female": {
+            "dominant_value": "Wife",
+            "group_size": 80,
+            "ratio": 0.9
+          },
+          "10th||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 892,
+            "ratio": 0.988789
+          },
+          "11th||Married-civ-spouse||Female": {
+            "dominant_value": "Wife",
+            "group_size": 78,
+            "ratio": 0.871795
+          },
+          "11th||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 934,
+            "ratio": 0.96788
+          },
+          "12th||Married-civ-spouse||Female": {
+            "dominant_value": "Wife",
+            "group_size": 34,
+            "ratio": 0.941176
+          },
+          "12th||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 326,
+            "ratio": 0.93865
+          },
+          "1st-4th||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 212,
+            "ratio": 0.943396
+          },
+          "5th-6th||Married-civ-spouse||Female": {
+            "dominant_value": "Wife",
+            "group_size": 42,
+            "ratio": 0.761905
+          },
+          "5th-6th||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 424,
+            "ratio": 0.966981
+          },
+          "5th-6th||Separated||Male": {
+            "dominant_value": "Not-in-family",
+            "group_size": 20,
+            "ratio": 0.8
+          },
+          "7th-8th||Married-civ-spouse||Female": {
+            "dominant_value": "Wife",
+            "group_size": 56,
+            "ratio": 0.892857
+          },
+          "7th-8th||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 900,
+            "ratio": 0.993333
+          },
+          "9th||Divorced||Male": {
+            "dominant_value": "Not-in-family",
+            "group_size": 78,
+            "ratio": 0.871795
+          },
+          "9th||Married-civ-spouse||Female": {
+            "dominant_value": "Wife",
+            "group_size": 66,
+            "ratio": 0.939394
+          },
+          "9th||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 578,
+            "ratio": 0.979239
+          },
+          "9th||Separated||Female": {
+            "dominant_value": "Unmarried",
+            "group_size": 34,
+            "ratio": 0.764706
+          },
+          "Assoc-acdm||Married-civ-spouse||Female": {
+            "dominant_value": "Wife",
+            "group_size": 204,
+            "ratio": 0.960784
+          },
+          "Assoc-acdm||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 1126,
+            "ratio": 0.992895
+          },
+          "Assoc-voc||Married-civ-spouse||Female": {
+            "dominant_value": "Wife",
+            "group_size": 224,
+            "ratio": 0.919643
+          },
+          "Assoc-voc||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 1720,
+            "ratio": 0.996512
+          },
+          "Assoc-voc||Separated||Male": {
+            "dominant_value": "Not-in-family",
+            "group_size": 38,
+            "ratio": 0.789474
+          },
+          "Bachelors||Divorced||Male": {
+            "dominant_value": "Not-in-family",
+            "group_size": 702,
+            "ratio": 0.774929
+          },
+          "Bachelors||Married-civ-spouse||Female": {
+            "dominant_value": "Wife",
+            "group_size": 852,
+            "ratio": 0.967136
+          },
+          "Bachelors||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 6952,
+            "ratio": 0.992232
+          },
+          "Bachelors||Married-spouse-absent||Male": {
+            "dominant_value": "Not-in-family",
+            "group_size": 74,
+            "ratio": 0.837838
+          },
+          "Doctorate||Divorced||Female": {
+            "dominant_value": "Not-in-family",
+            "group_size": 58,
+            "ratio": 0.758621
+          },
+          "Doctorate||Married-civ-spouse||Female": {
+            "dominant_value": "Wife",
+            "group_size": 46,
+            "ratio": 1.0
+          },
+          "Doctorate||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 686,
+            "ratio": 0.997085
+          },
+          "Doctorate||Never-married||Female": {
+            "dominant_value": "Not-in-family",
+            "group_size": 84,
+            "ratio": 0.809524
+          },
+          "Doctorate||Never-married||Male": {
+            "dominant_value": "Not-in-family",
+            "group_size": 96,
+            "ratio": 0.875
+          },
+          "HS-grad||Married-civ-spouse||Female": {
+            "dominant_value": "Wife",
+            "group_size": 1430,
+            "ratio": 0.916084
+          },
+          "HS-grad||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 12254,
+            "ratio": 0.989881
+          },
+          "Masters||Divorced||Male": {
+            "dominant_value": "Not-in-family",
+            "group_size": 250,
+            "ratio": 0.792
+          },
+          "Masters||Married-civ-spouse||Female": {
+            "dominant_value": "Wife",
+            "group_size": 338,
+            "ratio": 0.982249
+          },
+          "Masters||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 2538,
+            "ratio": 0.99606
+          },
+          "Masters||Married-spouse-absent||Female": {
+            "dominant_value": "Not-in-family",
+            "group_size": 28,
+            "ratio": 0.785714
+          },
+          "Masters||Never-married||Female": {
+            "dominant_value": "Not-in-family",
+            "group_size": 646,
+            "ratio": 0.795666
+          },
+          "Masters||Never-married||Male": {
+            "dominant_value": "Not-in-family",
+            "group_size": 558,
+            "ratio": 0.842294
+          },
+          "Masters||Separated||Male": {
+            "dominant_value": "Not-in-family",
+            "group_size": 40,
+            "ratio": 0.9
+          },
+          "Preschool||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 44,
+            "ratio": 0.863636
+          },
+          "Preschool||Never-married||Male": {
+            "dominant_value": "Not-in-family",
+            "group_size": 46,
+            "ratio": 0.913043
+          },
+          "Prof-school||Married-civ-spouse||Female": {
+            "dominant_value": "Wife",
+            "group_size": 72,
+            "ratio": 0.972222
+          },
+          "Prof-school||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 1046,
+            "ratio": 1.0
+          },
+          "Prof-school||Never-married||Female": {
+            "dominant_value": "Not-in-family",
+            "group_size": 106,
+            "ratio": 0.886792
+          },
+          "Prof-school||Never-married||Male": {
+            "dominant_value": "Not-in-family",
+            "group_size": 158,
+            "ratio": 0.835443
+          },
+          "Some-college||Married-civ-spouse||Female": {
+            "dominant_value": "Wife",
+            "group_size": 884,
+            "ratio": 0.828054
+          },
+          "Some-college||Married-civ-spouse||Mae": {
+            "dominant_value": "Husband",
+            "group_size": 78,
+            "ratio": 1.0
+          },
+          "Some-college||Married-civ-spouse||Mael": {
+            "dominant_value": "Husband",
+            "group_size": 158,
+            "ratio": 1.0
+          },
+          "Some-college||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 6123,
+            "ratio": 0.989874
+          },
+          "Some-college||Married-civ-spouse||Mlae": {
+            "dominant_value": "Husband",
+            "group_size": 87,
+            "ratio": 1.0
+          },
+          "Some-college||Married-civ-spouse||Mle": {
+            "dominant_value": "Husband",
+            "group_size": 75,
+            "ratio": 1.0
+          },
+          "Some-college||Married-civ-spouse||aMle": {
+            "dominant_value": "Husband",
+            "group_size": 67,
+            "ratio": 1.0
+          },
+          "Some-college||Married-civ-spouse||ale": {
+            "dominant_value": "Husband",
+            "group_size": 141,
+            "ratio": 1.0
+          },
+          "Some-college||Widowed||Male": {
+            "dominant_value": "Not-in-family",
+            "group_size": 72,
+            "ratio": 0.777778
+          }
+        },
+        "confidence": 0.86,
+        "support": 44855,
+        "usage_role": "candidate_generation_rule",
+        "priority": "medium",
+        "only_trigger_observed_values": [
+          "Husband",
+          "Wife"
+        ],
+        "min_group_size": 20,
+        "min_ratio": 0.75
+      },
+      {
+        "rule_id": "CAND_RELCTX_3",
+        "rule_type": "relationship_context_dominant",
+        "lhs": [
+          "workclass",
+          "maritalstatus",
+          "sex"
+        ],
+        "rhs": "relationship",
+        "target_column": "relationship",
+        "description": "relationship context dominant: workclass, maritalstatus, sex -> relationship",
+        "mapping_size": 22,
+        "majority_map": {
+          "Federal-gov||Married-civ-spouse||Female": {
+            "dominant_value": "Wife",
+            "group_size": 120,
+            "ratio": 0.95
+          },
+          "Federal-gov||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 1251,
+            "ratio": 0.993605
+          },
+          "Federal-gov||Separated||Male": {
+            "dominant_value": "Not-in-family",
+            "group_size": 26,
+            "ratio": 0.846154
+          },
+          "Local-gov||Married-civ-spouse||Female": {
+            "dominant_value": "Wife",
+            "group_size": 458,
+            "ratio": 0.960699
+          },
+          "Local-gov||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 2510,
+            "ratio": 0.988048
+          },
+          "Private||Married-AF-spouse||Female": {
+            "dominant_value": "Wife",
+            "group_size": 32,
+            "ratio": 0.9375
+          },
+          "Private||Married-civ-spouse||Female": {
+            "dominant_value": "Wife",
+            "group_size": 3114,
+            "ratio": 0.902055
+          },
+          "Private||Married-civ-spouse||Mae": {
+            "dominant_value": "Husband",
+            "group_size": 57,
+            "ratio": 1.0
+          },
+          "Private||Married-civ-spouse||Mael": {
+            "dominant_value": "Husband",
+            "group_size": 107,
+            "ratio": 1.0
+          },
+          "Private||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 24659,
+            "ratio": 0.988645
+          },
+          "Private||Married-civ-spouse||Mlae": {
+            "dominant_value": "Husband",
+            "group_size": 59,
+            "ratio": 1.0
+          },
+          "Private||Married-civ-spouse||Mle": {
+            "dominant_value": "Husband",
+            "group_size": 48,
+            "ratio": 1.0
+          },
+          "Private||Married-civ-spouse||aMle": {
+            "dominant_value": "Husband",
+            "group_size": 41,
+            "ratio": 1.0
+          },
+          "Private||Married-civ-spouse||ale": {
+            "dominant_value": "Husband",
+            "group_size": 101,
+            "ratio": 1.0
+          },
+          "Self-emp-inc||Married-civ-spouse||Female": {
+            "dominant_value": "Wife",
+            "group_size": 132,
+            "ratio": 0.916667
+          },
+          "Self-emp-inc||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 2260,
+            "ratio": 0.997345
+          },
+          "Self-emp-not-inc||Married-civ-spouse||Female": {
+            "dominant_value": "Wife",
+            "group_size": 378,
+            "ratio": 0.952381
+          },
+          "Self-emp-not-inc||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 4558,
+            "ratio": 0.992102
+          },
+          "Self-emp-not-inc||Married-spouse-absent||Male": {
+            "dominant_value": "Not-in-family",
+            "group_size": 64,
+            "ratio": 0.78125
+          },
+          "Self-emp-not-inc||Separated||Female": {
+            "dominant_value": "Unmarried",
+            "group_size": 60,
+            "ratio": 0.783333
+          },
+          "State-gov||Married-civ-spouse||Female": {
+            "dominant_value": "Wife",
+            "group_size": 216,
+            "ratio": 0.921296
+          },
+          "State-gov||Married-civ-spouse||Male": {
+            "dominant_value": "Husband",
+            "group_size": 1499,
+            "ratio": 0.99066
+          }
+        },
+        "confidence": 0.86,
+        "support": 41750,
+        "usage_role": "candidate_generation_rule",
+        "priority": "medium",
+        "only_trigger_observed_values": [
+          "Husband",
+          "Wife"
+        ],
+        "min_group_size": 20,
+        "min_ratio": 0.75
+      },
+      {
+        "rule_id": "CAND_RELCTX_4",
+        "rule_type": "relationship_context_dominant",
+        "lhs": [
+          "age",
+          "education",
+          "maritalstatus"
+        ],
+        "rhs": "relationship",
+        "target_column": "relationship",
+        "description": "relationship context dominant: age, education, maritalstatus -> relationship",
+        "mapping_size": 64,
+        "majority_map": {
+          "18-21||11th||Never-married": {
+            "dominant_value": "Own-child",
+            "group_size": 622,
+            "ratio": 0.78135
+          },
+          "18-21||12th||Never-married": {
+            "dominant_value": "Own-child",
+            "group_size": 252,
+            "ratio": 0.849206
+          },
+          "22-30||10th||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 146,
+            "ratio": 0.753425
+          },
+          "22-30||11th||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 210,
+            "ratio": 0.828571
+          },
+          "22-30||1st-4th||Never-married": {
+            "dominant_value": "Not-in-family",
+            "group_size": 42,
+            "ratio": 0.761905
+          },
+          "22-30||5th-6th||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 62,
+            "ratio": 0.806452
+          },
+          "22-30||7th-8th||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 92,
+            "ratio": 0.847826
+          },
+          "22-30||9th||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 98,
+            "ratio": 0.877551
+          },
+          "22-30||Assoc-voc||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 328,
+            "ratio": 0.804878
+          },
+          "22-30||Bachelors||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 1016,
+            "ratio": 0.773622
+          },
+          "22-30||Bachelors||Separated": {
+            "dominant_value": "Not-in-family",
+            "group_size": 24,
+            "ratio": 0.75
+          },
+          "22-30||Doctorate||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 20,
+            "ratio": 1.0
+          },
+          "22-30||HS-grad||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 2166,
+            "ratio": 0.847645
+          },
+          "22-30||Masters||Never-married": {
+            "dominant_value": "Not-in-family",
+            "group_size": 384,
+            "ratio": 0.760417
+          },
+          "22-30||Prof-school||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 50,
+            "ratio": 0.92
+          },
+          "22-30||Some-college||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 1242,
+            "ratio": 0.824477
+          },
+          "31-50||10th||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 418,
+            "ratio": 0.923445
+          },
+          "31-50||11th||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 500,
+            "ratio": 0.904
+          },
+          "31-50||12th||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 178,
+            "ratio": 0.88764
+          },
+          "31-50||1st-4th||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 112,
+            "ratio": 0.875
+          },
+          "31-50||5th-6th||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 222,
+            "ratio": 0.864865
+          },
+          "31-50||7th-8th||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 368,
+            "ratio": 0.923913
+          },
+          "31-50||9th||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 284,
+            "ratio": 0.873239
+          },
+          "31-50||Assoc-acdm||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 926,
+            "ratio": 0.87041
+          },
+          "31-50||Assoc-voc||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 1268,
+            "ratio": 0.88959
+          },
+          "31-50||Bachelors||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 5160,
+            "ratio": 0.889147
+          },
+          "31-50||Bachelors||Never-married": {
+            "dominant_value": "Not-in-family",
+            "group_size": 1694,
+            "ratio": 0.774498
+          },
+          "31-50||Doctorate||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 446,
+            "ratio": 0.914798
+          },
+          "31-50||Doctorate||Never-married": {
+            "dominant_value": "Not-in-family",
+            "group_size": 110,
+            "ratio": 0.890909
+          },
+          "31-50||HS-grad||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 7824,
+            "ratio": 0.890082
+          },
+          "31-50||Masters||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 1904,
+            "ratio": 0.872899
+          },
+          "31-50||Masters||Married-spouse-absent": {
+            "dominant_value": "Not-in-family",
+            "group_size": 20,
+            "ratio": 0.8
+          },
+          "31-50||Masters||Never-married": {
+            "dominant_value": "Not-in-family",
+            "group_size": 690,
+            "ratio": 0.852174
+          },
+          "31-50||Preschool||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 26,
+            "ratio": 0.769231
+          },
+          "31-50||Prof-school||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 750,
+            "ratio": 0.92
+          },
+          "31-50||Prof-school||Never-married": {
+            "dominant_value": "Not-in-family",
+            "group_size": 144,
+            "ratio": 0.916667
+          },
+          "31-50||Some-college||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 4840,
+            "ratio": 0.905785
+          },
+          "<18||10th||Never-married": {
+            "dominant_value": "Own-child",
+            "group_size": 296,
+            "ratio": 0.891892
+          },
+          "<18||11th||Never-married": {
+            "dominant_value": "Own-child",
+            "group_size": 464,
+            "ratio": 0.922414
+          },
+          "<18||12th||Never-married": {
+            "dominant_value": "Own-child",
+            "group_size": 114,
+            "ratio": 0.964912
+          },
+          "<18||HS-grad||Never-married": {
+            "dominant_value": "Own-child",
+            "group_size": 24,
+            "ratio": 0.833333
+          },
+          ">50||10th||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 388,
+            "ratio": 0.948454
+          },
+          ">50||10th||Never-married": {
+            "dominant_value": "Not-in-family",
+            "group_size": 28,
+            "ratio": 0.785714
+          },
+          ">50||11th||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 272,
+            "ratio": 0.955882
+          },
+          ">50||12th||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 108,
+            "ratio": 0.888889
+          },
+          ">50||1st-4th||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 102,
+            "ratio": 0.960784
+          },
+          ">50||5th-6th||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 176,
+            "ratio": 0.920455
+          },
+          ">50||7th-8th||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 492,
+            "ratio": 0.963415
+          },
+          ">50||9th||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 254,
+            "ratio": 0.88189
+          },
+          ">50||Assoc-acdm||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 210,
+            "ratio": 0.895238
+          },
+          ">50||Assoc-voc||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 334,
+            "ratio": 0.946108
+          },
+          ">50||Bachelors||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 1626,
+            "ratio": 0.937269
+          },
+          ">50||Bachelors||Never-married": {
+            "dominant_value": "Not-in-family",
+            "group_size": 164,
+            "ratio": 0.829268
+          },
+          ">50||Doctorate||Divorced": {
+            "dominant_value": "Not-in-family",
+            "group_size": 48,
+            "ratio": 0.875
+          },
+          ">50||Doctorate||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 266,
+            "ratio": 0.962406
+          },
+          ">50||Doctorate||Never-married": {
+            "dominant_value": "Not-in-family",
+            "group_size": 38,
+            "ratio": 0.894737
+          },
+          ">50||HS-grad||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 3556,
+            "ratio": 0.912261
+          },
+          ">50||Masters||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 798,
+            "ratio": 0.922306
+          },
+          ">50||Masters||Never-married": {
+            "dominant_value": "Not-in-family",
+            "group_size": 124,
+            "ratio": 0.83871
+          },
+          ">50||Preschool||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 20,
+            "ratio": 0.9
+          },
+          ">50||Prof-school||Divorced": {
+            "dominant_value": "Not-in-family",
+            "group_size": 44,
+            "ratio": 0.818182
+          },
+          ">50||Prof-school||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 318,
+            "ratio": 0.974843
+          },
+          ">50||Prof-school||Never-married": {
+            "dominant_value": "Not-in-family",
+            "group_size": 28,
+            "ratio": 0.928571
+          },
+          ">50||Some-college||Married-civ-spouse": {
+            "dominant_value": "Husband",
+            "group_size": 1798,
+            "ratio": 0.913793
+          }
+        },
+        "confidence": 0.86,
+        "support": 46728,
+        "usage_role": "candidate_generation_rule",
+        "priority": "medium",
+        "only_trigger_observed_values": [
+          "Husband",
+          "Wife"
+        ],
+        "min_group_size": 20,
+        "min_ratio": 0.75
+      },
+      {
+        "rule_id": "CAND_RELATTR_1",
+        "rule_type": "relationship_marital_spouse_conflict",
+        "columns": [
+          "maritalstatus",
+          "relationship"
+        ],
+        "target_column": "relationship",
+        "description": "If relationship is Husband/Wife while maritalstatus is non-married, attribute the suspicious cell to relationship.",
+        "spouse_values": [
+          "Husband",
+          "Wife"
+        ],
+        "conflicting_maritalstatus": [
+          "Divorced",
+          "Never-married",
+          "Separated",
+          "Widowed"
+        ],
+        "confidence": 0.94,
+        "support": 90444,
+        "usage_role": "strong_rule",
+        "priority": "high"
+      },
+      {
+        "rule_id": "CAND_RELATTR_2",
+        "rule_type": "relationship_age_spouse_conflict",
+        "columns": [
+          "age",
+          "relationship"
+        ],
+        "target_column": "relationship",
+        "description": "If a very young age bucket co-occurs with Husband/Wife, attribute the suspicious cell to relationship.",
+        "spouse_values": [
+          "Husband",
+          "Wife"
+        ],
+        "max_age_upper_for_conflict": 17,
+        "confidence": 0.9,
+        "support": 90444,
+        "usage_role": "strong_rule",
+        "priority": "high"
+      },
+      {
+        "rule_id": "CAND_RELATTR_3",
+        "rule_type": "relationship_sex_spouse_conflict",
+        "columns": [
+          "sex",
+          "relationship"
+        ],
+        "target_column": "relationship",
+        "description": "If relationship Husband/Wife conflicts with a valid sex value, attribute the suspicious cell to relationship; invalid sex itself should be handled by sex_domain.",
+        "expected_by_relationship": {
+          "Husband": "Male",
+          "Wife": "Female"
+        },
+        "confidence": 0.88,
+        "support": 90444,
+        "usage_role": "candidate_generation_rule",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "CAND_RELATTR_4",
+        "rule_type": "education_age_extreme_conflict",
+        "columns": [
+          "age",
+          "education"
+        ],
+        "target_column": "education",
+        "description": "Very young age buckets should not have extremely high education levels; attribute the suspicious cell to education.",
+        "education_order": {
+          "Preschool": 0,
+          "1st-4th": 1,
+          "5th-6th": 2,
+          "7th-8th": 3,
+          "9th": 4,
+          "10th": 5,
+          "11th": 6,
+          "12th": 7,
+          "HS-grad": 8,
+          "Some-college": 9,
+          "Assoc-voc": 10,
+          "Assoc-acdm": 10,
+          "Bachelors": 11,
+          "Masters": 12,
+          "Prof-school": 13,
+          "Doctorate": 14
+        },
+        "min_extreme_education_order": 11,
+        "max_age_upper_for_conflict": 17,
+        "confidence": 0.86,
+        "support": 90444,
+        "usage_role": "candidate_generation_rule",
+        "priority": "medium"
+      }
+    ]
+  }
+}

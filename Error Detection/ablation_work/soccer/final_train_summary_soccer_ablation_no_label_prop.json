@@ -1,0 +1,69 @@
+{
+  "dataset": "soccer",
+  "total_rows": 767,
+  "error_count": 349,
+  "correct_count": 418,
+  "error_ratio": 0.455019556714472,
+  "label_source_counter": {
+    "outside_clean": 417,
+    "llm": 350
+  },
+  "outside_candidate_count": 417,
+  "inside_candidate_count": 350,
+  "column_counter_top20": {
+    "position": 120,
+    "birthyear": 115,
+    "season": 115,
+    "team": 100,
+    "stadium": 100,
+    "city": 67,
+    "manager": 57,
+    "surname": 45,
+    "name": 25,
+    "birthplace": 23
+  },
+  "label_by_source": [
+    {
+      "label_source": "llm",
+      "label": "correct",
+      "count": 1
+    },
+    {
+      "label_source": "llm",
+      "label": "error",
+      "count": 349
+    },
+    {
+      "label_source": "outside_clean",
+      "label": "correct",
+      "count": 417
+    }
+  ],
+  "config": {
+    "input_table_csv": "/mnt/mydata/dq/projects/Splittree/soccer/soccer_dirty.csv",
+    "input_clustered_csv": "candidate_clustered_soccer.csv",
+    "input_labeled_csv": "candidate_sampled_labeled_soccer.csv",
+    "input_propagated_csv": "propagated_labels_soccer.csv",
+    "cluster_prop_min_conf": 0.9,
+    "knn_prop_min_conf": 0.92,
+    "enable_outside_clean": true,
+    "outside_clean_per_column": 70,
+    "outside_clean_min_per_column": 10,
+    "enable_balance": true,
+    "max_correct_to_error_ratio": 1.2,
+    "min_correct_keep": 80,
+    "dataset_gate": "soccer",
+    "max_propagated_train_rows": 700,
+    "max_outside_clean_total": 600
+  },
+  "soccer_attribution_bucket_counter": {
+    "outside_clean_primary_target": 417,
+    "primary_target_other": 168,
+    "format_pattern_conflict": 99,
+    "birthyear_season_age_conflict": 68,
+    "birthyear_invalid": 7,
+    "season_invalid": 4,
+    "fd_like_conflict": 2,
+    "position_invalid": 2
+  }
+}

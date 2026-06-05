@@ -1,4 +1,5 @@
 import json
+from collections import Counter
 from typing import Dict, Any, List, Tuple, Optional
 
 import numpy as np
@@ -68,6 +69,74 @@ WEAK_SIGNAL_EXTRA_CONFIDENCE = 0.08
 
 RANDOM_STATE = 42
 
+# ============================================================
+# Adult v2 传播约束
+# ============================================================
+# 当前 Adult v2 目标：只让 sex / relationship / education 的强信号样本积极传播；
+# age / income / race / country / workclass 等 context-only 列只作为上下文证据，默认不扩散伪标签。
+PRIMARY_TARGET_COLUMNS = {"sex", "relationship", "education"}
+
+CONTEXT_ONLY_COLUMNS = {
+    "age",
+    "workclass",
+    "maritalstatus",
+    "occupation",
+    "race",
+    "hoursperweek",
+    "country",
+    "income",
+}
+
+RELATIONSHIP_V2_RULE_TYPES = {
+    "relationship_marital_spouse_conflict",
+    "relationship_age_spouse_conflict",
+    "relationship_sex_spouse_conflict",
+    "relationship_context_dominant",
+}
+
+EDUCATION_V2_RULE_TYPES = {
+    "education_age_extreme_conflict",
+}
+
+# 传播预算向 primary target 倾斜，避免伪标签污染 context-only 列
+MAX_CLUSTER_PROPAGATION_PER_COLUMN_V2 = {
+    "relationship": 120,
+    "sex": 100,
+    "education": 40,
+
+    "age": 0,
+    "workclass": 0,
+    "maritalstatus": 0,
+    "occupation": 0,
+    "race": 0,
+    "hoursperweek": 0,
+    "country": 0,
+    "income": 0,
+}
+
+MAX_KNN_PROPAGATION_PER_COLUMN_V2 = {
+    "relationship": 100,
+    "sex": 80,
+    "education": 30,
+
+    "age": 0,
+    "workclass": 0,
+    "maritalstatus": 0,
+    "occupation": 0,
+    "race": 0,
+    "hoursperweek": 0,
+    "country": 0,
+    "income": 0,
+}
+
+# 对 relationship v2 正例/反例的传播更保守，必须有同列同簇或同列 KNN 支持。
+MIN_RELATIONSHIP_V2_PROP_CONF = 0.88
+MIN_SEX_INVALID_PROP_CONF = 0.90
+MIN_EDUCATION_V2_PROP_CONF = 0.90
+
+# context-only 列是否允许传播；默认 False，除非你确认这些列真有大量错误。
+ALLOW_CONTEXT_ONLY_PROPAGATION = False
+
 
 # ============================================================
 # 2. 特征列配置：adult 新版
@@ -110,6 +179,18 @@ FEATURE_COLUMNS_NUMERIC = [
 
     "signal_priority",
     "dist_to_center",
+
+    # Adult v2 attribution features
+    "target_is_primary_column",
+    "target_is_context_only_column",
+    "is_relationship_spouse_value",
+    "relationship_marital_conflict",
+    "relationship_age_conflict",
+    "relationship_sex_conflict",
+    "sex_value_invalid",
+    "education_age_extreme_conflict",
+    "has_relationship_v2_rule",
+    "has_education_v2_rule",
 ]
 
 FEATURE_COLUMNS_CATEGORICAL = [
@@ -129,6 +210,7 @@ FEATURE_COLUMNS_CATEGORICAL = [
     "time_window_bucket",
     "time_value_bucket",
     "sample_role",
+    "adult_v2_attribution_bucket",
 ]
 
 
@@ -209,6 +291,81 @@ def safe_int(x: Any, default: int = 0) -> int:
         return default
 
 
+def as_int01(x: Any) -> int:
+    if pd.isna(x) or x is None:
+        return 0
+    s = str(x).strip().lower()
+    if s in {"1", "true", "yes"}:
+        return 1
+    if s in {"0", "false", "no"}:
+        return 0
+    try:
+        return int(float(x))
+    except Exception:
+        return 0
+
+
+def get_column_cluster_budget(col_name: str, mode: str) -> int:
+    if mode == "cluster":
+        return int(MAX_CLUSTER_PROPAGATION_PER_COLUMN_V2.get(col_name, MAX_CLUSTER_PROPAGATION_PER_COLUMN))
+    if mode == "knn":
+        return int(MAX_KNN_PROPAGATION_PER_COLUMN_V2.get(col_name, MAX_KNN_PROPAGATION_PER_COLUMN))
+    return 0
+
+
+def has_relationship_v2_signal(row: pd.Series) -> bool:
+    rule = str(row.get("main_rule_type", ""))
+    return (
+        as_int01(row.get("relationship_marital_conflict", 0)) == 1
+        or as_int01(row.get("relationship_age_conflict", 0)) == 1
+        or as_int01(row.get("relationship_sex_conflict", 0)) == 1
+        or as_int01(row.get("has_relationship_v2_rule", 0)) == 1
+        or rule in RELATIONSHIP_V2_RULE_TYPES
+    )
+
+
+def has_sex_invalid_signal(row: pd.Series) -> bool:
+    return as_int01(row.get("sex_value_invalid", 0)) == 1
+
+
+def has_education_v2_signal(row: pd.Series) -> bool:
+    rule = str(row.get("main_rule_type", ""))
+    return (
+        as_int01(row.get("education_age_extreme_conflict", 0)) == 1
+        or as_int01(row.get("has_education_v2_rule", 0)) == 1
+        or rule in EDUCATION_V2_RULE_TYPES
+    )
+
+
+def should_allow_propagation_for_row(row: pd.Series, propagated_conf: float, source: str) -> bool:
+    """Adult v2 伪标签传播门控。
+
+    目标：
+    1. primary target 可以传播；
+    2. context-only 列默认不传播；
+    3. relationship / sex / education 的关键 v2 规则要求更高置信。
+    """
+    col = str(row.get("column", ""))
+
+    if col in CONTEXT_ONLY_COLUMNS and not ALLOW_CONTEXT_ONLY_PROPAGATION:
+        return False
+
+    if col not in PRIMARY_TARGET_COLUMNS and col not in CONTEXT_ONLY_COLUMNS:
+        return False
+
+    if col == "relationship" and has_relationship_v2_signal(row):
+        return propagated_conf >= MIN_RELATIONSHIP_V2_PROP_CONF
+
+    if col == "sex" and has_sex_invalid_signal(row):
+        return propagated_conf >= MIN_SEX_INVALID_PROP_CONF
+
+    if col == "education" and has_education_v2_signal(row):
+        return propagated_conf >= MIN_EDUCATION_V2_PROP_CONF
+
+    # primary target 的普通样本仍然使用全局阈值
+    return propagated_conf >= required_confidence_for_row(row, MIN_PROPAGATION_CONFIDENCE)
+
+
 def safe_none_fill(df: pd.DataFrame, idx: int):
     for col in [
         "error_type",
@@ -233,13 +390,22 @@ def is_weak_signal_row(row: pd.Series) -> bool:
     fd = safe_float(row.get("fd_like_count", 0.0), 0.0)
     ctx = safe_float(row.get("context_rule_count", 0.0), 0.0)
 
-    # country / occupation 的 rare 信号通常比较弱，传播时更谨慎
     col = str(row.get("column", ""))
     main_rule = str(row.get("main_rule_type", ""))
+
+    # context-only 列默认弱信号，避免传播扩散。
+    if col in CONTEXT_ONLY_COLUMNS:
+        return True
+
+    # country / occupation 的 rare 信号通常比较弱，传播时更谨慎
     if col in {"country", "occupation", "workclass"} and main_rule in {"rare_value", "rare_pattern", "global_dominant_value"}:
         return True
 
-    return (strong + domain + fmt + cons + schema + fd + ctx) <= 0
+    rel_v2 = 1 if has_relationship_v2_signal(row) else 0
+    sex_invalid = 1 if has_sex_invalid_signal(row) else 0
+    edu_v2 = 1 if has_education_v2_signal(row) else 0
+
+    return (strong + domain + fmt + cons + schema + fd + ctx + rel_v2 + sex_invalid + edu_v2) <= 0
 
 
 def required_confidence_for_row(row: pd.Series, base_threshold: float) -> float:
@@ -264,6 +430,23 @@ def propagation_priority(row: pd.Series) -> float:
     score += safe_float(row.get("posterior_error_probability", 0.0), 0.0) * 1.0
     score += safe_float(row.get("signal_priority", 0.0), 0.0) * 0.3
 
+    col = str(row.get("column", ""))
+    if col == "relationship":
+        score += 5.0
+    elif col == "sex":
+        score += 4.0
+    elif col == "education":
+        score += 2.0
+    elif col in CONTEXT_ONLY_COLUMNS:
+        score -= 6.0
+
+    if has_relationship_v2_signal(row):
+        score += 8.0
+    if has_sex_invalid_signal(row):
+        score += 7.0
+    if has_education_v2_signal(row):
+        score += 4.0
+
     nb = str(row.get("neighbor_bucket", ""))
     if nb == "strong_support_other":
         score += 1.2
@@ -281,7 +464,7 @@ def propagation_priority(row: pd.Series) -> float:
 # ============================================================
 
 def load_clustered_csv(path: str) -> pd.DataFrame:
-    df = pd.read_csv(path)
+    df = pd.read_csv(path, low_memory=False)
     df["row_id"] = df["row_id"].astype(int)
     df["column"] = df["column"].astype(str)
 
@@ -345,6 +528,18 @@ def load_clustered_csv(path: str) -> pd.DataFrame:
         "sample_role": "",
         "is_sampled": 0,
         "signal_priority": 0.0,
+
+        "target_is_primary_column": 0,
+        "target_is_context_only_column": 0,
+        "is_relationship_spouse_value": 0,
+        "relationship_marital_conflict": 0,
+        "relationship_age_conflict": 0,
+        "relationship_sex_conflict": 0,
+        "sex_value_invalid": 0,
+        "education_age_extreme_conflict": 0,
+        "has_relationship_v2_rule": 0,
+        "has_education_v2_rule": 0,
+        "adult_v2_attribution_bucket": "unknown",
     }
 
     for col, default_val in expected_defaults.items():
@@ -389,6 +584,17 @@ def load_clustered_csv(path: str) -> pd.DataFrame:
         "dist_to_center",
         "is_sampled",
         "signal_priority",
+
+        "target_is_primary_column",
+        "target_is_context_only_column",
+        "is_relationship_spouse_value",
+        "relationship_marital_conflict",
+        "relationship_age_conflict",
+        "relationship_sex_conflict",
+        "sex_value_invalid",
+        "education_age_extreme_conflict",
+        "has_relationship_v2_rule",
+        "has_education_v2_rule",
     ]
     for col in numeric_cols:
         df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0.0)
@@ -397,7 +603,7 @@ def load_clustered_csv(path: str) -> pd.DataFrame:
 
 
 def load_labeled_csv(path: str) -> pd.DataFrame:
-    df = pd.read_csv(path)
+    df = pd.read_csv(path, low_memory=False)
     df["row_id"] = df["row_id"].astype(int)
     df["column"] = df["column"].astype(str)
 
@@ -601,10 +807,10 @@ def cluster_label_propagation(df: pd.DataFrame) -> pd.DataFrame:
         if len(unlabeled_grp) == 0:
             continue
 
-        unlabeled_grp["_row_required_conf"] = unlabeled_grp.apply(
-            lambda r: required_confidence_for_row(r, MIN_PROPAGATION_CONFIDENCE), axis=1
+        unlabeled_grp["_row_allowed_to_propagate"] = unlabeled_grp.apply(
+            lambda r: should_allow_propagation_for_row(r, propagated_conf, "cluster_propagation"), axis=1
         )
-        unlabeled_grp = unlabeled_grp[propagated_conf >= unlabeled_grp["_row_required_conf"]].copy()
+        unlabeled_grp = unlabeled_grp[unlabeled_grp["_row_allowed_to_propagate"] == 1].copy()
 
         if len(unlabeled_grp) == 0:
             continue
@@ -618,7 +824,7 @@ def cluster_label_propagation(df: pd.DataFrame) -> pd.DataFrame:
 
         for idx in unlabeled_grp.index.tolist():
             col_name = str(df.at[idx, "column"])
-            if column_added_counter[col_name] >= MAX_CLUSTER_PROPAGATION_PER_COLUMN:
+            if column_added_counter[col_name] >= get_column_cluster_budget(col_name, "cluster"):
                 continue
 
             df.at[idx, "final_label_binary"] = propagated_label
@@ -722,8 +928,7 @@ def knn_label_propagation(df: pd.DataFrame, X: np.ndarray) -> pd.DataFrame:
                 if propagated_label is None or propagated_conf is None:
                     continue
 
-                row_required_conf = required_confidence_for_row(df.loc[idx], MIN_PROPAGATION_CONFIDENCE)
-                if propagated_conf < row_required_conf:
+                if not should_allow_propagation_for_row(df.loc[idx], propagated_conf, "knn_propagation"):
                     continue
 
                 priority = propagation_priority(df.loc[idx]) + propagated_conf * 3.0 - avg_distance * 0.2
@@ -732,7 +937,7 @@ def knn_label_propagation(df: pd.DataFrame, X: np.ndarray) -> pd.DataFrame:
             candidate_updates.sort(key=lambda x: (x[4], x[2], -x[3]), reverse=True)
 
             for idx, propagated_label, propagated_conf, avg_distance, priority in candidate_updates:
-                if column_added_counter[col_name] >= MAX_KNN_PROPAGATION_PER_COLUMN:
+                if column_added_counter[col_name] >= get_column_cluster_budget(col_name, "knn"):
                     break
 
                 df.at[idx, "final_label_binary"] = propagated_label
@@ -776,8 +981,7 @@ def knn_label_propagation(df: pd.DataFrame, X: np.ndarray) -> pd.DataFrame:
             if propagated_label is None or propagated_conf is None:
                 continue
 
-            row_required_conf = required_confidence_for_row(df.loc[idx], MIN_PROPAGATION_CONFIDENCE)
-            if propagated_conf < row_required_conf:
+            if not should_allow_propagation_for_row(df.loc[idx], propagated_conf, "knn_propagation"):
                 continue
 
             priority = propagation_priority(df.loc[idx]) + propagated_conf * 3.0 - avg_distance * 0.2
@@ -895,6 +1099,18 @@ def row_to_obj(row: pd.Series) -> Dict[str, Any]:
         "age_sampling_bucket": make_json_safe(row.get("age_sampling_bucket")),
         "hours_sampling_bucket": make_json_safe(row.get("hours_sampling_bucket")),
         "adult_value_bucket": make_json_safe(row.get("adult_value_bucket")),
+        "adult_v2_attribution_bucket": make_json_safe(row.get("adult_v2_attribution_bucket")),
+
+        "target_is_primary_column": int(as_int01(row.get("target_is_primary_column", 0))),
+        "target_is_context_only_column": int(as_int01(row.get("target_is_context_only_column", 0))),
+        "is_relationship_spouse_value": int(as_int01(row.get("is_relationship_spouse_value", 0))),
+        "relationship_marital_conflict": int(as_int01(row.get("relationship_marital_conflict", 0))),
+        "relationship_age_conflict": int(as_int01(row.get("relationship_age_conflict", 0))),
+        "relationship_sex_conflict": int(as_int01(row.get("relationship_sex_conflict", 0))),
+        "sex_value_invalid": int(as_int01(row.get("sex_value_invalid", 0))),
+        "education_age_extreme_conflict": int(as_int01(row.get("education_age_extreme_conflict", 0))),
+        "has_relationship_v2_rule": int(as_int01(row.get("has_relationship_v2_rule", 0))),
+        "has_education_v2_rule": int(as_int01(row.get("has_education_v2_rule", 0))),
 
         # 兼容旧字段
         "time_window_bucket": make_json_safe(row.get("time_window_bucket")),
@@ -978,6 +1194,10 @@ def export_results(df: pd.DataFrame, output_jsonl: str, output_csv: str, output_
         "label_source_distribution": df["label_source"].value_counts(dropna=False).to_dict(),
         "final_label_distribution": df["final_label"].value_counts(dropna=False).to_dict(),
         "column_distribution": labeled_df["column"].value_counts(dropna=False).to_dict() if len(labeled_df) else {},
+        "adult_v2_attribution_bucket_distribution": (
+            labeled_df["adult_v2_attribution_bucket"].value_counts(dropna=False).to_dict()
+            if len(labeled_df) and "adult_v2_attribution_bucket" in labeled_df.columns else {}
+        ),
         "column_source_distribution": (
             labeled_df.groupby(["column", "label_source"]).size().reset_index(name="count").to_dict(orient="records")
             if len(labeled_df) else []
@@ -996,6 +1216,12 @@ def export_results(df: pd.DataFrame, output_jsonl: str, output_csv: str, output_
             "MAX_KNN_PROPAGATION_PER_COLUMN": MAX_KNN_PROPAGATION_PER_COLUMN,
             "MAX_TOTAL_PROPAGATED": MAX_TOTAL_PROPAGATED,
             "MIN_PROPAGATION_CONFIDENCE": MIN_PROPAGATION_CONFIDENCE,
+            "PRIMARY_TARGET_COLUMNS": sorted(list(PRIMARY_TARGET_COLUMNS)),
+            "CONTEXT_ONLY_COLUMNS": sorted(list(CONTEXT_ONLY_COLUMNS)),
+            "ALLOW_CONTEXT_ONLY_PROPAGATION": ALLOW_CONTEXT_ONLY_PROPAGATION,
+            "MIN_RELATIONSHIP_V2_PROP_CONF": MIN_RELATIONSHIP_V2_PROP_CONF,
+            "MIN_SEX_INVALID_PROP_CONF": MIN_SEX_INVALID_PROP_CONF,
+            "MIN_EDUCATION_V2_PROP_CONF": MIN_EDUCATION_V2_PROP_CONF,
         }
     }
 

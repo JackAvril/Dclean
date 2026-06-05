@@ -60,39 +60,66 @@ ADULT_COLUMNS = [
     "income",
 ]
 
-TARGET_CANDIDATE_COLUMNS = set(ADULT_COLUMNS)
-HIGH_RISK_MISSING_COLUMNS = set(ADULT_COLUMNS)
-
-ENABLE_RARE_VALUE_RULE = True
-RARE_VALUE_MAX_FREQ = 2
-SKIP_RARE_VALUE_COLUMNS = {
-    "country",       # 国家天然长尾
-    "occupation",    # 职业分布长尾
-    "workclass",     # 工作类型也可能出现少数合法值
-}
-
-ENABLE_RARE_PATTERN_RULE = True
-RARE_PATTERN_MAX_RATIO = 0.02
-SKIP_RARE_PATTERN_COLUMNS = {
-    "age",
-    "hoursperweek",
-    "country",
-}
-
-# 不对这些列使用 global dominant，避免 Private / United-States / LessThan50K 这类多数类制造大量 FP
-SKIP_GLOBAL_DOMINANT_COLUMNS = {
-    "workclass",
+# ------------------------------------------------------------
+# Adult v2 候选生成策略
+# ------------------------------------------------------------
+# 当前评估显示真实错误主要集中在 sex / relationship / 少量 education。
+# 因此：
+# 1) PRIMARY_TARGET_COLUMNS 是主要被检测列；
+# 2) CONTEXT_ONLY_COLUMNS 主要作为上下文证据，不再由 rare/global/context-dominant 等弱规则大规模进入候选；
+# 3) context-only 列只有 domain / format 这类强规则触发时才建议进入候选。
+PRIMARY_TARGET_COLUMNS = {
+    "sex",
+    "relationship",
     "education",
+}
+
+CONTEXT_ONLY_COLUMNS = {
+    "age",
+    "workclass",
+    "maritalstatus",
     "occupation",
     "race",
+    "hoursperweek",
     "country",
     "income",
 }
 
-# 不对这些列加 generic pattern 规则，改用专门 schema/domain/range 规则
+SCHEMA_RULE_COLUMNS = set(ADULT_COLUMNS)
+TARGET_CANDIDATE_COLUMNS = set(PRIMARY_TARGET_COLUMNS)
+HIGH_RISK_MISSING_COLUMNS = set(PRIMARY_TARGET_COLUMNS)
+
+RELATIONSHIP_SPOUSE_VALUES = {"Husband", "Wife"}
+NON_MARRIED_STATUS_FOR_SPOUSE = {"Never-married", "Divorced", "Separated", "Widowed"}
+
+# 只为 relationship 生成少量高价值上下文 dominant 规则，不再全列泛化。
+RELATIONSHIP_CONTEXT_LHS_SPECS = [
+    ["age", "maritalstatus", "sex"],
+    ["education", "maritalstatus", "sex"],
+    ["workclass", "maritalstatus", "sex"],
+    ["age", "education", "maritalstatus"],
+]
+RELATIONSHIP_CONTEXT_MIN_GROUP_SIZE = 20
+RELATIONSHIP_CONTEXT_MIN_RATIO = 0.75
+RELATIONSHIP_CONTEXT_TRIGGER_VALUES = sorted(list(RELATIONSHIP_SPOUSE_VALUES))
+
+# 普通弱规则整体关闭/强跳过，避免 age/income/race/country/workclass 等正常值被海量打入候选。
+ENABLE_RARE_VALUE_RULE = False
+RARE_VALUE_MAX_FREQ = 2
+SKIP_RARE_VALUE_COLUMNS = set(ADULT_COLUMNS)
+
+ENABLE_RARE_PATTERN_RULE = False
+RARE_PATTERN_MAX_RATIO = 0.02
+SKIP_RARE_PATTERN_COLUMNS = set(ADULT_COLUMNS)
+
+# 全部关闭 global dominant：Adult 中 Private / United-States / LessThan50K / Male 等多数类会制造大量 FP。
+SKIP_GLOBAL_DOMINANT_COLUMNS = set(ADULT_COLUMNS)
+
+# 不对这些列加 generic pattern 规则，改用专门 schema/domain/range 规则。
 SKIP_GENERIC_PATTERN_COLUMNS = set(ADULT_COLUMNS)
 
-FD_RHS_CANDIDATE_COLUMNS = set(TARGET_CANDIDATE_COLUMNS)
+# FD/soft-FD 只允许指向 primary target，避免把 age/income/race/country 等上下文列打成候选。
+FD_RHS_CANDIDATE_COLUMNS = set(PRIMARY_TARGET_COLUMNS)
 EXTRA_SKIP_FD_LHS_COLUMNS = set()
 
 # ------------------------------------------------------------
@@ -495,47 +522,33 @@ def build_schema_rules(df, profiles):
     }
 
     for col, info in profiles.items():
-        if col not in TARGET_CANDIDATE_COLUMNS:
+        if col not in SCHEMA_RULE_COLUMNS:
             continue
 
         series = normalize_series(df[col])
 
-        not_null_threshold = 0.70
-        if col in {"age", "sex", "income", "hoursperweek"}:
-            not_null_threshold = 0.90
-        elif col in {"workclass", "education", "maritalstatus", "occupation", "relationship", "race", "country"}:
+        # 只对 primary target 使用 not_null 候选规则，避免上下文列缺失造成海量 FP。
+        if col in HIGH_RISK_MISSING_COLUMNS:
             not_null_threshold = 0.80
+            if col in {"sex", "relationship"}:
+                not_null_threshold = 0.90
 
-        if info["missing_rate"] <= not_null_threshold:
-            confidence, support = calc_not_null_confidence_and_support(series)
-            rules.append({
-                "rule_id": f"SCHEMA_{rule_id}",
-                "rule_type": "not_null",
-                "column": col,
-                "description": f"{col} should not be null",
-                "confidence": confidence,
-                "support": support,
-                "usage_role": "candidate_generation_rule",
-            })
-            rule_id += 1
-
-        if len(info["top_patterns"]) > 0 and col not in SKIP_GENERIC_PATTERN_COLUMNS:
-            main_pattern = info["top_patterns"][0]
-            if main_pattern["ratio"] >= DOMINANT_PATTERN_THRESHOLD:
-                confidence, support = calc_pattern_confidence_and_support(series, main_pattern["pattern"])
+            if info["missing_rate"] <= not_null_threshold:
+                confidence, support = calc_not_null_confidence_and_support(series)
                 rules.append({
                     "rule_id": f"SCHEMA_{rule_id}",
-                    "rule_type": "pattern",
+                    "rule_type": "not_null",
                     "column": col,
-                    "description": f"{col} should mostly follow the dominant pattern",
-                    "pattern": main_pattern["pattern"],
+                    "description": f"{col} should not be null",
                     "confidence": confidence,
                     "support": support,
-                    "usage_role": "strong_rule",
+                    "usage_role": "candidate_generation_rule",
+                    "target_scope": "primary_target",
                 })
                 rule_id += 1
 
-        # adult 专属规则
+        # adult 专属强格式 / domain 规则。context-only 列保留这些规则，是为了只捕捉明显非法值，
+        # 但不再让 weak statistical rules 把它们大量放入候选。
         if col == "age":
             rules.append({
                 "rule_id": f"SCHEMA_{rule_id}",
@@ -547,6 +560,7 @@ def build_schema_rules(df, profiles):
                 "confidence": 0.92,
                 "support": info["non_null_count"],
                 "usage_role": "strong_rule",
+                "target_scope": "context_only_format_guard",
             })
             rule_id += 1
 
@@ -562,19 +576,22 @@ def build_schema_rules(df, profiles):
                 "confidence": 0.90,
                 "support": info["non_null_count"],
                 "usage_role": "strong_rule",
+                "target_scope": "context_only_format_guard",
             })
             rule_id += 1
 
         if col in domain_specs:
+            target_scope = "primary_target" if col in PRIMARY_TARGET_COLUMNS else "context_only_domain_guard"
             rules.append({
                 "rule_id": f"SCHEMA_{rule_id}",
                 "rule_type": f"{col}_domain",
                 "column": col,
                 "description": f"{col} should be in a known adult domain",
                 "valid_values": sorted(list(domain_specs[col])),
-                "confidence": 0.93 if col != "country" else 0.86,
+                "confidence": 0.94 if col in PRIMARY_TARGET_COLUMNS else 0.90,
                 "support": info["non_null_count"],
-                "usage_role": "strong_rule" if col != "country" else "candidate_generation_rule",
+                "usage_role": "strong_rule",
+                "target_scope": target_scope,
             })
             rule_id += 1
 
@@ -587,6 +604,7 @@ def build_schema_rules(df, profiles):
                 "confidence": 0.92,
                 "support": info["non_null_count"],
                 "usage_role": "strong_rule",
+                "target_scope": "context_only_format_guard",
             })
             rule_id += 1
 
@@ -694,29 +712,26 @@ def build_soft_fd_rules(df, profiles):
 # ============================================================
 
 def build_pair_context_rules(df):
+    """Build only high-value relationship context rules.
+
+    原版本会为很多列建立 context dominant 规则，导致 age/income/race/country/workclass 等上下文列
+    被大量误纳入候选。Adult v2 只构造 relationship 的多字段上下文规则，并且在 shrink 阶段应只对
+    observed relationship in {Husband, Wife} 触发，用于召回当前最主要的 relationship 错误模式。
+    """
     rules = []
     rule_id = 1
     norm_df = pd.DataFrame({c: normalize_series(df[c]) for c in df.columns})
 
-    pair_specs = [
-        (["age"], "education"),
-        (["age"], "relationship"),
-        (["maritalstatus"], "relationship"),
-        (["relationship"], "maritalstatus"),
-        (["workclass"], "occupation"),
-        (["education"], "occupation"),
-        (["occupation"], "workclass"),
-        (["education", "occupation"], "income"),
-        (["maritalstatus", "relationship"], "sex"),
-        (["country"], "race"),
-    ]
+    rhs = "relationship"
+    if rhs not in norm_df.columns:
+        return rules
 
-    for lhs, rhs in pair_specs:
+    for lhs in RELATIONSHIP_CONTEXT_LHS_SPECS:
         if any(c not in norm_df.columns for c in lhs + [rhs]):
             continue
 
         sub = norm_df[lhs + [rhs]].dropna()
-        if len(sub) < PAIR_CONTEXT_MIN_GROUP_SIZE:
+        if len(sub) < RELATIONSHIP_CONTEXT_MIN_GROUP_SIZE:
             continue
 
         grouped = sub.groupby(lhs, dropna=True)[rhs]
@@ -724,14 +739,14 @@ def build_pair_context_rules(df):
         total_support = 0
 
         for key, grp in grouped:
-            if len(grp) < PAIR_CONTEXT_MIN_GROUP_SIZE:
+            if len(grp) < RELATIONSHIP_CONTEXT_MIN_GROUP_SIZE:
                 continue
 
             cnt = Counter(grp.tolist())
             maj_val, maj_cnt = cnt.most_common(1)[0]
             ratio = maj_cnt / len(grp)
 
-            if ratio >= PAIR_CONTEXT_MIN_RATIO:
+            if ratio >= RELATIONSHIP_CONTEXT_MIN_RATIO:
                 if not isinstance(key, tuple):
                     key = (key,)
                 majority_map["||".join(map(str, key))] = {
@@ -742,18 +757,22 @@ def build_pair_context_rules(df):
                 total_support += len(grp)
 
         if majority_map:
-            rtype = "dominant_value_by_context_pair" if len(lhs) >= 2 else "dominant_value_by_context"
             rules.append({
-                "rule_id": f"CAND_PAIRCTX_{rule_id}",
-                "rule_type": rtype,
+                "rule_id": f"CAND_RELCTX_{rule_id}",
+                "rule_type": "relationship_context_dominant",
                 "lhs": lhs,
                 "rhs": rhs,
-                "description": f"context dominant: {', '.join(lhs)} -> {rhs}",
+                "target_column": rhs,
+                "description": f"relationship context dominant: {', '.join(lhs)} -> relationship",
                 "mapping_size": len(majority_map),
                 "majority_map": majority_map,
-                "confidence": 0.84,
+                "confidence": 0.86,
                 "support": total_support,
                 "usage_role": "candidate_generation_rule",
+                "priority": "medium",
+                "only_trigger_observed_values": RELATIONSHIP_CONTEXT_TRIGGER_VALUES,
+                "min_group_size": RELATIONSHIP_CONTEXT_MIN_GROUP_SIZE,
+                "min_ratio": RELATIONSHIP_CONTEXT_MIN_RATIO,
             })
             rule_id += 1
 
@@ -761,91 +780,75 @@ def build_pair_context_rules(df):
 
 
 def build_adult_consistency_rules(df, profiles):
+    """Build attribution-aware Adult consistency rules.
+
+    关键变化：relationship 与 maritalstatus/age/sex 冲突时，优先将候选归因到 relationship，
+    而不是把 age/maritalstatus/sex 都打成候选。
+    """
     rules = []
     rule_id = 1
 
-    if {"age", "education"}.issubset(df.columns):
+    if {"maritalstatus", "relationship"}.issubset(df.columns):
         rules.append({
-            "rule_id": f"CAND_ADULTCONS_{rule_id}",
-            "rule_type": "age_education_consistency",
-            "columns": ["age", "education"],
-            "description": "very young age buckets should be consistent with plausible education levels",
-            "confidence": 0.86,
+            "rule_id": f"CAND_RELATTR_{rule_id}",
+            "rule_type": "relationship_marital_spouse_conflict",
+            "columns": ["maritalstatus", "relationship"],
+            "target_column": "relationship",
+            "description": "If relationship is Husband/Wife while maritalstatus is non-married, attribute the suspicious cell to relationship.",
+            "spouse_values": sorted(list(RELATIONSHIP_SPOUSE_VALUES)),
+            "conflicting_maritalstatus": sorted(list(NON_MARRIED_STATUS_FOR_SPOUSE)),
+            "confidence": 0.94,
             "support": len(df),
-            "usage_role": "candidate_generation_rule",
-            "education_order": EDUCATION_ORDER,
+            "usage_role": "strong_rule",
+            "priority": "high",
         })
         rule_id += 1
 
     if {"age", "relationship"}.issubset(df.columns):
         rules.append({
-            "rule_id": f"CAND_ADULTCONS_{rule_id}",
-            "rule_type": "age_relationship_consistency",
+            "rule_id": f"CAND_RELATTR_{rule_id}",
+            "rule_type": "relationship_age_spouse_conflict",
             "columns": ["age", "relationship"],
-            "description": "age bucket should be consistent with relationship role such as Own-child",
-            "confidence": 0.82,
-            "support": len(df),
-            "usage_role": "candidate_generation_rule",
-        })
-        rule_id += 1
-
-    if {"maritalstatus", "relationship"}.issubset(df.columns):
-        rules.append({
-            "rule_id": f"CAND_ADULTCONS_{rule_id}",
-            "rule_type": "marital_relationship_consistency",
-            "columns": ["maritalstatus", "relationship"],
-            "description": "maritalstatus should be logically consistent with relationship",
+            "target_column": "relationship",
+            "description": "If a very young age bucket co-occurs with Husband/Wife, attribute the suspicious cell to relationship.",
+            "spouse_values": sorted(list(RELATIONSHIP_SPOUSE_VALUES)),
+            "max_age_upper_for_conflict": 17,
             "confidence": 0.90,
             "support": len(df),
             "usage_role": "strong_rule",
+            "priority": "high",
         })
         rule_id += 1
 
     if {"sex", "relationship"}.issubset(df.columns):
         rules.append({
-            "rule_id": f"CAND_ADULTCONS_{rule_id}",
-            "rule_type": "sex_relationship_consistency",
+            "rule_id": f"CAND_RELATTR_{rule_id}",
+            "rule_type": "relationship_sex_spouse_conflict",
             "columns": ["sex", "relationship"],
-            "description": "relationship Wife/Husband should be consistent with sex",
+            "target_column": "relationship",
+            "description": "If relationship Husband/Wife conflicts with a valid sex value, attribute the suspicious cell to relationship; invalid sex itself should be handled by sex_domain.",
+            "expected_by_relationship": {"Husband": "Male", "Wife": "Female"},
             "confidence": 0.88,
             "support": len(df),
             "usage_role": "candidate_generation_rule",
+            "priority": "medium",
         })
         rule_id += 1
 
-    if {"workclass", "occupation"}.issubset(df.columns):
+    if {"age", "education"}.issubset(df.columns):
         rules.append({
-            "rule_id": f"CAND_ADULTCONS_{rule_id}",
-            "rule_type": "workclass_occupation_consistency",
-            "columns": ["workclass", "occupation"],
-            "description": "workclass and occupation should be mutually plausible",
-            "confidence": 0.82,
+            "rule_id": f"CAND_RELATTR_{rule_id}",
+            "rule_type": "education_age_extreme_conflict",
+            "columns": ["age", "education"],
+            "target_column": "education",
+            "description": "Very young age buckets should not have extremely high education levels; attribute the suspicious cell to education.",
+            "education_order": EDUCATION_ORDER,
+            "min_extreme_education_order": EDUCATION_ORDER["Bachelors"],
+            "max_age_upper_for_conflict": 17,
+            "confidence": 0.86,
             "support": len(df),
             "usage_role": "candidate_generation_rule",
-        })
-        rule_id += 1
-
-    if {"education", "occupation"}.issubset(df.columns):
-        rules.append({
-            "rule_id": f"CAND_ADULTCONS_{rule_id}",
-            "rule_type": "education_occupation_consistency",
-            "columns": ["education", "occupation"],
-            "description": "education and occupation should be mutually plausible by dominant evidence",
-            "confidence": 0.80,
-            "support": len(df),
-            "usage_role": "candidate_generation_rule",
-        })
-        rule_id += 1
-
-    if {"hoursperweek", "workclass"}.issubset(df.columns):
-        rules.append({
-            "rule_id": f"CAND_ADULTCONS_{rule_id}",
-            "rule_type": "hours_workclass_consistency",
-            "columns": ["hoursperweek", "workclass"],
-            "description": "hoursperweek should be broadly plausible for the workclass",
-            "confidence": 0.78,
-            "support": len(df),
-            "usage_role": "candidate_generation_rule",
+            "priority": "medium",
         })
         rule_id += 1
 
@@ -855,126 +858,11 @@ def build_adult_consistency_rules(df, profiles):
 def build_candidate_generation_rules(df, profiles):
     rules = []
     rule_id = 1
-    norm_df = pd.DataFrame({c: normalize_series(df[c]) for c in df.columns})
 
-    # global dominant
-    for col, prof in profiles.items():
-        if col not in TARGET_CANDIDATE_COLUMNS or col in SKIP_GLOBAL_DOMINANT_COLUMNS:
-            continue
+    # Adult v2: 不再生成 global_dominant / rare_value / rare_pattern / generic context dominant。
+    # 当前评估表明这些弱统计规则会把 age/income/race/country/workclass 等上下文列大规模误纳入候选。
 
-        top_values = prof.get("top_values", [])
-        if not top_values:
-            continue
-
-        top1 = top_values[0]
-        if top1["ratio"] >= DOMINANT_TYPO_MIN_RATIO:
-            rules.append({
-                "rule_id": f"CAND_GDOM_{rule_id}",
-                "rule_type": "global_dominant_value",
-                "column": col,
-                "description": f"global dominant value for {col}",
-                "dominant_value": top1["value"],
-                "dominant_count": top1["count"],
-                "dominant_ratio": top1["ratio"],
-                "confidence": round(top1["ratio"], 6),
-                "support": prof["non_null_count"],
-                "usage_role": "candidate_generation_rule",
-            })
-            rule_id += 1
-
-    # single-column context dominant
-    lhs_candidates = select_fd_lhs_candidates(profiles)
-    context_rule_id = 1
-    for rhs in TARGET_CANDIDATE_COLUMNS:
-        if rhs not in df.columns:
-            continue
-
-        for lhs in lhs_candidates:
-            if lhs == rhs:
-                continue
-
-            sub = norm_df[[lhs, rhs]].dropna()
-            if len(sub) < SOFT_FD_MIN_GROUP_SIZE:
-                continue
-
-            grouped = sub.groupby(lhs)[rhs]
-            majority_map = {}
-            total_support = 0
-
-            for lhs_val, grp in grouped:
-                if len(grp) < SOFT_FD_MIN_GROUP_SIZE:
-                    continue
-
-                cnt = Counter(grp.tolist())
-                maj_val, maj_cnt = cnt.most_common(1)[0]
-                ratio = maj_cnt / len(grp)
-
-                if ratio >= SOFT_FD_CONFIDENCE_THRESHOLD:
-                    majority_map[lhs_val] = {
-                        "dominant_value": maj_val,
-                        "group_size": len(grp),
-                        "ratio": round(ratio, 6),
-                    }
-                    total_support += len(grp)
-
-            if majority_map:
-                rules.append({
-                    "rule_id": f"CAND_CTXDOM_{context_rule_id}",
-                    "rule_type": "dominant_value_by_context",
-                    "lhs": [lhs],
-                    "rhs": rhs,
-                    "description": f"context dominant: {lhs} -> dominant {rhs}",
-                    "mapping_size": len(majority_map),
-                    "majority_map": majority_map,
-                    "confidence": 0.85,
-                    "support": total_support,
-                    "usage_role": "candidate_generation_rule",
-                })
-                context_rule_id += 1
-
-    # rare value
-    if ENABLE_RARE_VALUE_RULE:
-        for col, prof in profiles.items():
-            if col not in TARGET_CANDIDATE_COLUMNS or col in SKIP_RARE_VALUE_COLUMNS:
-                continue
-
-            counter = prof["value_counter"]
-            rare_values = [v for v, c in counter.items() if c <= RARE_VALUE_MAX_FREQ]
-            if rare_values:
-                rules.append({
-                    "rule_id": f"CAND_RAREVAL_{rule_id}",
-                    "rule_type": "rare_value",
-                    "column": col,
-                    "description": f"rare values in {col} may be suspicious",
-                    "rare_values": rare_values[:5000],
-                    "confidence": 0.6,
-                    "support": sum(counter[v] for v in rare_values),
-                    "usage_role": "candidate_generation_rule",
-                })
-                rule_id += 1
-
-    # rare pattern
-    if ENABLE_RARE_PATTERN_RULE:
-        for col, prof in profiles.items():
-            if col not in TARGET_CANDIDATE_COLUMNS or col in SKIP_RARE_PATTERN_COLUMNS:
-                continue
-
-            top_patterns = prof.get("top_patterns", [])
-            rare_patterns = [x["pattern"] for x in top_patterns if x["ratio"] <= RARE_PATTERN_MAX_RATIO]
-            if rare_patterns:
-                rules.append({
-                    "rule_id": f"CAND_RAREPAT_{rule_id}",
-                    "rule_type": "rare_pattern",
-                    "column": col,
-                    "description": f"rare patterns in {col} may be suspicious",
-                    "rare_patterns": rare_patterns,
-                    "confidence": 0.6,
-                    "support": prof["non_null_count"],
-                    "usage_role": "candidate_generation_rule",
-                })
-                rule_id += 1
-
-    # high risk missing
+    # high risk missing: only primary targets
     for col in HIGH_RISK_MISSING_COLUMNS:
         if col not in profiles:
             continue
@@ -983,36 +871,20 @@ def build_candidate_generation_rules(df, profiles):
             "rule_id": f"CAND_HRMISS_{rule_id}",
             "rule_type": "high_risk_missing",
             "column": col,
+            "target_column": col,
             "description": f"{col} missing values are suspicious in candidate generation",
-            "confidence": 0.8,
+            "confidence": 0.82,
             "support": prof["non_null_count"],
             "usage_role": "candidate_generation_rule",
+            "priority": "medium",
+            "target_scope": "primary_target",
         })
         rule_id += 1
 
-    # paired missing consistency
-    for a, b in [
-        ("workclass", "occupation"),
-        ("maritalstatus", "relationship"),
-        ("sex", "relationship"),
-        ("age", "education"),
-        ("country", "race"),
-        ("education", "occupation"),
-    ]:
-        if a in df.columns and b in df.columns:
-            rules.append({
-                "rule_id": f"CAND_PAIR_{rule_id}",
-                "rule_type": "paired_missing_consistency",
-                "columns": [a, b],
-                "description": f"{a} and {b} should usually co-occur",
-                "confidence": 0.8,
-                "support": len(df),
-                "usage_role": "candidate_generation_rule",
-            })
-            rule_id += 1
-
+    # 只保留与 relationship 主错误模式相关的多字段上下文规则，和显式 attribution consistency rules。
     rules.extend(build_pair_context_rules(df))
     rules.extend(build_adult_consistency_rules(df, profiles))
+
     return rules
 
 
@@ -1024,34 +896,40 @@ def assign_rule_priority(rule):
     rtype = rule.get("rule_type", "")
 
     if rtype in {
-        "age_bucket_format",
-        "hours_per_week_format_range",
-        "workclass_domain",
-        "education_domain",
-        "maritalstatus_domain",
-        "occupation_domain",
-        "relationship_domain",
-        "race_domain",
         "sex_domain",
-        "income_domain",
-        "income_canonical_format",
-        "marital_relationship_consistency",
+        "relationship_domain",
+        "education_domain",
+        "relationship_marital_spouse_conflict",
+        "relationship_age_spouse_conflict",
     }:
         return "high"
 
     if rtype in {
+        "age_bucket_format",
+        "hours_per_week_format_range",
+        "workclass_domain",
+        "maritalstatus_domain",
+        "occupation_domain",
+        "race_domain",
         "country_domain",
-        "age_education_consistency",
-        "age_relationship_consistency",
-        "sex_relationship_consistency",
-        "workclass_occupation_consistency",
-        "education_occupation_consistency",
-        "hours_workclass_consistency",
+        "income_domain",
+        "income_canonical_format",
+        "relationship_sex_spouse_conflict",
+        "education_age_extreme_conflict",
+        "relationship_context_dominant",
+        "high_risk_missing",
     }:
         return "medium"
 
+    if rtype in {
+        "functional_dependency",
+        "soft_functional_dependency",
+    }:
+        # FD/soft-FD 只作为证据，优先级不宜过高，避免把上下文统计相关性当作强规则。
+        return "low"
+
     if rule.get("usage_role", "candidate_generation_rule") == "candidate_generation_rule":
-        if rule.get("confidence", 0.0) >= 0.85 and rule.get("support", 0) >= 20:
+        if rule.get("confidence", 0.0) >= 0.90 and rule.get("support", 0) >= 20:
             return "medium"
         return "low"
 
@@ -1102,12 +980,14 @@ def build_rule_pool(input_csv, output_json):
             "column_count": int(len(df.columns)),
             "design_goal": "high_recall_candidate_generation_for_adult",
             "target_candidate_columns": sorted(list(TARGET_CANDIDATE_COLUMNS)),
+            "primary_target_columns": sorted(list(PRIMARY_TARGET_COLUMNS)),
+            "context_only_columns": sorted(list(CONTEXT_ONLY_COLUMNS)),
             "notes": [
                 "candidate inclusion is determined only by violating rules in this pool",
-                "adult-specific rules include categorical domains, age/hour range checks, income canonicalization, and demographic/work-profile consistency rules",
-                "global dominant rules are disabled for high-frequency majority columns such as workclass, country, and income to avoid excessive false positives",
-                "rare_value is disabled for country/workclass/occupation because they naturally contain legitimate minority values",
-                "FD and soft FD rules are mined but should be used as evidence rather than final labels",
+                "adult v2 focuses candidate generation on sex, relationship, and education based on evaluation error distribution",
+                "global dominant, rare value, rare pattern, and generic context-dominant rules are disabled to avoid excessive false positives",
+                "relationship-specific attribution rules target Husband/Wife conflicts with maritalstatus, age, and sex",
+                "FD and soft FD rules are mined only for primary target RHS columns and should be used as weak evidence rather than final labels",
             ],
         },
         "column_profiles": profiles,

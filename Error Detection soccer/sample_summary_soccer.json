@@ -1,0 +1,80 @@
+{
+  "input_candidates": 75344,
+  "sampled_candidates": 350,
+  "sample_ratio": 0.004645,
+  "global_sample_budget": 350,
+  "max_weak_rule_samples": 45,
+  "column_distribution_input": {
+    "team": 61321,
+    "stadium": 3642,
+    "birthyear": 2522,
+    "surname": 1561,
+    "position": 1084,
+    "birthplace": 1078,
+    "name": 1071,
+    "season": 1029,
+    "city": 1025,
+    "manager": 1011
+  },
+  "column_distribution_sampled": {
+    "position": 50,
+    "birthyear": 45,
+    "season": 45,
+    "surname": 45,
+    "team": 45,
+    "city": 40,
+    "stadium": 32,
+    "name": 20,
+    "birthplace": 14,
+    "manager": 14
+  },
+  "rule_distribution_input": {
+    "team_name_pattern": 60345,
+    "not_null": 10226,
+    "stadium_name_pattern": 2630,
+    "birthyear_season_age_consistency": 1455,
+    "surname_pattern": 547,
+    "functional_dependency": 38,
+    "birthyear_numeric_range": 37,
+    "season_numeric_range": 34,
+    "position_domain": 20,
+    "name_pattern": 9,
+    "manager_name_pattern": 2,
+    "birthplace_location_pattern": 1
+  },
+  "rule_distribution_sampled": {
+    "not_null": 234,
+    "team_name_pattern": 43,
+    "stadium_name_pattern": 24,
+    "surname_pattern": 23,
+    "birthyear_numeric_range": 7,
+    "name_pattern": 6,
+    "season_numeric_range": 4,
+    "manager_name_pattern": 2,
+    "birthyear_season_age_consistency": 2,
+    "functional_dependency": 2,
+    "position_domain": 2,
+    "birthplace_location_pattern": 1
+  },
+  "soccer_signal_distribution_sampled": {
+    "attr_primary_target_other": 159,
+    "attr_format_pattern_conflict": 82,
+    "attr_birthyear_season_age_conflict": 65,
+    "attr_fd_like_conflict": 31,
+    "attr_birthyear_invalid": 7,
+    "attr_season_invalid": 4,
+    "attr_position_invalid": 2
+  },
+  "soccer_attribution_distribution_sampled": {
+    "primary_target_other": 159,
+    "format_pattern_conflict": 82,
+    "birthyear_season_age_conflict": 65,
+    "fd_like_conflict": 31,
+    "birthyear_invalid": 7,
+    "season_invalid": 4,
+    "position_invalid": 2
+  },
+  "bucket_count": 102,
+  "cluster_count": 446,
+  "weak_rule_sampled_count": 0
+}

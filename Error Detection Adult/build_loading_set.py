@@ -62,6 +62,49 @@ ADULT_COLUMNS = {
 
 ADULT_LONG_TAIL_COLUMNS = {"country", "occupation", "workclass"}
 
+# Adult v2：与规则池、候选缩减、采样、标签传播、训练集构建保持一致
+PRIMARY_TARGET_COLUMNS = {
+    "sex",
+    "relationship",
+    "education",
+}
+
+CONTEXT_ONLY_COLUMNS = {
+    "age",
+    "workclass",
+    "maritalstatus",
+    "occupation",
+    "race",
+    "hoursperweek",
+    "country",
+    "income",
+}
+
+RELATIONSHIP_V2_RULE_TYPES = {
+    "relationship_marital_spouse_conflict",
+    "relationship_age_spouse_conflict",
+    "relationship_sex_spouse_conflict",
+    "relationship_context_dominant",
+}
+
+EDUCATION_V2_RULE_TYPES = {
+    "education_age_extreme_conflict",
+}
+
+ADULT_V2_FEATURE_COLS = [
+    "target_is_primary_column",
+    "target_is_context_only_column",
+    "is_relationship_spouse_value",
+    "relationship_marital_conflict",
+    "relationship_age_conflict",
+    "relationship_sex_conflict",
+    "sex_value_invalid",
+    "education_age_extreme_conflict",
+    "has_relationship_v2_rule",
+    "has_education_v2_rule",
+    "adult_v2_attribution_bucket",
+]
+
 
 # ============================================================
 # 2. 基础工具函数
@@ -123,12 +166,57 @@ def parse_bool_like(x, default=None):
     return default
 
 
+def as_int01(x, default=0):
+    if pd.isna(x) or x is None:
+        return default
+    s = str(x).strip().lower()
+    if s in {"1", "true", "yes", "y"}:
+        return 1
+    if s in {"0", "false", "no", "n"}:
+        return 0
+    try:
+        return int(float(x))
+    except Exception:
+        return default
+
+
+def is_relationship_v2_rule(rule_type: str) -> bool:
+    return str(rule_type) in RELATIONSHIP_V2_RULE_TYPES
+
+
+def is_education_v2_rule(rule_type: str) -> bool:
+    return str(rule_type) in EDUCATION_V2_RULE_TYPES
+
+
+def build_adult_v2_attribution_bucket(row: pd.Series) -> str:
+    col = str(row.get("column", ""))
+    rule = str(row.get("main_rule_type", ""))
+
+    if as_int01(row.get("relationship_marital_conflict", 0)) == 1:
+        return "relationship_marital_conflict"
+    if as_int01(row.get("relationship_age_conflict", 0)) == 1:
+        return "relationship_age_conflict"
+    if as_int01(row.get("relationship_sex_conflict", 0)) == 1:
+        return "relationship_sex_conflict"
+    if as_int01(row.get("has_relationship_v2_rule", 0)) == 1 or is_relationship_v2_rule(rule):
+        return "relationship_v2_rule"
+    if as_int01(row.get("sex_value_invalid", 0)) == 1:
+        return "sex_value_invalid"
+    if as_int01(row.get("education_age_extreme_conflict", 0)) == 1 or is_education_v2_rule(rule):
+        return "education_age_extreme_conflict"
+    if col in PRIMARY_TARGET_COLUMNS:
+        return "primary_target_other"
+    if col in CONTEXT_ONLY_COLUMNS:
+        return "context_only_other"
+    return "unknown_attribution"
+
+
 # ============================================================
 # 3. 读取与预处理
 # ============================================================
 
 def load_full_candidate_csv(path: str) -> pd.DataFrame:
-    df = pd.read_csv(path, dtype=str)
+    df = pd.read_csv(path, dtype=str, low_memory=False)
     df = maybe_drop_unnamed_columns(df)
 
     required_cols = [
@@ -190,6 +278,19 @@ def load_full_candidate_csv(path: str) -> pd.DataFrame:
         "is_sampled": np.nan,
         "signal_priority": 0.0,
 
+        # Adult v2 attribution fields
+        "target_is_primary_column": 0,
+        "target_is_context_only_column": 0,
+        "is_relationship_spouse_value": 0,
+        "relationship_marital_conflict": 0,
+        "relationship_age_conflict": 0,
+        "relationship_sex_conflict": 0,
+        "sex_value_invalid": 0,
+        "education_age_extreme_conflict": 0,
+        "has_relationship_v2_rule": 0,
+        "has_education_v2_rule": 0,
+        "adult_v2_attribution_bucket": "",
+
         # 兼容旧 flights/time 字段
         "time_window_rule_count": 0,
         "time_value_minutes": np.nan,
@@ -222,6 +323,7 @@ def load_full_candidate_csv(path: str) -> pd.DataFrame:
         "domain_valid",
         "adult_evidence_flags",
         "row_income_canonical",
+        "adult_v2_attribution_bucket",
         "time_window_bucket",
         "time_value_bucket",
         "bucket_id",
@@ -248,6 +350,18 @@ def load_full_candidate_csv(path: str) -> pd.DataFrame:
         "row_missing_count",
         "row_non_missing_count",
         "time_window_rule_count",
+
+        "target_is_primary_column",
+        "target_is_context_only_column",
+        "is_relationship_spouse_value",
+        "relationship_marital_conflict",
+        "relationship_age_conflict",
+        "relationship_sex_conflict",
+        "sex_value_invalid",
+        "education_age_extreme_conflict",
+        "has_relationship_v2_rule",
+        "has_education_v2_rule",
+
         "cluster_id",
         "is_sampled",
     ]
@@ -283,7 +397,7 @@ def load_full_candidate_csv(path: str) -> pd.DataFrame:
 
 
 def load_clustered_csv(path: str) -> pd.DataFrame:
-    df = pd.read_csv(path, dtype=str)
+    df = pd.read_csv(path, dtype=str, low_memory=False)
     df = maybe_drop_unnamed_columns(df)
 
     needed_cols = [
@@ -300,7 +414,32 @@ def load_clustered_csv(path: str) -> pd.DataFrame:
         "adult_value_bucket", "domain_valid", "adult_consistency_score",
         "adult_profile_inconsistency_count",
 
+        # Adult v2 attribution fields
+        "target_is_primary_column",
+        "target_is_context_only_column",
+        "is_relationship_spouse_value",
+        "relationship_marital_conflict",
+        "relationship_age_conflict",
+        "relationship_sex_conflict",
+        "sex_value_invalid",
+        "education_age_extreme_conflict",
+        "has_relationship_v2_rule",
+        "has_education_v2_rule",
+        "adult_v2_attribution_bucket",
+
         # 兼容旧字段
+        "target_is_primary_column",
+        "target_is_context_only_column",
+        "is_relationship_spouse_value",
+        "relationship_marital_conflict",
+        "relationship_age_conflict",
+        "relationship_sex_conflict",
+        "sex_value_invalid",
+        "education_age_extreme_conflict",
+        "has_relationship_v2_rule",
+        "has_education_v2_rule",
+        "adult_v2_attribution_bucket",
+
         "time_window_rule_count", "time_value_minutes",
         "time_window_bucket", "time_value_bucket",
     ]
@@ -320,7 +459,73 @@ def load_clustered_csv(path: str) -> pd.DataFrame:
 # 4. merge 聚类字段
 # ============================================================
 
+
+def first_non_empty_series(df: pd.DataFrame, col_name: str, default=None) -> pd.Series:
+    """Robustly return a 1-D Series even when df has duplicate column names.
+
+    Pandas may return a DataFrame for df[col_name] if duplicate headers exist.
+    This helper coalesces duplicate columns row-wise by taking the first non-null,
+    non-empty value. It prevents errors like:
+    NotImplementedError: cannot align with a higher dimensional NDFrame
+    """
+    matches = [i for i, c in enumerate(df.columns) if c == col_name]
+    if not matches:
+        return pd.Series([default] * len(df), index=df.index)
+
+    sub = df.iloc[:, matches]
+
+    if sub.shape[1] == 1:
+        return sub.iloc[:, 0]
+
+    # Treat empty strings as missing during coalesce.
+    # 注意：sub2 仍然可能包含重复列名，不能用 sub2[c]，否则仍可能返回 DataFrame。
+    # 必须按列位置逐列处理，保证每次拿到的都是 1-D Series。
+    sub2 = sub.copy()
+    cleaned_cols = []
+    for j in range(sub2.shape[1]):
+        s = sub2.iloc[:, j]
+        s = s.where(
+            ~s.isna() & (s.astype(str).str.strip() != ""),
+            np.nan
+        )
+        cleaned_cols.append(s.reset_index(drop=True))
+
+    if not cleaned_cols:
+        return pd.Series([default] * len(df), index=df.index)
+
+    cleaned = pd.concat(cleaned_cols, axis=1)
+    cleaned.index = df.index
+    return cleaned.bfill(axis=1).iloc[:, 0]
+
+
+def drop_all_columns_named(df: pd.DataFrame, col_name: str) -> pd.DataFrame:
+    return df.loc[:, [c != col_name for c in df.columns]].copy()
+
+
+
 def merge_cluster_fields(full_df: pd.DataFrame, clustered_df: pd.DataFrame) -> pd.DataFrame:
+    """Merge cluster/sample fields back to full candidate contexts.
+
+    This version is robust to duplicate column names. The previous implementation used
+    df[col].where(..., df[cluster_col]); if df[col] or df[cluster_col] resolves to a
+    DataFrame because duplicate column names exist, pandas raises:
+    NotImplementedError: cannot align with a higher dimensional NDFrame.
+    """
+    # 防止输入表本身存在重复列名，先做一层 coalesce。
+    def collapse_duplicate_columns(input_df: pd.DataFrame) -> pd.DataFrame:
+        out_parts = []
+        seen = []
+        for c in input_df.columns:
+            if c in seen:
+                continue
+            seen.append(c)
+            s = first_non_empty_series(input_df, c)
+            out_parts.append(pd.Series(s.values, name=c, index=input_df.index))
+        return pd.concat(out_parts, axis=1) if out_parts else pd.DataFrame(index=input_df.index)
+
+    full_df = collapse_duplicate_columns(full_df)
+    clustered_df = collapse_duplicate_columns(clustered_df)
+
     df = full_df.merge(
         clustered_df,
         on=["row_id", "column"],
@@ -340,21 +545,42 @@ def merge_cluster_fields(full_df: pd.DataFrame, clustered_df: pd.DataFrame) -> p
         "adult_value_bucket", "domain_valid", "adult_consistency_score",
         "adult_profile_inconsistency_count",
 
+        "target_is_primary_column",
+        "target_is_context_only_column",
+        "is_relationship_spouse_value",
+        "relationship_marital_conflict",
+        "relationship_age_conflict",
+        "relationship_sex_conflict",
+        "sex_value_invalid",
+        "education_age_extreme_conflict",
+        "has_relationship_v2_rule",
+        "has_education_v2_rule",
+        "adult_v2_attribution_bucket",
+
         "time_window_rule_count", "time_value_minutes",
         "time_window_bucket", "time_value_bucket",
     ]
 
     for col in merge_cols:
         cluster_col = f"{col}_from_cluster"
-        if cluster_col in df.columns:
-            if col not in df.columns:
-                df[col] = df[cluster_col]
-            else:
-                df[col] = df[col].where(
-                    ~df[col].isna() & (df[col].astype(str).str.strip() != ""),
-                    df[cluster_col]
-                )
-            df = df.drop(columns=[cluster_col])
+        if cluster_col not in df.columns:
+            continue
+
+        cluster_s = first_non_empty_series(df, cluster_col)
+
+        if col not in df.columns:
+            df[col] = cluster_s
+            df = drop_all_columns_named(df, cluster_col)
+            continue
+
+        base_s = first_non_empty_series(df, col)
+        base_valid = ~base_s.isna() & (base_s.astype(str).str.strip() != "")
+        merged_s = base_s.where(base_valid, cluster_s)
+
+        # 删除所有同名重复列，再写回 1-D 结果，保证后续 df[col] 一定是 Series。
+        df = drop_all_columns_named(df, col)
+        df[col] = merged_s.values
+        df = drop_all_columns_named(df, cluster_col)
 
     return df
 
@@ -545,6 +771,55 @@ def fill_bucket_fields(df: pd.DataFrame) -> pd.DataFrame:
         build_time_value_bucket, axis=1
     )
 
+    # Adult v2 attribution bucket：如果上游没有提供，则根据 v2 字段和 main_rule_type 自动补齐。
+    for col in [
+        "target_is_primary_column",
+        "target_is_context_only_column",
+        "is_relationship_spouse_value",
+        "relationship_marital_conflict",
+        "relationship_age_conflict",
+        "relationship_sex_conflict",
+        "sex_value_invalid",
+        "education_age_extreme_conflict",
+        "has_relationship_v2_rule",
+        "has_education_v2_rule",
+    ]:
+        if col not in df.columns:
+            df[col] = 0
+        df[col] = df[col].apply(lambda x: as_int01(x, 0))
+
+    if "adult_v2_attribution_bucket" not in df.columns:
+        df["adult_v2_attribution_bucket"] = ""
+    df["adult_v2_attribution_bucket"] = df["adult_v2_attribution_bucket"].fillna("").astype(str)
+    need_fill_v2_bucket = df["adult_v2_attribution_bucket"].eq("")
+    df.loc[need_fill_v2_bucket, "adult_v2_attribution_bucket"] = df[need_fill_v2_bucket].apply(
+        build_adult_v2_attribution_bucket, axis=1
+    )
+
+    # 按列名兜底补 target_is_primary/context_only，避免上游旧文件没有这些字段。
+    df["target_is_primary_column"] = np.where(
+        df["column"].astype(str).isin(PRIMARY_TARGET_COLUMNS),
+        1,
+        df["target_is_primary_column"].astype(int),
+    )
+    df["target_is_context_only_column"] = np.where(
+        df["column"].astype(str).isin(CONTEXT_ONLY_COLUMNS),
+        1,
+        df["target_is_context_only_column"].astype(int),
+    )
+
+    # 按规则类型兜底补 v2 rule indicator。
+    df["has_relationship_v2_rule"] = np.where(
+        df["main_rule_type"].astype(str).isin(RELATIONSHIP_V2_RULE_TYPES),
+        1,
+        df["has_relationship_v2_rule"].astype(int),
+    )
+    df["has_education_v2_rule"] = np.where(
+        df["main_rule_type"].astype(str).isin(EDUCATION_V2_RULE_TYPES),
+        1,
+        df["has_education_v2_rule"].astype(int),
+    )
+
     if "bucket_id" not in df.columns:
         df["bucket_id"] = DEFAULT_BUCKET_ID
     df["bucket_id"] = df["bucket_id"].fillna(DEFAULT_BUCKET_ID).replace("", DEFAULT_BUCKET_ID)
@@ -624,6 +899,17 @@ def add_derived_features(df: pd.DataFrame) -> pd.DataFrame:
         "adult_format_rule_count",
         "adult_consistency_rule_count",
         "time_window_rule_count",
+
+        "target_is_primary_column",
+        "target_is_context_only_column",
+        "is_relationship_spouse_value",
+        "relationship_marital_conflict",
+        "relationship_age_conflict",
+        "relationship_sex_conflict",
+        "sex_value_invalid",
+        "education_age_extreme_conflict",
+        "has_relationship_v2_rule",
+        "has_education_v2_rule",
     ]
     for c in numeric_count_cols:
         if c not in df.columns:
@@ -796,6 +1082,69 @@ def add_derived_features(df: pd.DataFrame) -> pd.DataFrame:
         ((df["hours_lower"].astype(float) + df["hours_upper"].astype(float)) / 2.0) > 60
     ).astype(int)
 
+    # Adult v2 专属派生特征
+    for c in [
+        "target_is_primary_column",
+        "target_is_context_only_column",
+        "is_relationship_spouse_value",
+        "relationship_marital_conflict",
+        "relationship_age_conflict",
+        "relationship_sex_conflict",
+        "sex_value_invalid",
+        "education_age_extreme_conflict",
+        "has_relationship_v2_rule",
+        "has_education_v2_rule",
+    ]:
+        if c not in df.columns:
+            df[c] = 0
+        df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0).astype(int)
+
+    df["relationship_v2_conflict_count"] = (
+        df["relationship_marital_conflict"].astype(int)
+        + df["relationship_age_conflict"].astype(int)
+        + df["relationship_sex_conflict"].astype(int)
+    )
+
+    df["has_relationship_v2_signal"] = (
+        (df["relationship_v2_conflict_count"] > 0)
+        | (df["has_relationship_v2_rule"].astype(int) > 0)
+        | df["main_rule_type"].astype(str).isin(RELATIONSHIP_V2_RULE_TYPES)
+    ).astype(int)
+
+    df["has_education_v2_signal"] = (
+        (df["education_age_extreme_conflict"].astype(int) > 0)
+        | (df["has_education_v2_rule"].astype(int) > 0)
+        | df["main_rule_type"].astype(str).isin(EDUCATION_V2_RULE_TYPES)
+    ).astype(int)
+
+    df["is_context_only_weak_signal"] = (
+        (df["target_is_context_only_column"].astype(int) == 1)
+        & (df["adult_domain_rule_count"].astype(float) <= 0)
+        & (df["adult_format_rule_count"].astype(float) <= 0)
+        & (df["adult_consistency_rule_count"].astype(float) <= 0)
+        & (~df["main_rule_type"].astype(str).isin(RELATIONSHIP_V2_RULE_TYPES | EDUCATION_V2_RULE_TYPES))
+    ).astype(int)
+
+    df["adult_v2_signal_strength"] = (
+        2.5 * df["has_relationship_v2_signal"].astype(float)
+        + 2.0 * df["sex_value_invalid"].astype(float)
+        + 1.5 * df["has_education_v2_signal"].astype(float)
+        + 0.8 * df["target_is_primary_column"].astype(float)
+        - 1.2 * df["is_context_only_weak_signal"].astype(float)
+    )
+
+    # 给推理阶段一个可解释的高风险列标记，用于后续 infer_mlp 的阈值/后处理。
+    df["adult_v2_primary_target_signal"] = (
+        (df["target_is_primary_column"].astype(int) == 1)
+        & (
+            (df["has_relationship_v2_signal"].astype(int) == 1)
+            | (df["sex_value_invalid"].astype(int) == 1)
+            | (df["has_education_v2_signal"].astype(int) == 1)
+            | (df["adult_domain_rule_count"].astype(float) > 0)
+            | (df["adult_format_rule_count"].astype(float) > 0)
+        )
+    ).astype(int)
+
     return df
 
 
@@ -864,6 +1213,18 @@ def reorder_columns(df: pd.DataFrame) -> pd.DataFrame:
         "row_missing_count",
         "row_non_missing_count",
 
+        "target_is_primary_column",
+        "target_is_context_only_column",
+        "is_relationship_spouse_value",
+        "relationship_marital_conflict",
+        "relationship_age_conflict",
+        "relationship_sex_conflict",
+        "sex_value_invalid",
+        "education_age_extreme_conflict",
+        "has_relationship_v2_rule",
+        "has_education_v2_rule",
+        "adult_v2_attribution_bucket",
+
         # 兼容旧字段
         "time_window_rule_count",
         "time_value_minutes",
@@ -897,6 +1258,13 @@ def reorder_columns(df: pd.DataFrame) -> pd.DataFrame:
         "hours_span",
         "is_minor_age_bucket",
         "is_high_hours_bucket",
+
+        "relationship_v2_conflict_count",
+        "has_relationship_v2_signal",
+        "has_education_v2_signal",
+        "is_context_only_weak_signal",
+        "adult_v2_signal_strength",
+        "adult_v2_primary_target_signal",
 
         "pattern_bucket",
         "rarity_bucket",
@@ -972,6 +1340,10 @@ def main():
         "rule_total_count", "adult_rule_total_count",
         "rule_strength_sum",
         "domain_invalid_flag", "adult_consistency_flag",
+        "target_is_primary_column", "target_is_context_only_column",
+        "adult_v2_attribution_bucket",
+        "has_relationship_v2_signal", "sex_value_invalid",
+        "has_education_v2_signal", "adult_v2_signal_strength",
         "label_source", "is_outside_candidate"
     ]
     preview_cols = [c for c in preview_cols if c in df.columns]

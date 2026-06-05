@@ -1,0 +1,8 @@
+[
+  {
+    "name": "hospital",
+    "dirty": "/mnt/mydata/dq/projects/Splittree/hospital/hospital_dirty.csv",
+    "clean": "/mnt/mydata/dq/projects/Splittree/hospital/hospital_clean.csv",
+    "fd_path": "configs/hospital_fds.example.txt"
+  }
+]

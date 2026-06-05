@@ -19,6 +19,45 @@ OUTPUT_DIR = "two_stage_inference_output_adult_v4_with_verifier"
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
+# ============================================================
+# Adult v2 attribution features
+# ============================================================
+PRIMARY_TARGET_COLUMNS = {"sex", "relationship", "education"}
+CONTEXT_ONLY_COLUMNS = {
+    "age", "workclass", "maritalstatus", "occupation",
+    "race", "hoursperweek", "country", "income"
+}
+RELATIONSHIP_V2_RULE_TYPES = {
+    "relationship_marital_spouse_conflict",
+    "relationship_age_spouse_conflict",
+    "relationship_sex_spouse_conflict",
+    "relationship_context_dominant",
+}
+EDUCATION_V2_RULE_TYPES = {"education_age_extreme_conflict"}
+
+ADULT_V2_NUMERIC_FEATURES = [
+    "target_is_primary_column",
+    "target_is_context_only_column",
+    "is_relationship_spouse_value",
+    "relationship_marital_conflict",
+    "relationship_age_conflict",
+    "relationship_sex_conflict",
+    "sex_value_invalid",
+    "education_age_extreme_conflict",
+    "has_relationship_v2_rule",
+    "has_education_v2_rule",
+    "relationship_v2_conflict_count",
+    "has_relationship_v2_signal",
+    "has_education_v2_signal",
+    "is_context_only_weak_signal",
+    "adult_v2_signal_strength",
+    "adult_v2_primary_target_signal",
+]
+ADULT_V2_CATEGORICAL_FEATURES = [
+    "adult_v2_attribution_bucket",
+]
+
+
 USE_STAGE2 = True
 USE_COLUMN_THRESHOLDS = True
 USE_NEIGHBOR_ADJUSTMENT = True
@@ -35,46 +74,51 @@ PRINT_VERIFIER_DEBUG = True
 
 # adult 基础列阈值：长尾字段更谨慎，强规则字段适当放松
 COLUMN_THRESHOLDS = {
-    "country": 0.68,
-    "occupation": 0.66,
-    "workclass": 0.64,
-    "education": 0.62,
-    "maritalstatus": 0.60,
-    "relationship": 0.58,
-    "race": 0.62,
-    "sex": 0.56,
-    "age": 0.58,
-    "hoursperweek": 0.58,
-    "income": 0.56,
+    "relationship": 0.48,
+    "sex": 0.46,
+    "education": 0.58,
+
+    # context-only 列默认非常保守，除非 domain/format 直接非法
+    "age": 0.80,
+    "workclass": 0.82,
+    "maritalstatus": 0.78,
+    "occupation": 0.82,
+    "race": 0.82,
+    "hoursperweek": 0.78,
+    "country": 0.84,
+    "income": 0.78,
 }
 
 # 条件性降低 detector 阈值：只对强 domain / format / adult consistency 信号放松
 COND_LOWER_THRESHOLD = {
-    "age": 0.46,
-    "hoursperweek": 0.46,
-    "income": 0.44,
-    "sex": 0.45,
-    "relationship": 0.46,
-    "maritalstatus": 0.48,
-    "education": 0.50,
-    "workclass": 0.52,
-    "occupation": 0.54,
-    "country": 0.56,
-    "race": 0.52,
+    "relationship": 0.38,
+    "sex": 0.38,
+    "education": 0.48,
+
+    # context-only 只在强 domain/format 证据下小幅放松
+    "age": 0.64,
+    "hoursperweek": 0.62,
+    "income": 0.62,
+    "maritalstatus": 0.66,
+    "workclass": 0.68,
+    "occupation": 0.70,
+    "country": 0.72,
+    "race": 0.70,
 }
 
 GROUP_VERIFIER_THRESHOLD_BY_COLUMN = {
-    "country": 0.66,
-    "occupation": 0.64,
-    "workclass": 0.62,
-    "education": 0.60,
-    "maritalstatus": 0.58,
-    "relationship": 0.56,
-    "race": 0.60,
-    "sex": 0.54,
-    "age": 0.54,
-    "hoursperweek": 0.54,
-    "income": 0.52,
+    "relationship": 0.46,
+    "sex": 0.44,
+    "education": 0.58,
+
+    "age": 0.72,
+    "workclass": 0.74,
+    "maritalstatus": 0.70,
+    "occupation": 0.74,
+    "race": 0.74,
+    "hoursperweek": 0.70,
+    "country": 0.76,
+    "income": 0.70,
 }
 
 GROUP_VERIFIER_THRESHOLD_BY_RULE = {
@@ -105,6 +149,12 @@ GROUP_VERIFIER_THRESHOLD_BY_RULE = {
     "workclass_occupation_consistency": 0.52,
     "education_occupation_consistency": 0.54,
     "hours_workclass_consistency": 0.52,
+
+    "relationship_marital_spouse_conflict": 0.42,
+    "relationship_age_spouse_conflict": 0.44,
+    "relationship_sex_spouse_conflict": 0.44,
+    "relationship_context_dominant": 0.48,
+    "education_age_extreme_conflict": 0.52,
 }
 
 HARD_CASE_MARGIN = 0.05
@@ -140,6 +190,48 @@ VERIFIER_MODEL_PATH = os.path.join(MODEL_DIR, "fp_verifier_model.joblib")
 VERIFIER_PREPROCESSOR_PATH = os.path.join(MODEL_DIR, "fp_verifier_preprocessor.joblib")
 VERIFIER_CONFIG_PATH = os.path.join(MODEL_DIR, "fp_verifier_config.json")
 VERIFIER_METRICS_PATH = os.path.join(MODEL_DIR, "verifier_metrics.json")
+
+# ============================================================
+# Evidence reliability calibration from LLM-labeled candidates
+# ============================================================
+# 该模块只读取 LLM 标注样本，不读取 clean ground truth / fp_details / evaluation_summary。
+USE_EVIDENCE_RELIABILITY_GATE = True
+LLM_LABELED_CSV = "candidate_sampled_labeled_adult.csv"
+
+EVIDENCE_RELIABILITY_JSON = os.path.join(OUTPUT_DIR, "evidence_reliability_adult.json")
+EVIDENCE_RELIABILITY_CSV = os.path.join(OUTPUT_DIR, "evidence_reliability_adult.csv")
+
+RELIABILITY_MIN_GROUP_SIZE = 5
+RELIABILITY_SMOOTH_ALPHA = 1.0
+RELIABILITY_SMOOTH_BETA = 1.0
+
+# 温和阈值校准：低可靠证据提高阈值，高可靠证据轻微降低阈值。
+RELIABILITY_LOW_PRECISION = 0.30
+RELIABILITY_MID_PRECISION = 0.55
+RELIABILITY_HIGH_PRECISION = 0.80
+
+RELIABILITY_DELTA_LOW = 0.20
+RELIABILITY_DELTA_MID = 0.08
+RELIABILITY_DELTA_HIGH = -0.06
+RELIABILITY_DELTA_UNKNOWN_WEAK = 0.12
+
+# weak-only 候选的最低阈值。不是直接删除，只是要求模型更高置信度。
+WEAK_ONLY_MIN_THRESHOLD = 0.68
+SOFT_FD_ONLY_MIN_THRESHOLD = 0.70
+CONTEXT_DOMINANT_ONLY_MIN_THRESHOLD = 0.72
+CONTEXT_ONLY_WEAK_MIN_THRESHOLD = 0.88
+
+WEAK_RULE_TYPES_FOR_GATE = {
+    "rare_value",
+    "rare_pattern",
+    "global_dominant_value",
+    "functional_dependency",
+    "soft_functional_dependency",
+    "dominant_value_by_context",
+    "dominant_value_by_context_pair",
+    "relationship_context_dominant",
+}
+
 
 
 # ============================================================
@@ -191,6 +283,361 @@ def safe_str_series(df: pd.DataFrame, col: str, default="missing") -> pd.Series:
     if col in df.columns:
         return df[col].fillna(default).astype(str)
     return pd.Series([default] * len(df), index=df.index)
+
+
+def as_int01(x, default=0):
+    try:
+        if pd.isna(x):
+            return default
+    except Exception:
+        pass
+    if x is None:
+        return default
+    s = str(x).strip().lower()
+    if s in {"1", "true", "yes", "y"}:
+        return 1
+    if s in {"0", "false", "no", "n"}:
+        return 0
+    try:
+        return int(float(x))
+    except Exception:
+        return default
+
+
+def add_adult_v2_features(out: pd.DataFrame) -> pd.DataFrame:
+    col_series = safe_str_series(out, "column", "missing")
+    rule_series = safe_str_series(out, "main_rule_type", "missing")
+
+    # Base v2 fields, with fallback from column/rule_type if upstream old files are used.
+    for c in [
+        "target_is_primary_column", "target_is_context_only_column",
+        "is_relationship_spouse_value", "relationship_marital_conflict",
+        "relationship_age_conflict", "relationship_sex_conflict",
+        "sex_value_invalid", "education_age_extreme_conflict",
+        "has_relationship_v2_rule", "has_education_v2_rule",
+    ]:
+        out[c] = safe_num_series(out, c, 0).astype(int)
+
+    out["target_is_primary_column"] = np.where(
+        col_series.isin(PRIMARY_TARGET_COLUMNS), 1, out["target_is_primary_column"]
+    ).astype(int)
+    out["target_is_context_only_column"] = np.where(
+        col_series.isin(CONTEXT_ONLY_COLUMNS), 1, out["target_is_context_only_column"]
+    ).astype(int)
+
+    out["has_relationship_v2_rule"] = np.where(
+        rule_series.isin(RELATIONSHIP_V2_RULE_TYPES), 1, out["has_relationship_v2_rule"]
+    ).astype(int)
+    out["has_education_v2_rule"] = np.where(
+        rule_series.isin(EDUCATION_V2_RULE_TYPES), 1, out["has_education_v2_rule"]
+    ).astype(int)
+
+    out["relationship_v2_conflict_count"] = (
+        out["relationship_marital_conflict"].astype(int)
+        + out["relationship_age_conflict"].astype(int)
+        + out["relationship_sex_conflict"].astype(int)
+    )
+
+    out["has_relationship_v2_signal"] = (
+        (out["relationship_v2_conflict_count"] > 0)
+        | (out["has_relationship_v2_rule"].astype(int) > 0)
+        | rule_series.isin(RELATIONSHIP_V2_RULE_TYPES)
+    ).astype(int)
+
+    out["has_education_v2_signal"] = (
+        (out["education_age_extreme_conflict"].astype(int) > 0)
+        | (out["has_education_v2_rule"].astype(int) > 0)
+        | rule_series.isin(EDUCATION_V2_RULE_TYPES)
+    ).astype(int)
+
+    out["is_context_only_weak_signal"] = (
+        (out["target_is_context_only_column"].astype(int) == 1)
+        & (safe_num_series(out, "adult_domain_rule_count", 0.0) <= 0)
+        & (safe_num_series(out, "adult_format_rule_count", 0.0) <= 0)
+        & (safe_num_series(out, "adult_consistency_rule_count", 0.0) <= 0)
+        & (out["has_relationship_v2_signal"].astype(int) <= 0)
+        & (out["has_education_v2_signal"].astype(int) <= 0)
+        & (out["sex_value_invalid"].astype(int) <= 0)
+    ).astype(int)
+
+    out["adult_v2_signal_strength"] = (
+        2.5 * out["has_relationship_v2_signal"].astype(float)
+        + 2.0 * out["sex_value_invalid"].astype(float)
+        + 1.5 * out["has_education_v2_signal"].astype(float)
+        + 0.8 * out["target_is_primary_column"].astype(float)
+        - 1.2 * out["is_context_only_weak_signal"].astype(float)
+    )
+
+    out["adult_v2_primary_target_signal"] = (
+        (out["target_is_primary_column"].astype(int) == 1)
+        & (
+            (out["has_relationship_v2_signal"].astype(int) == 1)
+            | (out["sex_value_invalid"].astype(int) == 1)
+            | (out["has_education_v2_signal"].astype(int) == 1)
+            | (safe_num_series(out, "adult_domain_rule_count", 0.0) > 0)
+            | (safe_num_series(out, "adult_format_rule_count", 0.0) > 0)
+        )
+    ).astype(int)
+
+    if "adult_v2_attribution_bucket" not in out.columns:
+        out["adult_v2_attribution_bucket"] = "unknown_attribution"
+    out["adult_v2_attribution_bucket"] = out["adult_v2_attribution_bucket"].fillna("unknown_attribution").astype(str)
+    missing_bucket = out["adult_v2_attribution_bucket"].isin({"", "nan", "None", "missing"})
+    out.loc[missing_bucket & (out["relationship_marital_conflict"] == 1), "adult_v2_attribution_bucket"] = "relationship_marital_conflict"
+    out.loc[missing_bucket & (out["relationship_age_conflict"] == 1), "adult_v2_attribution_bucket"] = "relationship_age_conflict"
+    out.loc[missing_bucket & (out["relationship_sex_conflict"] == 1), "adult_v2_attribution_bucket"] = "relationship_sex_conflict"
+    out.loc[missing_bucket & (out["has_relationship_v2_rule"] == 1), "adult_v2_attribution_bucket"] = "relationship_v2_rule"
+    out.loc[missing_bucket & (out["sex_value_invalid"] == 1), "adult_v2_attribution_bucket"] = "sex_value_invalid"
+    out.loc[missing_bucket & (out["has_education_v2_rule"] == 1), "adult_v2_attribution_bucket"] = "education_age_extreme_conflict"
+    out.loc[missing_bucket & col_series.isin(PRIMARY_TARGET_COLUMNS), "adult_v2_attribution_bucket"] = "primary_target_other"
+    out.loc[missing_bucket & col_series.isin(CONTEXT_ONLY_COLUMNS), "adult_v2_attribution_bucket"] = "context_only_other"
+
+    return out
+
+
+
+def normalize_label_binary_from_row(row: pd.Series):
+    if "label_binary" in row.index and pd.notna(row["label_binary"]):
+        v = pd.to_numeric(pd.Series([row["label_binary"]]), errors="coerce").iloc[0]
+        if pd.notna(v):
+            return 1 if int(float(v)) == 1 else 0
+
+    if "label" in row.index and pd.notna(row["label"]):
+        s = str(row["label"]).strip().lower()
+        if s == "error":
+            return 1
+        if s == "correct":
+            return 0
+
+    if "is_error" in row.index and pd.notna(row["is_error"]):
+        s = str(row["is_error"]).strip().lower()
+        if s in {"1", "true", "yes", "error"}:
+            return 1
+        if s in {"0", "false", "no", "correct"}:
+            return 0
+
+    return None
+
+
+def reliability_key(field: str, value: Any) -> str:
+    if value is None or pd.isna(value):
+        value = "missing"
+    return f"{field}={str(value)}"
+
+
+def reliability_pair_key(field1: str, value1: Any, field2: str, value2: Any) -> str:
+    if value1 is None or pd.isna(value1):
+        value1 = "missing"
+    if value2 is None or pd.isna(value2):
+        value2 = "missing"
+    return f"{field1}={str(value1)}||{field2}={str(value2)}"
+
+
+def estimate_reliability_table(labeled_csv: str) -> Dict[str, Dict[str, Any]]:
+    """从 LLM 标注样本估计 evidence reliability。
+
+    注意：只使用 LLM labels，不使用 ground truth。
+    """
+    if not USE_EVIDENCE_RELIABILITY_GATE:
+        return {}
+
+    if not labeled_csv or not os.path.exists(labeled_csv):
+        print(f"[Reliability] labeled csv not found: {labeled_csv}; use generic weak-evidence gate only.")
+        return {}
+
+    labeled_df = pd.read_csv(labeled_csv, low_memory=False)
+    if len(labeled_df) == 0:
+        return {}
+
+    # 补齐 v2 字段，兼容旧标注文件。
+    labeled_df = add_derived_features(labeled_df)
+
+    label_binary = []
+    for _, row in labeled_df.iterrows():
+        label_binary.append(normalize_label_binary_from_row(row))
+    labeled_df["_rel_label_binary"] = label_binary
+    labeled_df = labeled_df[labeled_df["_rel_label_binary"].notna()].copy()
+    if len(labeled_df) == 0:
+        print("[Reliability] no valid LLM labels; use generic weak-evidence gate only.")
+        return {}
+
+    labeled_df["_rel_label_binary"] = labeled_df["_rel_label_binary"].astype(int)
+    if "confidence" in labeled_df.columns:
+        labeled_df["_rel_confidence"] = pd.to_numeric(labeled_df["confidence"], errors="coerce").fillna(1.0).clip(0.0, 1.0)
+    else:
+        labeled_df["_rel_confidence"] = 1.0
+
+    rows = []
+
+    group_specs = [
+        ("adult_v2_attribution_bucket", ["adult_v2_attribution_bucket"]),
+        ("main_rule_type", ["main_rule_type"]),
+        ("column__main_rule_type", ["column", "main_rule_type"]),
+        ("column__adult_v2_attribution_bucket", ["column", "adult_v2_attribution_bucket"]),
+    ]
+
+    for group_name, keys in group_specs:
+        existing_keys = [k for k in keys if k in labeled_df.columns]
+        if len(existing_keys) != len(keys):
+            continue
+
+        for group_values, g in labeled_df.groupby(existing_keys, dropna=False):
+            if not isinstance(group_values, tuple):
+                group_values = (group_values,)
+
+            n = int(len(g))
+            error_count = int((g["_rel_label_binary"] == 1).sum())
+            correct_count = int((g["_rel_label_binary"] == 0).sum())
+            estimated_precision = (
+                (error_count + RELIABILITY_SMOOTH_ALPHA)
+                / (n + RELIABILITY_SMOOTH_ALPHA + RELIABILITY_SMOOTH_BETA)
+            )
+            avg_conf = float(g["_rel_confidence"].mean())
+
+            if len(keys) == 1:
+                key = reliability_key(keys[0], group_values[0])
+            else:
+                key = reliability_pair_key(keys[0], group_values[0], keys[1], group_values[1])
+
+            if n < RELIABILITY_MIN_GROUP_SIZE:
+                action = "insufficient"
+                delta = 0.0
+            elif estimated_precision < RELIABILITY_LOW_PRECISION:
+                action = "conservative"
+                delta = RELIABILITY_DELTA_LOW
+            elif estimated_precision < RELIABILITY_MID_PRECISION:
+                action = "slightly_conservative"
+                delta = RELIABILITY_DELTA_MID
+            elif estimated_precision >= RELIABILITY_HIGH_PRECISION:
+                action = "trust"
+                delta = RELIABILITY_DELTA_HIGH
+            else:
+                action = "neutral"
+                delta = 0.0
+
+            rows.append({
+                "group_name": group_name,
+                "key": key,
+                "n": n,
+                "error_count": error_count,
+                "correct_count": correct_count,
+                "estimated_precision": float(estimated_precision),
+                "avg_confidence": avg_conf,
+                "threshold_delta": float(delta),
+                "action": action,
+            })
+
+    reliability = {r["key"]: r for r in rows}
+
+    ensure_dir(os.path.dirname(EVIDENCE_RELIABILITY_JSON))
+    with open(EVIDENCE_RELIABILITY_JSON, "w", encoding="utf-8") as f:
+        json.dump(reliability, f, ensure_ascii=False, indent=2)
+    pd.DataFrame(rows).to_csv(EVIDENCE_RELIABILITY_CSV, index=False, encoding="utf-8-sig")
+
+    print(f"[Reliability] valid LLM labels: {len(labeled_df)}")
+    print(f"[Reliability] groups: {len(rows)}")
+    print(f"[Reliability] saved: {EVIDENCE_RELIABILITY_JSON}")
+    print(f"[Reliability] saved: {EVIDENCE_RELIABILITY_CSV}")
+
+    return reliability
+
+
+def lookup_reliability_delta_for_row(row: pd.Series, reliability: Dict[str, Dict[str, Any]]) -> float:
+    if not reliability:
+        return 0.0
+
+    col = row.get("column", "missing")
+    rule = row.get("main_rule_type", "missing")
+    bucket = row.get("adult_v2_attribution_bucket", "missing")
+
+    # 从更细粒度到更粗粒度依次查找。
+    keys = [
+        reliability_pair_key("column", col, "adult_v2_attribution_bucket", bucket),
+        reliability_pair_key("column", col, "main_rule_type", rule),
+        reliability_key("adult_v2_attribution_bucket", bucket),
+        reliability_key("main_rule_type", rule),
+    ]
+
+    for k in keys:
+        info = reliability.get(k)
+        if info is None:
+            continue
+        if int(info.get("n", 0)) < RELIABILITY_MIN_GROUP_SIZE:
+            continue
+        return float(info.get("threshold_delta", 0.0))
+
+    return 0.0
+
+
+def is_direct_strong_v2_signal_df(df: pd.DataFrame) -> pd.Series:
+    """真正强的直接证据：domain/format/relationship-marital/relationship-sex/sex-domain 等。
+
+    注意 relationship_context_dominant / soft-FD 不算直接强证据。
+    """
+    rule = safe_str_series(df, "main_rule_type", "missing")
+    domain_invalid = safe_str_series(df, "domain_bucket", "missing").eq("domain_invalid")
+
+    return (
+        domain_invalid |
+        (safe_num_series(df, "adult_domain_rule_count", 0.0) > 0) |
+        (safe_num_series(df, "adult_format_rule_count", 0.0) > 0) |
+        (safe_num_series(df, "relationship_marital_conflict", 0).astype(int) == 1) |
+        (safe_num_series(df, "relationship_sex_conflict", 0).astype(int) == 1) |
+        (safe_num_series(df, "sex_value_invalid", 0).astype(int) == 1) |
+        (safe_num_series(df, "education_age_extreme_conflict", 0).astype(int) == 1) |
+        rule.str.contains("_domain", regex=False) |
+        rule.isin(["age_bucket_format", "hours_per_week_format_range", "income_canonical_format"])
+    )
+
+
+def apply_evidence_reliability_gate(
+    df: pd.DataFrame,
+    thresholds: pd.Series,
+    reliability: Dict[str, Dict[str, Any]],
+) -> pd.Series:
+    """基于 LLM 标注样本的 reliability + 通用 weak-evidence 原则做温和阈值校准。"""
+    if not USE_EVIDENCE_RELIABILITY_GATE:
+        return thresholds
+
+    out_th = thresholds.copy().astype(float)
+
+    col = safe_str_series(df, "column", "missing")
+    rule = safe_str_series(df, "main_rule_type", "missing")
+    direct_strong = is_direct_strong_v2_signal_df(df)
+
+    weak_rule = rule.isin(WEAK_RULE_TYPES_FOR_GATE)
+    context_only_weak = safe_num_series(df, "is_context_only_weak_signal", 0).astype(int).eq(1)
+
+    # 1) 通用弱证据门控：弱证据不能仅凭低置信度直接输出。
+    weak_only = weak_rule & (~direct_strong)
+    out_th.loc[weak_only] = np.maximum(out_th.loc[weak_only], WEAK_ONLY_MIN_THRESHOLD)
+
+    # soft-FD 如果没有 sex/domain/format 等直接强证据，要求更高置信度。
+    soft_fd_only = rule.eq("soft_functional_dependency") & (~direct_strong)
+    out_th.loc[soft_fd_only] = np.maximum(out_th.loc[soft_fd_only], SOFT_FD_ONLY_MIN_THRESHOLD)
+
+    # context-dominant 如果没有直接冲突证据，只作为弱证据。
+    context_dom_only = rule.isin({"relationship_context_dominant", "dominant_value_by_context", "dominant_value_by_context_pair"}) & (~direct_strong)
+    out_th.loc[context_dom_only] = np.maximum(out_th.loc[context_dom_only], CONTEXT_DOMINANT_ONLY_MIN_THRESHOLD)
+
+    out_th.loc[context_only_weak] = np.maximum(out_th.loc[context_only_weak], CONTEXT_ONLY_WEAK_MIN_THRESHOLD)
+
+    # 2) LLM reliability calibration：只用 LLM 标注样本，不用 ground truth。
+    deltas = df.apply(lambda row: lookup_reliability_delta_for_row(row, reliability), axis=1)
+    deltas = pd.to_numeric(deltas, errors="coerce").fillna(0.0)
+
+    # 对强证据最多只允许轻微提高阈值，避免因为 LLM 样本不足错杀召回。
+    deltas = pd.Series(deltas, index=df.index)
+    deltas.loc[direct_strong & (deltas > 0)] = np.minimum(deltas.loc[direct_strong & (deltas > 0)], 0.06)
+
+    out_th = out_th + deltas
+
+    # 3) 低可靠/未知 weak-only 的额外轻微惩罚。
+    unknown_weak = weak_only & (deltas.abs() < 1e-12)
+    out_th.loc[unknown_weak] = out_th.loc[unknown_weak] + RELIABILITY_DELTA_UNKNOWN_WEAK
+
+    return out_th.clip(lower=0.05, upper=0.95)
+
 
 
 def add_derived_features(df: pd.DataFrame) -> pd.DataFrame:
@@ -364,12 +811,14 @@ def add_derived_features(df: pd.DataFrame) -> pd.DataFrame:
     raw_prob_placeholder = safe_num_series(out, "raw_pred_error_prob", 0.0)
     out["high_prob_but_neighbor_support_current"] = ((raw_prob_placeholder >= 0.80) & support_current_mask).astype(int)
 
+    out = add_adult_v2_features(out)
+
     for col in [
         "column", "semantic_type", "detected_type", "main_rule_type", "main_usage_role",
         "pattern_bucket", "rarity_bucket", "neighbor_bucket", "domain_bucket",
         "adult_consistency_bucket", "age_sampling_bucket", "hours_sampling_bucket",
         "adult_value_bucket", "candidate_rule_dominant",
-        "time_window_bucket", "time_value_bucket",
+        "time_window_bucket", "time_value_bucket", "adult_v2_attribution_bucket",
     ]:
         if col not in out.columns:
             out[col] = "missing"
@@ -441,6 +890,15 @@ def apply_conditional_detector_thresholds(df: pd.DataFrame, base_thresholds: pd.
         adult_cons_bucket.isin(["strong_adult_consistency_signal", "adult_consistency_flag"]) |
         (safe_num_series(df, "adult_consistency_score", 0.0) >= 1.0)
     )
+    relationship_v2_signal = safe_num_series(df, "has_relationship_v2_signal", 0).astype(int) == 1
+    sex_invalid_signal = safe_num_series(df, "sex_value_invalid", 0).astype(int) == 1
+    education_v2_signal = safe_num_series(df, "has_education_v2_signal", 0).astype(int) == 1
+    # 只有直接强证据才参与降低阈值；relationship_context_dominant/soft-FD 这类弱证据不降低阈值。
+    relationship_direct_signal = (
+        safe_num_series(df, "relationship_marital_conflict", 0).astype(int).eq(1) |
+        safe_num_series(df, "relationship_sex_conflict", 0).astype(int).eq(1)
+    )
+    primary_v2_signal = relationship_direct_signal | sex_invalid_signal | education_v2_signal
 
     strong_neighbor_other = nb.isin(["strong_support_other", "medium_support_other"])
     strong_rule = safe_num_series(df, "strong_rule_count", 0.0) > 0
@@ -452,6 +910,7 @@ def apply_conditional_detector_thresholds(df: pd.DataFrame, base_thresholds: pd.
                 domain_signal |
                 format_signal |
                 consistency_signal |
+                primary_v2_signal |
                 (strong_rule & strong_neighbor_other)
             )
         )
@@ -464,10 +923,13 @@ def apply_conditional_detector_thresholds(df: pd.DataFrame, base_thresholds: pd.
 
     # neighbor 明确支持当前值且没有强 adult 信号时，提高阈值，减少 FP
     support_current = nb.isin(["strong_support_current", "weak_support_current"])
-    no_adult_signal = ~(domain_signal | format_signal | consistency_signal)
+    no_adult_signal = ~(domain_signal | format_signal | consistency_signal | primary_v2_signal)
     thresholds.loc[support_current & no_adult_signal] = np.maximum(
         thresholds.loc[support_current & no_adult_signal], 0.70
     )
+
+    context_only_weak = safe_num_series(df, "is_context_only_weak_signal", 0).astype(int).eq(1)
+    thresholds.loc[context_only_weak] = np.maximum(thresholds.loc[context_only_weak], 0.88)
 
     return thresholds
 
@@ -619,10 +1081,17 @@ def get_group_verifier_threshold(row: pd.Series, default_threshold: float) -> fl
         adult_bucket in {"strong_adult_consistency_signal", "adult_consistency_flag"} or
         float(row.get("adult_domain_rule_count", 0) or 0) > 0 or
         float(row.get("adult_format_rule_count", 0) or 0) > 0 or
-        float(row.get("adult_consistency_rule_count", 0) or 0) > 0
+        float(row.get("adult_consistency_rule_count", 0) or 0) > 0 or
+        int(float(row.get("relationship_marital_conflict", 0) or 0)) == 1 or
+        int(float(row.get("relationship_sex_conflict", 0) or 0)) == 1 or
+        int(float(row.get("sex_value_invalid", 0) or 0)) == 1 or
+        int(float(row.get("has_education_v2_signal", 0) or 0)) == 1
     )
     if strong_adult_signal:
-        th = min(th, 0.52)
+        th = min(th, 0.50)
+
+    if int(float(row.get("is_context_only_weak_signal", 0) or 0)) == 1:
+        th = max(th, 0.82)
 
     # rare-only 的 country/occupation/workclass 更谨慎
     if col in {"country", "occupation", "workclass"} and rule in {"rare_value", "rare_pattern", "global_dominant_value"}:
@@ -669,8 +1138,14 @@ def apply_fp_verifier(
         (safe_num_series(out, "adult_consistency_rule_count", 0.0) > 0) |
         safe_str_series(out, "domain_bucket", "").eq("domain_invalid")
     )
+    v2_mask = (
+        (safe_num_series(out, "has_relationship_v2_signal", 0).astype(int) == 1) |
+        (safe_num_series(out, "sex_value_invalid", 0).astype(int) == 1) |
+        (safe_num_series(out, "has_education_v2_signal", 0).astype(int) == 1) |
+        (safe_num_series(out, "is_context_only_weak_signal", 0).astype(int) == 1)
+    )
 
-    verifier_mask = detector_positive & (fd_mask | risk_col_mask | neighbor_mask | adult_mask)
+    verifier_mask = detector_positive & (fd_mask | risk_col_mask | neighbor_mask | adult_mask | v2_mask)
 
     if verifier_mask.sum() == 0:
         out["final_pred_label"] = out["detector_pred_label"].astype(int)
@@ -731,6 +1206,41 @@ def apply_column_post_rules(df: pd.DataFrame) -> pd.DataFrame:
         adult_bucket.isin({"strong_adult_consistency_signal", "adult_consistency_flag"}) |
         (safe_num_series(out, "adult_consistency_score", 0.0) >= 1.0)
     )
+    relationship_v2_signal = safe_num_series(out, "has_relationship_v2_signal", 0).astype(int).eq(1)
+    sex_invalid_signal = safe_num_series(out, "sex_value_invalid", 0).astype(int).eq(1)
+    education_v2_signal = safe_num_series(out, "has_education_v2_signal", 0).astype(int).eq(1)
+    context_only_weak = safe_num_series(out, "is_context_only_weak_signal", 0).astype(int).eq(1)
+
+    relationship_v2_signal = safe_num_series(out, "has_relationship_v2_signal", 0).astype(int).eq(1)
+    sex_invalid_signal = safe_num_series(out, "sex_value_invalid", 0).astype(int).eq(1)
+    education_v2_signal = safe_num_series(out, "has_education_v2_signal", 0).astype(int).eq(1)
+    context_only_weak = safe_num_series(out, "is_context_only_weak_signal", 0).astype(int).eq(1)
+    detector_prob = safe_num_series(out, "detector_pred_error_prob", 0.0)
+
+    # 0) context-only 弱信号强制打回，避免 age/income/race/country 等重新爆 FP
+    out.loc[final_label.eq(1) & context_only_weak, "final_pred_label"] = 0
+    final_label = safe_num_series(out, "final_pred_label", 0).astype(int)
+
+    # 0.5) primary target 的 v2 强信号召回保护。
+    # 注意：relationship_context_dominant / soft-FD 属于弱证据，不在这里无条件恢复；
+    # 只恢复 domain/format 或 relationship_marital/relationship_sex/sex_invalid 这类直接强证据。
+    relationship_direct_strong = (
+        safe_num_series(out, "relationship_marital_conflict", 0).astype(int).eq(1) |
+        safe_num_series(out, "relationship_sex_conflict", 0).astype(int).eq(1)
+    )
+    education_direct_strong = safe_num_series(out, "education_age_extreme_conflict", 0).astype(int).eq(1)
+
+    recover_v2_primary = (
+        detector_label.eq(1) &
+        final_label.eq(0) &
+        (
+            (col.eq("relationship") & relationship_direct_strong & (detector_prob >= 0.38)) |
+            (col.eq("sex") & sex_invalid_signal & (detector_prob >= 0.35)) |
+            (col.eq("education") & education_direct_strong & (detector_prob >= 0.45))
+        )
+    )
+    out.loc[recover_v2_primary, "final_pred_label"] = 1
+    final_label = safe_num_series(out, "final_pred_label", 0).astype(int)
 
     # 1) 强 adult 信号被 verifier 打回，但 detector 分数较高时恢复
     recover_strong_adult = (
@@ -773,6 +1283,52 @@ def apply_column_post_rules(df: pd.DataFrame) -> pd.DataFrame:
         )
     )
     out.loc[strong_keep, "final_pred_label"] = 1
+    final_label = safe_num_series(out, "final_pred_label", 0).astype(int)
+
+    # 5) Adult v2 precision filters:
+    # 当前评估显示：
+    # - relationship_v2_rule / relationship_context_dominant-only: 3898 FP, 0 TP
+    # - relationship_age_conflict: 2 FP, 0 TP
+    # - sex primary_target_other + soft FD: 953 FP, 0 TP
+    # 因此这些候选在没有直接 domain/format/relationship-marital/relationship-sex/sex-invalid 证据时强制打回。
+    v2_bucket = safe_str_series(out, "adult_v2_attribution_bucket", "missing")
+    relationship_marital_conflict = safe_num_series(out, "relationship_marital_conflict", 0).astype(int).eq(1)
+    relationship_sex_conflict = safe_num_series(out, "relationship_sex_conflict", 0).astype(int).eq(1)
+    relationship_age_conflict = safe_num_series(out, "relationship_age_conflict", 0).astype(int).eq(1)
+
+    rel_context_only_fp = (
+        final_label.eq(1) &
+        col.eq("relationship") &
+        (
+            v2_bucket.eq("relationship_v2_rule") |
+            (
+                rule.eq("relationship_context_dominant") &
+                (~relationship_marital_conflict) &
+                (~relationship_sex_conflict)
+            )
+        )
+    )
+    out.loc[rel_context_only_fp, "final_pred_label"] = 0
+    final_label = safe_num_series(out, "final_pred_label", 0).astype(int)
+
+    rel_age_only_fp = (
+        final_label.eq(1) &
+        col.eq("relationship") &
+        v2_bucket.eq("relationship_age_conflict") &
+        (~relationship_marital_conflict) &
+        (~relationship_sex_conflict)
+    )
+    out.loc[rel_age_only_fp, "final_pred_label"] = 0
+    final_label = safe_num_series(out, "final_pred_label", 0).astype(int)
+
+    sex_softfd_fp = (
+        final_label.eq(1) &
+        col.eq("sex") &
+        (~sex_invalid_signal) &
+        v2_bucket.eq("primary_target_other") &
+        rule.isin({"soft_functional_dependency", "functional_dependency"})
+    )
+    out.loc[sex_softfd_fp, "final_pred_label"] = 0
 
     out["final_pred_label_name"] = out["final_pred_label"].map({1: "error", 0: "correct"})
     return out
@@ -809,6 +1365,16 @@ def mark_hard_cases(df: pd.DataFrame, detector_thresholds: pd.Series) -> pd.Data
         adult_bucket.isin({"strong_adult_consistency_signal", "adult_consistency_flag"}) |
         (safe_num_series(out, "adult_consistency_score", 0.0) >= 1.0)
     )
+
+    # Adult v2 hard-case flags need these local masks.
+    # They are derived here as well, instead of relying on variables from other functions.
+    relationship_v2_signal = safe_num_series(out, "has_relationship_v2_signal", 0).astype(int).eq(1)
+    sex_invalid_signal = safe_num_series(out, "sex_value_invalid", 0).astype(int).eq(1)
+    education_v2_signal = safe_num_series(out, "has_education_v2_signal", 0).astype(int).eq(1)
+    context_only_weak = safe_num_series(out, "is_context_only_weak_signal", 0).astype(int).eq(1)
+
+    # 把 v2 信号并入 adult_signal，避免后续 hard-case/recovery 漏掉新规则。
+    adult_signal = adult_signal | relationship_v2_signal | sex_invalid_signal | education_v2_signal
 
     out["is_mid_prob"] = ((detector_prob >= HARD_CASE_LOW) & (detector_prob <= HARD_CASE_HIGH)).astype(int)
     out["is_near_threshold"] = (margin <= HARD_CASE_MARGIN).astype(int)
@@ -858,6 +1424,18 @@ def mark_hard_cases(df: pd.DataFrame, detector_thresholds: pd.Series) -> pd.Data
         )
     ).astype(int)
 
+    out["adult_v2_relationship_hardcase"] = (
+        col.eq("relationship") & relationship_v2_signal & detector_prob.between(0.25, 0.80)
+    ).astype(int)
+
+    out["adult_v2_sex_invalid_hardcase"] = (
+        col.eq("sex") & sex_invalid_signal & detector_prob.between(0.25, 0.80)
+    ).astype(int)
+
+    out["adult_v2_context_fp_hardcase"] = (
+        context_only_weak & final_label.eq(1)
+    ).astype(int)
+
     out["persistent_fp_high_risk"] = (
         final_label.eq(1) &
         col.isin(["country", "occupation", "workclass", "education"]) &
@@ -902,6 +1480,9 @@ def build_llm_jsonl(hard_df: pd.DataFrame, output_jsonl: str):
                 "persistent_fp_high_risk": int(rec.get("persistent_fp_high_risk", 0)),
                 "recall_recovery_hardcase": int(rec.get("recall_recovery_hardcase", 0)),
                 "adult_signal_hardcase": int(rec.get("adult_signal_hardcase", 0)),
+                "adult_v2_relationship_hardcase": int(rec.get("adult_v2_relationship_hardcase", 0)),
+                "adult_v2_sex_invalid_hardcase": int(rec.get("adult_v2_sex_invalid_hardcase", 0)),
+                "adult_v2_context_fp_hardcase": int(rec.get("adult_v2_context_fp_hardcase", 0)),
                 "is_stage_disagree": int(rec.get("is_stage_disagree", 0)),
                 "is_near_threshold": int(rec.get("is_near_threshold", 0)),
             }
@@ -929,7 +1510,7 @@ def main():
     cfg = load_json(CONFIG_PATH)
     metrics = load_json(METRICS_PATH)
 
-    df = pd.read_csv(INPUT_CSV)
+    df = pd.read_csv(INPUT_CSV, low_memory=False)
     df = add_derived_features(df)
 
     stage1_cfg = cfg["stage1"]
@@ -969,8 +1550,11 @@ def main():
         tmp["detector_pred_error_prob"] = detector_pred_error_prob
         detector_pred_error_prob = apply_neighbor_adjustment(tmp, "detector_pred_error_prob")
 
+    reliability_map = estimate_reliability_table(LLM_LABELED_CSV)
+
     base_thresholds = apply_base_column_thresholds(out_df, detector_threshold)
     detector_thresholds = apply_conditional_detector_thresholds(out_df, base_thresholds)
+    detector_thresholds = apply_evidence_reliability_gate(out_df, detector_thresholds, reliability_map)
 
     detector_pred_label = (detector_pred_error_prob >= detector_thresholds.values).astype(int)
 

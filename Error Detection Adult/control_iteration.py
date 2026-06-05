@@ -15,16 +15,17 @@ from openai import OpenAI
 
 BASE_TRAIN_CSV = "final_train_dataset_adult.csv"
 BASE_INFERENCE_CSV = "candidate_infer_ready_adult.csv"
+BASE_LLM_LABELED_CSV = "candidate_sampled_labeled_adult.csv"
 
-TRAIN_SCRIPT_PATH = "train_mlp_adult.py"
-INFER_SCRIPT_PATH = "infer_mlp_adult.py"
+TRAIN_SCRIPT_PATH = "train_mlp.py"
+INFER_SCRIPT_PATH = "infer_mlp.py"
 
 WORK_DIR = "active_cleaning_loop_runs_adult_v4"
 os.makedirs(WORK_DIR, exist_ok=True)
 
 # 不要把 key 写死到代码里。运行前执行：
 # export DEEPSEEK_API_KEY="你的key"
-DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "sk-fd93f5216ae0488f8bf32d9e2a14a14a")
 DEEPSEEK_BASE_URL = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
 DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
 
@@ -68,7 +69,11 @@ Adult-specific consistency hints:
 - age is usually a bucket such as <18, 18-21, 22-25, ..., >70.
 - hoursperweek should be a reasonable number or numeric range.
 - income should be LessThan50K or MoreThan50K if the dataset uses canonical labels.
+- Adult v2 primary targets are sex, relationship, and education.
 - relationship=Wife usually implies sex=Female; relationship=Husband usually implies sex=Male.
+- If relationship=Husband/Wife conflicts with valid sex/maritalstatus/age context, prefer marking relationship as erroneous.
+- If the candidate column is sex, only mark it as error when the sex value itself is outside {Male, Female} or directly corrupted.
+- Context-only columns such as age, income, race, country, workclass, occupation, maritalstatus, and hoursperweek should not be marked error unless there is direct domain/format evidence.
 - relationship=Husband/Wife conflicts with Never-married, Divorced, Separated, or Widowed.
 - very young age conflicts with very high education such as Bachelors, Masters, Doctorate.
 - workclass=Never-worked conflicts with nonzero hoursperweek or normal occupation.
@@ -252,6 +257,17 @@ def select_hard_cases_for_llm(records: List[Dict[str, Any]], max_cases: int) -> 
         score += 2.0 * robust_float(r.get("adult_consistency_rule_count"), 0.0)
         score += 1.0 * robust_float(r.get("adult_consistency_score"), 0.0)
 
+        # Adult v2 hard cases 优先，避免回流 token 被 context-only 弱样本消耗
+        score += 6.0 * robust_int(r.get("has_relationship_v2_signal"), 0)
+        score += 5.0 * robust_int(r.get("sex_value_invalid"), 0)
+        score += 3.5 * robust_int(r.get("has_education_v2_signal"), 0)
+        score -= 5.0 * robust_int(r.get("is_context_only_weak_signal"), 0)
+
+        flags = r.get("hard_case_flags", {})
+        score += 5.0 * int(flags.get("adult_v2_relationship_hardcase", 0))
+        score += 4.0 * int(flags.get("adult_v2_sex_invalid_hardcase", 0))
+        score -= 3.0 * int(flags.get("adult_v2_context_fp_hardcase", 0))
+
         # 长尾 rare-only 不优先，除非有 adult 信号
         col = str(r.get("column", ""))
         rule = str(r.get("main_rule_type", ""))
@@ -309,8 +325,8 @@ def merge_relabeled_into_trainset(
     relabeled_jsonl: str,
     output_train_csv: str
 ):
-    base_train_df = pd.read_csv(base_train_csv)
-    inference_df = pd.read_csv(inference_csv)
+    base_train_df = pd.read_csv(base_train_csv, low_memory=False)
+    inference_df = pd.read_csv(inference_csv, low_memory=False)
     relabeled_df = pd.DataFrame(load_jsonl(relabeled_jsonl))
 
     if len(relabeled_df) == 0:
@@ -457,7 +473,8 @@ def run_inference_once(
     infer_script_path: str,
     input_csv: str,
     model_dir: str,
-    output_dir: str
+    output_dir: str,
+    llm_labeled_csv: str = BASE_LLM_LABELED_CSV,
 ) -> Dict[str, str]:
     infer_mod = load_module_from_path("infer_mod_dynamic", infer_script_path)
 
@@ -482,6 +499,14 @@ def run_inference_once(
     infer_mod.OUTPUT_HIGH_RISK_CSV = os.path.join(output_dir, "inference_high_risk.csv")
     infer_mod.OUTPUT_LLM_JSONL = os.path.join(output_dir, "hard_cases_for_llm.jsonl")
 
+    # Evidence reliability gate: keep original output format; only put extra diagnostics under this iter dir.
+    if hasattr(infer_mod, "LLM_LABELED_CSV"):
+        infer_mod.LLM_LABELED_CSV = llm_labeled_csv
+    if hasattr(infer_mod, "EVIDENCE_RELIABILITY_JSON"):
+        infer_mod.EVIDENCE_RELIABILITY_JSON = os.path.join(output_dir, "evidence_reliability_adult.json")
+    if hasattr(infer_mod, "EVIDENCE_RELIABILITY_CSV"):
+        infer_mod.EVIDENCE_RELIABILITY_CSV = os.path.join(output_dir, "evidence_reliability_adult.csv")
+
     ensure_dir(output_dir)
     infer_mod.main()
 
@@ -498,7 +523,7 @@ def run_inference_once(
 # ============================================================
 
 def summarize_inference(output_all_csv: str) -> Dict[str, Any]:
-    df = pd.read_csv(output_all_csv)
+    df = pd.read_csv(output_all_csv, low_memory=False)
     total = len(df)
     hard = int(df["is_hard_case"].sum()) if "is_hard_case" in df.columns else 0
     high_risk = int(df["is_high_risk"].sum()) if "is_high_risk" in df.columns else 0

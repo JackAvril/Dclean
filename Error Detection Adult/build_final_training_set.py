@@ -53,21 +53,23 @@ OUTSIDE_MAX_VALUE_FREQ_RANK = 25
 SKIP_NULL_IN_OUTSIDE_CLEAN = True
 
 # 候选外 clean 总量限制。
-MAX_OUTSIDE_CLEAN_TOTAL = 900
+MAX_OUTSIDE_CLEAN_TOTAL = 500
 MAX_OUTSIDE_CLEAN_PER_COLUMN = {
-    "age": 80,
-    "workclass": 70,
-    "education": 80,
-    "maritalstatus": 70,
-    "occupation": 80,
-    "relationship": 80,
-    "race": 60,
-    "sex": 50,
-    "hoursperweek": 80,
-    "country": 80,
-    "income": 60,
+    "relationship": 220,
+    "sex": 180,
+    "education": 100,
+
+    # context-only 列默认不作为 outside clean 来源，除非手动加入 OUTSIDE_CLEAN_ALLOWED_COLUMNS。
+    "age": 0,
+    "workclass": 0,
+    "maritalstatus": 0,
+    "occupation": 0,
+    "race": 0,
+    "hoursperweek": 0,
+    "country": 0,
+    "income": 0,
 }
-DEFAULT_MAX_OUTSIDE_CLEAN_PER_COLUMN = 70
+DEFAULT_MAX_OUTSIDE_CLEAN_PER_COLUMN = 0
 
 # 对长尾列 outside clean 更谨慎。
 OUTSIDE_LONG_TAIL_COLUMNS = {"country", "occupation", "workclass"}
@@ -140,6 +142,70 @@ ADULT_PROFILE_COLUMNS = {
 
 RANDOM_STATE = 42
 
+# -------------------------
+# Adult v2 目标列与归因字段
+# -------------------------
+PRIMARY_TARGET_COLUMNS = {
+    "sex",
+    "relationship",
+    "education",
+}
+
+CONTEXT_ONLY_COLUMNS = {
+    "age",
+    "workclass",
+    "maritalstatus",
+    "occupation",
+    "race",
+    "hoursperweek",
+    "country",
+    "income",
+}
+
+RELATIONSHIP_V2_RULE_TYPES = {
+    "relationship_marital_spouse_conflict",
+    "relationship_age_spouse_conflict",
+    "relationship_sex_spouse_conflict",
+    "relationship_context_dominant",
+}
+
+EDUCATION_V2_RULE_TYPES = {
+    "education_age_extreme_conflict",
+}
+
+ADULT_V2_FEATURE_COLS = [
+    "target_is_primary_column",
+    "target_is_context_only_column",
+    "is_relationship_spouse_value",
+    "relationship_marital_conflict",
+    "relationship_age_conflict",
+    "relationship_sex_conflict",
+    "sex_value_invalid",
+    "education_age_extreme_conflict",
+    "has_relationship_v2_rule",
+    "has_education_v2_rule",
+    "adult_v2_attribution_bucket",
+]
+
+# outside clean 不再均匀覆盖所有 11 列，而是重点补 primary target 的 correct 样本。
+OUTSIDE_CLEAN_ALLOWED_COLUMNS = PRIMARY_TARGET_COLUMNS
+
+# 传播样本也按 Adult v2 控制，避免伪标签把 context-only 列带入训练。
+PROPAGATED_PER_COLUMN_V2 = {
+    "relationship": 140,
+    "sex": 120,
+    "education": 50,
+    "age": 0,
+    "workclass": 0,
+    "maritalstatus": 0,
+    "occupation": 0,
+    "race": 0,
+    "hoursperweek": 0,
+    "country": 0,
+    "income": 0,
+}
+DEFAULT_PROPAGATED_PER_COLUMN_V2 = 0
+
 
 # ============================================================
 # 2. 基础函数
@@ -179,6 +245,80 @@ def safe_int(x, default=0):
         return int(float(x))
     except Exception:
         return default
+
+
+def as_int01(x: Any) -> int:
+    if pd.isna(x) or x is None:
+        return 0
+    s = str(x).strip().lower()
+    if s in {"1", "true", "yes"}:
+        return 1
+    if s in {"0", "false", "no"}:
+        return 0
+    try:
+        return int(float(x))
+    except Exception:
+        return 0
+
+
+def has_relationship_v2_signal(row: pd.Series) -> bool:
+    rule = str(row.get("main_rule_type", ""))
+    return (
+        as_int01(row.get("relationship_marital_conflict", 0)) == 1
+        or as_int01(row.get("relationship_age_conflict", 0)) == 1
+        or as_int01(row.get("relationship_sex_conflict", 0)) == 1
+        or as_int01(row.get("has_relationship_v2_rule", 0)) == 1
+        or rule in RELATIONSHIP_V2_RULE_TYPES
+    )
+
+
+def has_sex_invalid_signal(row: pd.Series) -> bool:
+    return as_int01(row.get("sex_value_invalid", 0)) == 1
+
+
+def has_education_v2_signal(row: pd.Series) -> bool:
+    rule = str(row.get("main_rule_type", ""))
+    return (
+        as_int01(row.get("education_age_extreme_conflict", 0)) == 1
+        or as_int01(row.get("has_education_v2_rule", 0)) == 1
+        or rule in EDUCATION_V2_RULE_TYPES
+    )
+
+
+def get_propagated_column_limit(col: str) -> int:
+    return int(PROPAGATED_PER_COLUMN_V2.get(str(col), DEFAULT_PROPAGATED_PER_COLUMN_V2))
+
+
+def adult_v2_training_priority(row: pd.Series) -> float:
+    """训练样本保留优先级：优先保留 primary target 的 v2 强证据样本。"""
+    score = 0.0
+    col = str(row.get("column", ""))
+
+    if col == "relationship":
+        score += 8.0
+    elif col == "sex":
+        score += 7.0
+    elif col == "education":
+        score += 4.0
+    elif col in CONTEXT_ONLY_COLUMNS:
+        score -= 8.0
+
+    score += safe_float(row.get("propagation_confidence", 0.0), 0.0) * 5.0
+    score += safe_float(row.get("sample_weight", 0.0), 0.0) * 3.0
+    score += safe_float(row.get("conflict_score", 0.0), 0.0) / 20.0
+    score += safe_float(row.get("strong_rule_count", 0.0), 0.0) * 2.0
+    score += safe_float(row.get("adult_domain_rule_count", 0.0), 0.0) * 2.0
+    score += safe_float(row.get("adult_format_rule_count", 0.0), 0.0) * 1.8
+    score += safe_float(row.get("adult_consistency_rule_count", 0.0), 0.0) * 1.5
+
+    if has_relationship_v2_signal(row):
+        score += 10.0
+    if has_sex_invalid_signal(row):
+        score += 9.0
+    if has_education_v2_signal(row):
+        score += 5.0
+
+    return float(score)
 
 
 def normalize_label_binary_from_row(row: pd.Series) -> Optional[int]:
@@ -271,7 +411,7 @@ def sort_and_dedup_by_priority(df: pd.DataFrame) -> pd.DataFrame:
 # ============================================================
 
 def load_table(path: str) -> pd.DataFrame:
-    df = pd.read_csv(path, dtype=str)
+    df = pd.read_csv(path, dtype=str, low_memory=False)
     df = maybe_drop_unnamed_columns(df)
     for col in df.columns:
         df[col] = normalize_series(df[col])
@@ -279,7 +419,7 @@ def load_table(path: str) -> pd.DataFrame:
 
 
 def load_clustered_csv(path: str) -> pd.DataFrame:
-    df = pd.read_csv(path)
+    df = pd.read_csv(path, low_memory=False)
     df["row_id"] = df["row_id"].astype(int)
     df["column"] = df["column"].astype(str)
 
@@ -345,6 +485,18 @@ def load_clustered_csv(path: str) -> pd.DataFrame:
         "sample_role": "",
         "is_sampled": 0,
         "signal_priority": 0.0,
+
+        "target_is_primary_column": 0,
+        "target_is_context_only_column": 0,
+        "is_relationship_spouse_value": 0,
+        "relationship_marital_conflict": 0,
+        "relationship_age_conflict": 0,
+        "relationship_sex_conflict": 0,
+        "sex_value_invalid": 0,
+        "education_age_extreme_conflict": 0,
+        "has_relationship_v2_rule": 0,
+        "has_education_v2_rule": 0,
+        "adult_v2_attribution_bucket": "unknown",
     }
 
     for col, default_val in expected_cols.items():
@@ -355,7 +507,7 @@ def load_clustered_csv(path: str) -> pd.DataFrame:
 
 
 def load_labeled_csv(path: str) -> pd.DataFrame:
-    df = pd.read_csv(path)
+    df = pd.read_csv(path, low_memory=False)
     df["row_id"] = df["row_id"].astype(int)
     df["column"] = df["column"].astype(str)
 
@@ -404,6 +556,18 @@ def load_labeled_csv(path: str) -> pd.DataFrame:
         "adult_consistency_score": 0.0,
         "adult_evidence_flags": "",
 
+        "target_is_primary_column": 0,
+        "target_is_context_only_column": 0,
+        "is_relationship_spouse_value": 0,
+        "relationship_marital_conflict": 0,
+        "relationship_age_conflict": 0,
+        "relationship_sex_conflict": 0,
+        "sex_value_invalid": 0,
+        "education_age_extreme_conflict": 0,
+        "has_relationship_v2_rule": 0,
+        "has_education_v2_rule": 0,
+        "adult_v2_attribution_bucket": "unknown",
+
         "time_window_rule_count": 0,
         "time_value_minutes": np.nan,
         "time_window_bucket": "adult_not_applicable",
@@ -417,7 +581,7 @@ def load_labeled_csv(path: str) -> pd.DataFrame:
 
 
 def load_propagated_csv(path: str) -> pd.DataFrame:
-    df = pd.read_csv(path)
+    df = pd.read_csv(path, low_memory=False)
     df["row_id"] = df["row_id"].astype(int)
     df["column"] = df["column"].astype(str)
 
@@ -507,6 +671,18 @@ def load_propagated_csv(path: str) -> pd.DataFrame:
         "sample_role": "",
         "is_sampled": 0,
         "signal_priority": 0.0,
+
+        "target_is_primary_column": 0,
+        "target_is_context_only_column": 0,
+        "is_relationship_spouse_value": 0,
+        "relationship_marital_conflict": 0,
+        "relationship_age_conflict": 0,
+        "relationship_sex_conflict": 0,
+        "sex_value_invalid": 0,
+        "education_age_extreme_conflict": 0,
+        "has_relationship_v2_rule": 0,
+        "has_education_v2_rule": 0,
+        "adult_v2_attribution_bucket": "unknown",
     }
     for col, default_val in expected_cols.items():
         if col not in df.columns:
@@ -579,6 +755,19 @@ ADULT_FEATURE_COLS = [
     "sample_role",
     "is_sampled",
     "signal_priority",
+
+    # Adult v2 attribution fields
+    "target_is_primary_column",
+    "target_is_context_only_column",
+    "is_relationship_spouse_value",
+    "relationship_marital_conflict",
+    "relationship_age_conflict",
+    "relationship_sex_conflict",
+    "sex_value_invalid",
+    "education_age_extreme_conflict",
+    "has_relationship_v2_rule",
+    "has_education_v2_rule",
+    "adult_v2_attribution_bucket",
 ]
 
 
@@ -654,6 +843,18 @@ def fill_missing_feature_defaults(df: pd.DataFrame) -> pd.DataFrame:
         "sample_role": "",
         "is_sampled": 0,
         "signal_priority": 0.0,
+
+        "target_is_primary_column": 0,
+        "target_is_context_only_column": 0,
+        "is_relationship_spouse_value": 0,
+        "relationship_marital_conflict": 0,
+        "relationship_age_conflict": 0,
+        "relationship_sex_conflict": 0,
+        "sex_value_invalid": 0,
+        "education_age_extreme_conflict": 0,
+        "has_relationship_v2_rule": 0,
+        "has_education_v2_rule": 0,
+        "adult_v2_attribution_bucket": "unknown",
     }
 
     for col, default_val in defaults.items():
@@ -777,23 +978,19 @@ def build_candidate_training_from_labels(
     prop_df = pd.DataFrame(prop_rows)
     if len(prop_df) > 0:
         prop_df = prop_df.copy()
-        prop_df["_prop_priority"] = (
-            pd.to_numeric(prop_df["propagation_confidence"], errors="coerce").fillna(0.0) * 5.0
-            + pd.to_numeric(prop_df.get("strong_rule_count", 0), errors="coerce").fillna(0.0) * 2.0
-            + pd.to_numeric(prop_df.get("adult_domain_rule_count", 0), errors="coerce").fillna(0.0) * 1.8
-            + pd.to_numeric(prop_df.get("adult_format_rule_count", 0), errors="coerce").fillna(0.0) * 1.6
-            + pd.to_numeric(prop_df.get("adult_consistency_rule_count", 0), errors="coerce").fillna(0.0) * 1.4
-            + pd.to_numeric(prop_df.get("conflict_score", 0), errors="coerce").fillna(0.0) / 20.0
-        )
+        prop_df["_prop_priority"] = prop_df.apply(adult_v2_training_priority, axis=1)
 
         if MAX_PROPAGATED_PER_COLUMN is not None:
             kept_parts = []
             for col, g in prop_df.groupby("column", sort=False):
-                if len(g) > MAX_PROPAGATED_PER_COLUMN:
+                col_limit = min(MAX_PROPAGATED_PER_COLUMN, get_propagated_column_limit(str(col)))
+                if col_limit <= 0:
+                    continue
+                if len(g) > col_limit:
                     g = g.sort_values(
                         by=["_prop_priority", "propagation_confidence", "conflict_score"],
                         ascending=[False, False, False],
-                    ).head(MAX_PROPAGATED_PER_COLUMN)
+                    ).head(col_limit)
                 kept_parts.append(g)
             prop_df = pd.concat(kept_parts, ignore_index=True) if kept_parts else prop_df.iloc[0:0]
 
@@ -847,6 +1044,9 @@ def build_outside_clean_training_simple(
     outside_rows = []
 
     for col in df_table.columns:
+        if col not in OUTSIDE_CLEAN_ALLOWED_COLUMNS:
+            continue
+
         if OUTSIDE_ONLY_FROM_CANDIDATE_COLUMNS and col not in candidate_columns:
             continue
 
@@ -961,6 +1161,18 @@ def build_outside_clean_training_simple(
                 "sample_role": "outside_clean",
                 "is_sampled": 0,
                 "signal_priority": 0.0,
+
+                "target_is_primary_column": 1 if col in PRIMARY_TARGET_COLUMNS else 0,
+                "target_is_context_only_column": 1 if col in CONTEXT_ONLY_COLUMNS else 0,
+                "is_relationship_spouse_value": 0,
+                "relationship_marital_conflict": 0,
+                "relationship_age_conflict": 0,
+                "relationship_sex_conflict": 0,
+                "sex_value_invalid": 0,
+                "education_age_extreme_conflict": 0,
+                "has_relationship_v2_rule": 0,
+                "has_education_v2_rule": 0,
+                "adult_v2_attribution_bucket": "outside_clean_primary_target" if col in PRIMARY_TARGET_COLUMNS else "outside_clean_context_only",
 
                 "label_binary": 0,
                 "label": "correct",
@@ -1106,6 +1318,13 @@ def export_final_train(df: pd.DataFrame, out_csv: str, out_jsonl: str, out_summa
 
         "bucket_id", "cluster_id", "dist_to_center", "sample_role", "is_sampled", "signal_priority",
 
+        "target_is_primary_column", "target_is_context_only_column",
+        "is_relationship_spouse_value",
+        "relationship_marital_conflict", "relationship_age_conflict", "relationship_sex_conflict",
+        "sex_value_invalid", "education_age_extreme_conflict",
+        "has_relationship_v2_rule", "has_education_v2_rule",
+        "adult_v2_attribution_bucket",
+
         "error_type", "reason_short", "reason_detailed",
         "suggested_correct_value", "needs_human_review", "evidence_used",
     ]
@@ -1140,6 +1359,10 @@ def export_final_train(df: pd.DataFrame, out_csv: str, out_jsonl: str, out_summa
             df.groupby(["column", "label"]).size().reset_index(name="count").to_dict(orient="records")
             if "column" in df.columns and "label" in df.columns else []
         ),
+        "adult_v2_attribution_bucket_distribution": (
+            df["adult_v2_attribution_bucket"].value_counts(dropna=False).to_dict()
+            if "adult_v2_attribution_bucket" in df.columns else {}
+        ),
         "config": {
             "CLUSTER_PROP_MIN_CONF": CLUSTER_PROP_MIN_CONF,
             "KNN_PROP_MIN_CONF": KNN_PROP_MIN_CONF,
@@ -1150,6 +1373,10 @@ def export_final_train(df: pd.DataFrame, out_csv: str, out_jsonl: str, out_summa
             "MAX_OUTSIDE_CLEAN_TOTAL": MAX_OUTSIDE_CLEAN_TOTAL,
             "MAX_CORRECT_TO_ERROR_RATIO": MAX_CORRECT_TO_ERROR_RATIO,
             "MIN_CORRECT_KEEP": MIN_CORRECT_KEEP,
+            "PRIMARY_TARGET_COLUMNS": sorted(list(PRIMARY_TARGET_COLUMNS)),
+            "CONTEXT_ONLY_COLUMNS": sorted(list(CONTEXT_ONLY_COLUMNS)),
+            "OUTSIDE_CLEAN_ALLOWED_COLUMNS": sorted(list(OUTSIDE_CLEAN_ALLOWED_COLUMNS)),
+            "PROPAGATED_PER_COLUMN_V2": PROPAGATED_PER_COLUMN_V2,
         }
     }
 

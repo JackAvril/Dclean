@@ -14,7 +14,7 @@ DIRTY_CSV = "/mnt/mydata/dq/projects/Splittree/adult/adult_dirty.csv"
 # 如果你跑的是主动学习主控脚本，可改成：
 # "/mnt/mydata/dq/projects/Splittree/test/Error Detection adult/active_cleaning_loop_runs_adult_v4/iter_3_infer/inference_all_predictions.csv"
 # 或 best_model 对应的推理目录输出。
-INFER_RESULT_CSV = "/mnt/mydata/dq/projects/Splittree/test/Error Detection adult/two_stage_inference_output_adult_v4_with_verifier/inference_all_predictions.csv"
+INFER_RESULT_CSV = "/mnt/mydata/dq/projects/Splittree/test/Error Detection Adult/active_cleaning_loop_runs_adult_v4/iter_3_infer/inference_all_predictions.csv"
 
 OUTPUT_DIR = "eval_outputs_adult_v4_with_verifier"
 
@@ -39,6 +39,26 @@ ADULT_COLUMNS = [
     "country",
     "income",
 ]
+
+# Adult v2：与规则池、缩减候选、训练/推理脚本保持一致。
+PRIMARY_TARGET_COLUMNS = {"sex", "relationship", "education"}
+CONTEXT_ONLY_COLUMNS = {
+    "age",
+    "workclass",
+    "maritalstatus",
+    "occupation",
+    "race",
+    "hoursperweek",
+    "country",
+    "income",
+}
+RELATIONSHIP_V2_RULE_TYPES = {
+    "relationship_marital_spouse_conflict",
+    "relationship_age_spouse_conflict",
+    "relationship_sex_spouse_conflict",
+    "relationship_context_dominant",
+}
+EDUCATION_V2_RULE_TYPES = {"education_age_extreme_conflict"}
 
 # 是否额外输出按列统计、按规则统计
 EXPORT_GROUP_SUMMARIES = True
@@ -90,7 +110,7 @@ def safe_float(x, default=None):
 
 
 def load_table(path: str) -> pd.DataFrame:
-    df = pd.read_csv(path, dtype=str)
+    df = pd.read_csv(path, dtype=str, low_memory=False)
     df = maybe_drop_unnamed_columns(df)
     df = normalize_df(df)
     return df
@@ -112,6 +132,122 @@ def bool_from_any(v, default=False) -> bool:
         return int(float(s)) == 1
     except Exception:
         return default
+
+
+def as_int01(v, default=0) -> int:
+    if pd.isna(v) or v is None:
+        return default
+    s = str(v).strip().lower()
+    if s in {"1", "true", "yes", "y", "error"}:
+        return 1
+    if s in {"0", "false", "no", "n", "correct"}:
+        return 0
+    try:
+        return int(float(s))
+    except Exception:
+        return default
+
+
+def safe_str(v, default=""):
+    if pd.isna(v) or v is None:
+        return default
+    return str(v)
+
+
+def add_eval_v2_flags_to_infer_df(infer_df: pd.DataFrame) -> pd.DataFrame:
+    """给评估阶段补齐 Adult v2 分组字段，避免旧推理文件缺列时报错。"""
+    df = infer_df.copy()
+
+    for c in [
+        "target_is_primary_column",
+        "target_is_context_only_column",
+        "is_relationship_spouse_value",
+        "relationship_marital_conflict",
+        "relationship_age_conflict",
+        "relationship_sex_conflict",
+        "sex_value_invalid",
+        "education_age_extreme_conflict",
+        "has_relationship_v2_rule",
+        "has_education_v2_rule",
+        "relationship_v2_conflict_count",
+        "has_relationship_v2_signal",
+        "has_education_v2_signal",
+        "is_context_only_weak_signal",
+        "adult_v2_primary_target_signal",
+    ]:
+        if c not in df.columns:
+            df[c] = 0
+        df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0).astype(int)
+
+    if "adult_v2_signal_strength" not in df.columns:
+        df["adult_v2_signal_strength"] = 0.0
+    df["adult_v2_signal_strength"] = pd.to_numeric(df["adult_v2_signal_strength"], errors="coerce").fillna(0.0)
+
+    if "adult_v2_attribution_bucket" not in df.columns:
+        df["adult_v2_attribution_bucket"] = "unknown_attribution"
+    df["adult_v2_attribution_bucket"] = df["adult_v2_attribution_bucket"].fillna("unknown_attribution").astype(str)
+
+    col = df["column"].astype(str)
+    rule = df["main_rule_type"].astype(str) if "main_rule_type" in df.columns else pd.Series([""] * len(df), index=df.index)
+
+    df["target_is_primary_column"] = ((df["target_is_primary_column"] == 1) | col.isin(PRIMARY_TARGET_COLUMNS)).astype(int)
+    df["target_is_context_only_column"] = ((df["target_is_context_only_column"] == 1) | col.isin(CONTEXT_ONLY_COLUMNS)).astype(int)
+
+    df["has_relationship_v2_rule"] = ((df["has_relationship_v2_rule"] == 1) | rule.isin(RELATIONSHIP_V2_RULE_TYPES)).astype(int)
+    df["has_education_v2_rule"] = ((df["has_education_v2_rule"] == 1) | rule.isin(EDUCATION_V2_RULE_TYPES)).astype(int)
+
+    df["relationship_v2_conflict_count"] = (
+        df["relationship_marital_conflict"]
+        + df["relationship_age_conflict"]
+        + df["relationship_sex_conflict"]
+    ).astype(int)
+
+    df["has_relationship_v2_signal"] = (
+        (df["has_relationship_v2_signal"] == 1)
+        | (df["relationship_v2_conflict_count"] > 0)
+        | (df["has_relationship_v2_rule"] == 1)
+    ).astype(int)
+
+    df["has_education_v2_signal"] = (
+        (df["has_education_v2_signal"] == 1)
+        | (df["education_age_extreme_conflict"] == 1)
+        | (df["has_education_v2_rule"] == 1)
+    ).astype(int)
+
+    if "adult_domain_rule_count" in df.columns:
+        adult_domain = pd.to_numeric(df["adult_domain_rule_count"], errors="coerce").fillna(0)
+    else:
+        adult_domain = pd.Series([0] * len(df), index=df.index)
+    if "adult_format_rule_count" in df.columns:
+        adult_format = pd.to_numeric(df["adult_format_rule_count"], errors="coerce").fillna(0)
+    else:
+        adult_format = pd.Series([0] * len(df), index=df.index)
+    if "adult_consistency_rule_count" in df.columns:
+        adult_cons = pd.to_numeric(df["adult_consistency_rule_count"], errors="coerce").fillna(0)
+    else:
+        adult_cons = pd.Series([0] * len(df), index=df.index)
+
+    df["is_context_only_weak_signal"] = (
+        (df["target_is_context_only_column"] == 1)
+        & (adult_domain <= 0)
+        & (adult_format <= 0)
+        & (adult_cons <= 0)
+        & (df["has_relationship_v2_signal"] <= 0)
+        & (df["has_education_v2_signal"] <= 0)
+        & (df["sex_value_invalid"] <= 0)
+    ).astype(int)
+
+    need_bucket = df["adult_v2_attribution_bucket"].isin(["", "missing", "unknown", "unknown_attribution", "nan", "None"])
+    df.loc[need_bucket & (df["relationship_marital_conflict"] == 1), "adult_v2_attribution_bucket"] = "relationship_marital_conflict"
+    df.loc[need_bucket & (df["relationship_age_conflict"] == 1), "adult_v2_attribution_bucket"] = "relationship_age_conflict"
+    df.loc[need_bucket & (df["relationship_sex_conflict"] == 1), "adult_v2_attribution_bucket"] = "relationship_sex_conflict"
+    df.loc[need_bucket & (df["has_relationship_v2_signal"] == 1), "adult_v2_attribution_bucket"] = "relationship_v2_rule"
+    df.loc[need_bucket & (df["sex_value_invalid"] == 1), "adult_v2_attribution_bucket"] = "sex_value_invalid"
+    df.loc[need_bucket & (df["has_education_v2_signal"] == 1), "adult_v2_attribution_bucket"] = "education_age_extreme_conflict"
+    df.loc[need_bucket & col.isin(PRIMARY_TARGET_COLUMNS), "adult_v2_attribution_bucket"] = "primary_target_other"
+    df.loc[need_bucket & col.isin(CONTEXT_ONLY_COLUMNS), "adult_v2_attribution_bucket"] = "context_only_other"
+
+    return df
 
 
 # ============================================================
@@ -202,8 +338,9 @@ def parse_detector_error_flag(row: pd.Series) -> bool:
 
 
 def load_infer_result(path: str):
-    df = pd.read_csv(path, dtype=str)
+    df = pd.read_csv(path, dtype=str, low_memory=False)
     df = maybe_drop_unnamed_columns(df)
+    df = add_eval_v2_flags_to_infer_df(df)
 
     required = ["row_id", "column"]
     missing = [c for c in required if c not in df.columns]
@@ -415,6 +552,25 @@ def build_detail_rows(
             "adult_consistency_score",
             "adult_evidence_flags",
 
+            # Adult v2 归因特征
+            "target_is_primary_column",
+            "target_is_context_only_column",
+            "is_relationship_spouse_value",
+            "relationship_marital_conflict",
+            "relationship_age_conflict",
+            "relationship_sex_conflict",
+            "sex_value_invalid",
+            "education_age_extreme_conflict",
+            "has_relationship_v2_rule",
+            "has_education_v2_rule",
+            "relationship_v2_conflict_count",
+            "has_relationship_v2_signal",
+            "has_education_v2_signal",
+            "is_context_only_weak_signal",
+            "adult_v2_signal_strength",
+            "adult_v2_primary_target_signal",
+            "adult_v2_attribution_bucket",
+
             # 兼容旧字段
             "time_window_rule_count",
             "time_value_minutes",
@@ -515,6 +671,9 @@ def build_detail_rows(
             "is_stage_disagree",
             "rule_neighbor_conflict",
             "adult_signal_hardcase",
+            "adult_v2_relationship_hardcase",
+            "adult_v2_sex_invalid_hardcase",
+            "adult_v2_context_fp_hardcase",
             "verifier_borderline",
             "verifier_reject_borderline",
             "fp_conflict_fd_hardcase",
@@ -563,6 +722,13 @@ def export_group_summaries(
         "main_rule_type",
         "domain_bucket",
         "adult_consistency_bucket",
+        "adult_v2_attribution_bucket",
+        "target_is_primary_column",
+        "target_is_context_only_column",
+        "has_relationship_v2_signal",
+        "sex_value_invalid",
+        "has_education_v2_signal",
+        "is_context_only_weak_signal",
         "neighbor_bucket",
         "rarity_bucket",
         "pattern_bucket",
@@ -594,6 +760,70 @@ def export_group_summaries(
         safe_name = gcol.replace("/", "_")
         summary.to_csv(os.path.join(output_dir, f"group_summary_by_{safe_name}.csv"), index=False, encoding="utf-8-sig")
 
+
+
+def export_adult_v2_diagnostics(
+    infer_df: pd.DataFrame,
+    true_error_cells: Set[Tuple[int, str]],
+    predicted_error_cells: Set[Tuple[int, str]],
+    detector_predicted_error_cells: Set[Tuple[int, str]],
+    output_dir: str,
+):
+    """额外导出 Adult v2 专属诊断表。"""
+    tmp = infer_df.copy()
+    tmp["_key"] = list(zip(tmp["row_id"].astype(int), tmp["column"].astype(str)))
+    tmp["_is_true_error"] = tmp["_key"].isin(true_error_cells).astype(int)
+    tmp["_final_pred"] = tmp.apply(parse_final_error_flag, axis=1).astype(int)
+    tmp["_detector_pred"] = tmp.apply(parse_detector_error_flag, axis=1).astype(int)
+
+    # 1) v2 bucket 级别诊断
+    if "adult_v2_attribution_bucket" in tmp.columns:
+        v2_bucket = tmp.groupby("adult_v2_attribution_bucket", dropna=False).agg(
+            rows=("_key", "count"),
+            true_errors=("_is_true_error", "sum"),
+            detector_pred_errors=("_detector_pred", "sum"),
+            final_pred_errors=("_final_pred", "sum"),
+        ).reset_index()
+        v2_bucket["true_error_rate_in_bucket"] = v2_bucket["true_errors"] / v2_bucket["rows"].clip(lower=1)
+        v2_bucket["final_pred_rate_in_bucket"] = v2_bucket["final_pred_errors"] / v2_bucket["rows"].clip(lower=1)
+        v2_bucket["precision_in_bucket"] = v2_bucket.apply(
+            lambda r: r["true_errors"] / r["final_pred_errors"] if r["final_pred_errors"] > 0 else 0.0,
+            axis=1
+        )
+        v2_bucket.to_csv(os.path.join(output_dir, "adult_v2_bucket_diagnostics.csv"), index=False, encoding="utf-8-sig")
+
+    # 2) column × v2 bucket 交叉诊断
+    if "adult_v2_attribution_bucket" in tmp.columns:
+        cross = tmp.groupby(["column", "adult_v2_attribution_bucket"], dropna=False).agg(
+            rows=("_key", "count"),
+            true_errors=("_is_true_error", "sum"),
+            detector_pred_errors=("_detector_pred", "sum"),
+            final_pred_errors=("_final_pred", "sum"),
+        ).reset_index()
+        cross["true_error_rate"] = cross["true_errors"] / cross["rows"].clip(lower=1)
+        cross["final_pred_rate"] = cross["final_pred_errors"] / cross["rows"].clip(lower=1)
+        cross.to_csv(os.path.join(output_dir, "adult_v2_column_bucket_diagnostics.csv"), index=False, encoding="utf-8-sig")
+
+    # 3) primary target 与 context-only 诊断
+    for gcol in [
+        "target_is_primary_column",
+        "target_is_context_only_column",
+        "has_relationship_v2_signal",
+        "sex_value_invalid",
+        "has_education_v2_signal",
+        "is_context_only_weak_signal",
+    ]:
+        if gcol not in tmp.columns:
+            continue
+        summary = tmp.groupby(gcol, dropna=False).agg(
+            rows=("_key", "count"),
+            true_errors=("_is_true_error", "sum"),
+            detector_pred_errors=("_detector_pred", "sum"),
+            final_pred_errors=("_final_pred", "sum"),
+        ).reset_index()
+        summary["true_error_rate"] = summary["true_errors"] / summary["rows"].clip(lower=1)
+        summary["final_pred_rate"] = summary["final_pred_errors"] / summary["rows"].clip(lower=1)
+        summary.to_csv(os.path.join(output_dir, f"adult_v2_summary_by_{gcol}.csv"), index=False, encoding="utf-8-sig")
 
 # ============================================================
 # 8. 主评估流程
@@ -668,6 +898,14 @@ def evaluate_detection(clean_csv: str, dirty_csv: str, infer_csv: str, output_di
         output_dir=output_dir,
     )
 
+    export_adult_v2_diagnostics(
+        infer_df=infer_df,
+        true_error_cells=true_error_cells,
+        predicted_error_cells=predicted_error_cells,
+        detector_predicted_error_cells=detector_predicted_error_cells,
+        output_dir=output_dir,
+    )
+
     summary = {
         "dataset": "adult",
         "clean_csv": clean_csv,
@@ -704,6 +942,13 @@ def evaluate_detection(clean_csv: str, dirty_csv: str, infer_csv: str, output_di
 
         "n_verifier_used": n_verifier_used,
         "n_verifier_rejected": n_verifier_rejected,
+
+        "n_primary_target_candidates": int(pd.to_numeric(infer_df.get("target_is_primary_column", 0), errors="coerce").fillna(0).sum()) if "target_is_primary_column" in infer_df.columns else 0,
+        "n_context_only_candidates": int(pd.to_numeric(infer_df.get("target_is_context_only_column", 0), errors="coerce").fillna(0).sum()) if "target_is_context_only_column" in infer_df.columns else 0,
+        "n_relationship_v2_signal": int(pd.to_numeric(infer_df.get("has_relationship_v2_signal", 0), errors="coerce").fillna(0).sum()) if "has_relationship_v2_signal" in infer_df.columns else 0,
+        "n_sex_value_invalid_signal": int(pd.to_numeric(infer_df.get("sex_value_invalid", 0), errors="coerce").fillna(0).sum()) if "sex_value_invalid" in infer_df.columns else 0,
+        "n_education_v2_signal": int(pd.to_numeric(infer_df.get("has_education_v2_signal", 0), errors="coerce").fillna(0).sum()) if "has_education_v2_signal" in infer_df.columns else 0,
+        "n_context_only_weak_signal": int(pd.to_numeric(infer_df.get("is_context_only_weak_signal", 0), errors="coerce").fillna(0).sum()) if "is_context_only_weak_signal" in infer_df.columns else 0,
     }
 
     if "is_high_risk" in infer_df.columns:
@@ -755,6 +1000,15 @@ def evaluate_detection(clean_csv: str, dirty_csv: str, infer_csv: str, output_di
     print(f"F1: {summary['f1']:.6f}")
     print()
 
+    print("---- Adult v2 诊断统计 ----")
+    print(f"Primary target 候选数: {summary.get('n_primary_target_candidates', 0)}")
+    print(f"Context-only 候选数: {summary.get('n_context_only_candidates', 0)}")
+    print(f"Relationship v2 signal 数量: {summary.get('n_relationship_v2_signal', 0)}")
+    print(f"Sex invalid signal 数量: {summary.get('n_sex_value_invalid_signal', 0)}")
+    print(f"Education v2 signal 数量: {summary.get('n_education_v2_signal', 0)}")
+    print(f"Context-only weak signal 数量: {summary.get('n_context_only_weak_signal', 0)}")
+    print()
+
     print("---- Verifier 统计 ----")
     print(f"Verifier 参与样本数: {summary['n_verifier_used']}")
     print(f"Verifier 打回 correct 数: {summary['n_verifier_rejected']}")
@@ -779,6 +1033,8 @@ def evaluate_detection(clean_csv: str, dirty_csv: str, infer_csv: str, output_di
         print(os.path.join(output_dir, "candidate_metrics_by_column.csv"))
         print(os.path.join(output_dir, "detector_metrics_by_column.csv"))
         print(os.path.join(output_dir, "final_metrics_by_column.csv"))
+        print(os.path.join(output_dir, "adult_v2_bucket_diagnostics.csv"))
+        print(os.path.join(output_dir, "adult_v2_column_bucket_diagnostics.csv"))
 
     return summary
 

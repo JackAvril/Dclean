@@ -1,0 +1,173 @@
+{
+  "total_clustered_rows": 75344,
+  "total_labeled_or_propagated": 989,
+  "llm_count": 350,
+  "cluster_propagation_count": 300,
+  "knn_propagation_count": 339,
+  "unlabeled_count": 74355,
+  "coverage": 0.013126459970269696,
+  "label_source_distribution": {
+    "NaN": 74355,
+    "llm": 350,
+    "knn_propagation": 339,
+    "cluster_propagation": 300
+  },
+  "final_label_distribution": {
+    "NaN": 74355,
+    "error": 988,
+    "correct": 1
+  },
+  "column_distribution": {
+    "position": 210,
+    "birthyear": 177,
+    "season": 158,
+    "team": 125,
+    "surname": 114,
+    "stadium": 110,
+    "birthplace": 43,
+    "name": 25,
+    "manager": 15,
+    "city": 12
+  },
+  "column_source_distribution": [
+    {
+      "column": "birthplace",
+      "label_source": "cluster_propagation",
+      "count": 20
+    },
+    {
+      "column": "birthplace",
+      "label_source": "llm",
+      "count": 23
+    },
+    {
+      "column": "birthyear",
+      "label_source": "cluster_propagation",
+      "count": 78
+    },
+    {
+      "column": "birthyear",
+      "label_source": "knn_propagation",
+      "count": 54
+    },
+    {
+      "column": "birthyear",
+      "label_source": "llm",
+      "count": 45
+    },
+    {
+      "column": "city",
+      "label_source": "llm",
+      "count": 12
+    },
+    {
+      "column": "manager",
+      "label_source": "llm",
+      "count": 15
+    },
+    {
+      "column": "name",
+      "label_source": "llm",
+      "count": 25
+    },
+    {
+      "column": "position",
+      "label_source": "cluster_propagation",
+      "count": 80
+    },
+    {
+      "column": "position",
+      "label_source": "knn_propagation",
+      "count": 80
+    },
+    {
+      "column": "position",
+      "label_source": "llm",
+      "count": 50
+    },
+    {
+      "column": "season",
+      "label_source": "cluster_propagation",
+      "count": 33
+    },
+    {
+      "column": "season",
+      "label_source": "knn_propagation",
+      "count": 80
+    },
+    {
+      "column": "season",
+      "label_source": "llm",
+      "count": 45
+    },
+    {
+      "column": "stadium",
+      "label_source": "cluster_propagation",
+      "count": 25
+    },
+    {
+      "column": "stadium",
+      "label_source": "knn_propagation",
+      "count": 40
+    },
+    {
+      "column": "stadium",
+      "label_source": "llm",
+      "count": 45
+    },
+    {
+      "column": "surname",
+      "label_source": "cluster_propagation",
+      "count": 24
+    },
+    {
+      "column": "surname",
+      "label_source": "knn_propagation",
+      "count": 45
+    },
+    {
+      "column": "surname",
+      "label_source": "llm",
+      "count": 45
+    },
+    {
+      "column": "team",
+      "label_source": "cluster_propagation",
+      "count": 40
+    },
+    {
+      "column": "team",
+      "label_source": "knn_propagation",
+      "count": 40
+    },
+    {
+      "column": "team",
+      "label_source": "llm",
+      "count": 45
+    }
+  ],
+  "config": {
+    "dataset": "soccer",
+    "MIN_LABELED_PER_CLUSTER": 3,
+    "CLUSTER_PROPAGATION_THRESHOLD": 0.9,
+    "CLUSTER_CENTER_DIST_QUANTILE": 0.55,
+    "MAX_CLUSTER_PROPAGATION_PER_CLUSTER": 20,
+    "ENABLE_KNN_PROPAGATION": true,
+    "KNN_K": 5,
+    "KNN_PROPAGATION_THRESHOLD": 0.88,
+    "KNN_MIN_MARGIN": 0.18,
+    "KNN_MAX_AVG_DISTANCE": 3.8,
+    "MIN_PROPAGATION_CONFIDENCE": 0.78,
+    "MAX_TOTAL_PROPAGATED": 800,
+    "DATASET_GATE": "soccer"
+  },
+  "soccer_attribution_bucket_distribution": {
+    "primary_target_other": 592,
+    "format_pattern_conflict": 253,
+    "birthyear_season_age_conflict": 128,
+    "birthyear_invalid": 8,
+    "season_invalid": 4,
+    "fd_like_conflict": 2,
+    "position_invalid": 2
+  }
+}

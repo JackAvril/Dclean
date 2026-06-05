@@ -1,0 +1,5627 @@
+{
+  "metadata": {
+    "source_file": "/mnt/mydata/dq/projects/Splittree/soccer/soccer_dirty.csv",
+    "row_count": 200000,
+    "column_count": 10,
+    "design_goal": "high_recall_candidate_generation_for_soccer",
+    "dataset": "soccer",
+    "expected_columns": [
+      "name",
+      "surname",
+      "birthyear",
+      "birthplace",
+      "position",
+      "team",
+      "city",
+      "stadium",
+      "season",
+      "manager"
+    ],
+    "target_candidate_columns": [
+      "birthplace",
+      "birthyear",
+      "city",
+      "manager",
+      "name",
+      "position",
+      "season",
+      "stadium",
+      "surname",
+      "team"
+    ],
+    "primary_target_columns": [
+      "birthplace",
+      "birthyear",
+      "city",
+      "manager",
+      "name",
+      "position",
+      "season",
+      "stadium",
+      "surname",
+      "team"
+    ],
+    "context_only_columns": [],
+    "notes": [
+      "candidate inclusion is determined only by violating rules in this pool",
+      "soccer rule pool uses schema/domain/range/pattern rules plus mined FD/soft-FD/context evidence",
+      "rare value, rare pattern, and global dominant rules are disabled to avoid excessive false positives on long-tail soccer entities",
+      "birthyear-season age consistency captures implausible player ages at a season",
+      "name, surname, and birthplace are now primary candidate columns because the previous run missed many true errors in these fields",
+      "not-null, numeric range, domain, and explicit format rules are intended to be direct candidate-generation rules",
+      "team/stadium/city/manager context dominant rules are evidence-only by default to avoid large false-positive expansion",
+      "soft FD rules are evidence-only and should not be used by shrink_search_space to add candidates directly",
+      "strong FD rules are mined only under strict confidence/support/group-purity conditions"
+    ]
+  },
+  "column_profiles": {
+    "name": {
+      "column": "name",
+      "missing_rate": 0.00531,
+      "non_null_count": 198938,
+      "unique_count": 257,
+      "unique_ratio": 0.001292,
+      "numeric_parse_ratio": 0.0,
+      "entropy": 7.632969,
+      "detected_type": "text",
+      "semantic_type": "person_name",
+      "index_like": false,
+      "avg_length": 13.545009,
+      "top_values": [
+        {
+          "value": "Gesine_Tilmann",
+          "count": 2930,
+          "ratio": 0.014728
+        },
+        {
+          "value": "Cherri_Toshiaki",
+          "count": 2522,
+          "ratio": 0.012677
+        },
+        {
+          "value": "Yadran_Mechthild",
+          "count": 2508,
+          "ratio": 0.012607
+        },
+        {
+          "value": "Martii_Mischa",
+          "count": 2497,
+          "ratio": 0.012552
+        },
+        {
+          "value": "Daisy_Ryotaro",
+          "count": 2345,
+          "ratio": 0.011788
+        },
+        {
+          "value": "Osmar_Norton",
+          "count": 2069,
+          "ratio": 0.0104
+        },
+        {
+          "value": "Graham_Kukhamay",
+          "count": 2068,
+          "ratio": 0.010395
+        },
+        {
+          "value": "Mehryar_Judi",
+          "count": 2010,
+          "ratio": 0.010104
+        },
+        {
+          "value": "Ayal_Waeil",
+          "count": 2006,
+          "ratio": 0.010084
+        },
+        {
+          "value": "Andres_Yahya",
+          "count": 1986,
+          "ratio": 0.009983
+        },
+        {
+          "value": "Gang_Vivekananda",
+          "count": 1970,
+          "ratio": 0.009903
+        },
+        {
+          "value": "Surapol_Yechezkel",
+          "count": 1913,
+          "ratio": 0.009616
+        },
+        {
+          "value": "Behcet_Liu",
+          "count": 1912,
+          "ratio": 0.009611
+        },
+        {
+          "value": "Laird_Capers",
+          "count": 1894,
+          "ratio": 0.009521
+        },
+        {
+          "value": "Ryoichi_Ilan",
+          "count": 1839,
+          "ratio": 0.009244
+        },
+        {
+          "value": "Chitresh_Harlan",
+          "count": 1606,
+          "ratio": 0.008073
+        },
+        {
+          "value": "Judy_Brant",
+          "count": 1550,
+          "ratio": 0.007791
+        },
+        {
+          "value": "Anke_Ute",
+          "count": 1549,
+          "ratio": 0.007786
+        },
+        {
+          "value": "Gernod_Sowmitri",
+          "count": 1536,
+          "ratio": 0.007721
+        },
+        {
+          "value": "Lundy_Bharathi",
+          "count": 1531,
+          "ratio": 0.007696
+        }
+      ],
+      "top_patterns": [
+        {
+          "pattern": "L6S1L8",
+          "count": 13107,
+          "ratio": 0.065885
+        },
+        {
+          "pattern": "L6S1L5",
+          "count": 9966,
+          "ratio": 0.050096
+        },
+        {
+          "pattern": "L4S1L5",
+          "count": 9510,
+          "ratio": 0.047804
+        },
+        {
+          "pattern": "L5S1L6",
+          "count": 9457,
+          "ratio": 0.047537
+        },
+        {
+          "pattern": "L6S1L7",
+          "count": 8383,
+          "ratio": 0.042139
+        },
+        {
+          "pattern": "L7S1L4",
+          "count": 7766,
+          "ratio": 0.039037
+        },
+        {
+          "pattern": "L6S1L6",
+          "count": 7553,
+          "ratio": 0.037967
+        },
+        {
+          "pattern": "L7S1L6",
+          "count": 7482,
+          "ratio": 0.03761
+        },
+        {
+          "pattern": "L5S1L7",
+          "count": 7356,
+          "ratio": 0.036976
+        },
+        {
+          "pattern": "L5S1L8",
+          "count": 7287,
+          "ratio": 0.03663
+        }
+      ],
+      "value_counter": {
+        "Brad_Zhaofang": 1515,
+        "Asis_Sinisa": 479,
+        "Bhuwan_Percy": 1020,
+        "Pierangela_Sudha": 987,
+        "Caryl_Moninder": 968,
+        "Luitpold_Avra": 971,
+        "Zhili_Vinay": 484,
+        "Maggie_Zhiqiang": 990,
+        "Guisseppi_Abdelmadjid": 1076,
+        "Pitro_Melek": 1068,
+        "Nalvo_Shaygan": 1003,
+        "Gina_Kenta": 1517,
+        "Takenobu_Leighton": 948,
+        "Behcet_Liu": 1912,
+        "Rastislav_Stevo": 995,
+        "Yannick_Ronald": 539,
+        "Hongsing_Marla": 1018,
+        "Catherina_Loan": 506,
+        "Yuka_Prakash": 434,
+        "Gang_Vivekananda": 1970,
+        "Antonius_Ard": 470,
+        "Mazin_Emeka": 549,
+        "Jinsei_Ranjeev": 1472,
+        "Elie_Mart": 972,
+        "Tatuo_Bongki": 1501,
+        "Matthey_Toshihisa": 982,
+        "Abdalla_Susannne": 997,
+        "Jacob_Efthimis": 521,
+        "Osmar_Norton": 2069,
+        "Daisy_Ryotaro": 2345,
+        "Sangjin_Martin": 1440,
+        "Peteris_Yusuf": 983,
+        "Sahrah_Kimon": 955,
+        "Mehryar_Judi": 2010,
+        "Yadran_Mechthild": 2508,
+        "Salim_Uday": 1041,
+        "Ayal_Waeil": 2006,
+        "Shunge_Wop": 1045,
+        "Ezio_Roslyn": 506,
+        "Fortune_Orestes": 534,
+        "Boijdar_Michal": 500,
+        "Dongmyun_Samuel": 501,
+        "Catuscia_Ivo": 474,
+        "Guoren_Igino": 1466,
+        "Geraud_Pat": 972,
+        "Sanjaya_Raed": 955,
+        "Magne_Chihping": 925,
+        "Steinar_Sathis": 529,
+        "Yookun_Apostol": 953,
+        "Yasubumi_Friedemann": 525,
+        "Devina_Qutaibah": 978,
+        "Petko_Maogang": 1368,
+        "Alison_Pierdaniele": 539,
+        "Laird_Capers": 1894,
+        "Wonhee_Chrysantos": 477,
+        "Krishnaprasad_Hiu": 1030,
+        "Theordore_Zhaoqian": 1462,
+        "Chase_Jed": 1020,
+        "Huajun_Haijo": 966,
+        "Jim_Jaak": 950,
+        "Judy_Brant": 1550,
+        "Mahmut_Vyjayanti": 1478,
+        "Gesine_Tilmann": 2930,
+        "Gongzhu_Youngmok": 1057,
+        "Huu_Shian": 485,
+        "Ryoichi_Ilan": 1839,
+        "Yoshitomi_Thoshiaki": 539,
+        "Annabelle_Katsunori": 520,
+        "Martii_Mischa": 2497,
+        "Ernest_Chiemi": 1007,
+        "Klaus_Nicu": 1001,
+        "Hideaki_Sava": 1436,
+        "Masahisa_Prabhav": 1362,
+        "Felipe_Gaetano": 507,
+        "Hing_Seichi": 1007,
+        "Hiroyuke_Hagbal": 524,
+        "Nedo_Sudarshan": 509,
+        "Andres_Yahya": 1986,
+        "Gernod_Sowmitri": 1536,
+        "Fuyau_Boo": 506,
+        "Guilang_Prasant": 507,
+        "Graham_Kukhamay": 2068,
+        "Lundy_Bharathi": 1531,
+        "Dallas_Chongkye": 1475,
+        "Anke_Ute": 1549,
+        "Tejwansh_Klemens": 507,
+        "Saydean_Eiichi": 1512,
+        "Ravin_Shengchang": 1032,
+        "Kazumiti_Pin": 1059,
+        "Murat_Luc": 923,
+        "Shigeo_Jitender": 490,
+        "Wendie_Benson": 499,
+        "Kioumars_Junbo": 487,
+        "Farzan_Jakob": 490,
+        "Jianlin_Guanghui": 1454,
+        "Setsuo_Gay": 436,
+        "Zoubida_Roch": 527,
+        "Myla_Nikolaus": 1028,
+        "Masum_Zhenbing": 968,
+        "Yasusi_Seongyeol": 1479,
+        "Rahim_Barton": 1001,
+        "Dagmar_Marilde": 972,
+        "Tatsuro_Kamaljit": 479,
+        "Dallan_Yoshioki": 549,
+        "Nili_Reese": 944,
+        "Jeroen_Yiyun": 1089,
+        "Rudie_Subbu": 536,
+        "Attila_Adelheit": 538,
+        "Heiner_Farahangiz": 961,
+        "Roger_Kazi": 1030,
+        "Cherri_Toshiaki": 2522,
+        "Omer_Ponnarasu": 485,
+        "Izak_Monte": 462,
+        "Fiora_Avinash": 543,
+        "Renganathan_Sihai": 1498,
+        "Xiaola_Jinhwan": 456,
+        "Otthein_Naftaly": 1057,
+        "Boyan_Witold": 484,
+        "Vijay_Ravindranath": 513,
+        "Elenora_Noriyuki": 978,
+        "Lorrin_Kazuki": 949,
+        "Athushi_Belli": 1011,
+        "Zengping_Alissa": 534,
+        "Osten_Bian": 541,
+        "Hichum_Ashok": 976,
+        "Alfred_Giovanni": 530,
+        "Afke_Vlad": 542,
+        "Woei_Dongmo": 1045,
+        "Nasreddine_Dongseung": 1011,
+        "Guardian_Yongjoon": 1483,
+        "Hucang_Xiaoyong": 455,
+        "Alper_Ehud": 501,
+        "Zicheng_Yike": 999,
+        "Ramakant_Elgin": 1398,
+        "Oryal_Tohru": 541,
+        "Abhaya_Win": 1058,
+        "Eleftherios_Maxwell": 1470,
+        "Nicol_Kathrin": 523,
+        "Surnjani_Catharine": 518,
+        "Munir_Sajal": 502,
+        "Vishwani_Konrad": 1521,
+        "Rohan_Sander": 1013,
+        "Zizette_Polina": 1066,
+        "Jami_Waqar": 559,
+        "Lode_Anamaria": 533,
+        "Errol_Cetin": 1030,
+        "Sarangan_Sreerama": 1080,
+        "Jialin_Huan": 474,
+        "Bienvenido_Hussein": 477,
+        "Silvio_Rogelio": 1093,
+        "Vassilios_Rildo": 509,
+        "Surjatini_Joohack": 551,
+        "Clay_Pawel": 1033,
+        "Raymond_Huaiyuan": 482,
+        "Chitresh_Harlan": 1606,
+        "Joxan_Barb": 250,
+        "Farshid_Zubin": 464,
+        "Xiaocheng_Beth": 452,
+        "Yuyan_Ivailo": 504,
+        "Kristian_Britta": 462,
+        "Iko_Fujio": 506,
+        "Sahin_Owen": 1410,
+        "Anya_Itaru": 946,
+        "Yuiko_Adele": 509,
+        "Gennadi_Ciprian": 473,
+        "Elfriede_Zin": 501,
+        "Ludomir_Franziska": 475,
+        "Pierre_Bella": 508,
+        "Yibei_Yousong": 1115,
+        "Noe_Aurelie": 521,
+        "Petru_Bapiraju": 499,
+        "Hongbing_Kevin": 486,
+        "Surapol_Yechezkel": 1913,
+        "Chengdian_Brijesh": 486,
+        "Kamal_Carolyn": 456,
+        "Yooichi_Hemant": 961,
+        "Djimitri_Gabriela": 422,
+        "CherR_Toshiaki": 2,
+        "Hayo_Laks": 493,
+        "Curd_Jussi": 489,
+        "Adhemar_Yanni": 442,
+        "Tayloe_Erven": 510,
+        "Ruck_Williams": 553,
+        "Sara_Jea": 503,
+        "Hunter_YaLing": 522,
+        "Philip_Sachio": 1041,
+        "Horace_Gunnvald": 492,
+        "Seungwang_Haym": 1060,
+        "Jianghai_Kiyotoshi": 529,
+        "Yoonjoon_Eila": 503,
+        "Mejar_Congxiao": 859,
+        "Christopher_Stamos": 519,
+        "Slawomir_Wanli": 527,
+        "Odysseas_Iara": 443,
+        "Anandeep_Marinus": 467,
+        "Ichiang_Hanan": 965,
+        "Dongwook_Valentyn": 1010,
+        "Gururaj_Emilio": 935,
+        "Karan_Spyridon": 1008,
+        "Basem_Noemie": 499,
+        "Yatsutaka_Oivind": 535,
+        "Noriyuki_Audrey": 526,
+        "Elham_Roy": 494,
+        "Yerucham_Yunming": 534,
+        "Frieda_Ortrun": 539,
+        "Yili_Junjie": 958,
+        "Joe_Myung": 538,
+        "Leelanivas_Domenico": 478,
+        "Sava_Lui": 488,
+        "Toshiro_Ryouichi": 1025,
+        "Souri_Bozena": 481,
+        "Baoling_Takehiro": 486,
+        "Nasreddine_Ratko": 743,
+        "Velimir_Solveig": 555,
+        "Lorraine_Hussein": 478,
+        "Sylvie_Nathalie": 481,
+        "Giuliano_Nobuhiko": 1026,
+        "Lui_Sherry": 465,
+        "Siranush_Maris": 462,
+        "Jialin_Sartaj": 499,
+        "Dhabaleswar_Atilio": 497,
+        "Jefferson_Chenxi": 505,
+        "Thodoros_PeiZong": 549,
+        "CherRri_Toshiaki": 2,
+        "Suphachai_Tsukasa": 472,
+        "Mieke_Yoshikane": 445,
+        "Corentin_Luping": 535,
+        "Drago_Slava": 519,
+        "ChErri_Toshiaki": 3,
+        "BhuwD_Percy": 5,
+        "Boy_Witold": 4,
+        "Hideaki_Savas": 9,
+        "JE_Myung": 9,
+        "Boyan_WitoldS": 3,
+        "Elefth2ios_Maxwell": 4,
+        "Nasredd_Dongseung": 3,
+        "Boyan_Witld": 6,
+        "Elfede_Zin": 5,
+        "Tatsu_Kamaljit": 6,
+        "ElEftherios_Maxwell": 2,
+        "Ananarinus": 5,
+        "Tatsmaljit": 6,
+        "BhuwdPercy": 4,
+        "Baan_Percy": 4,
+        "Kristian_BrittaS": 5,
+        "Eleftios_Maxwell": 3,
+        "Boyan_WitolD": 11,
+        "Joe_M": 7,
+        "BhuwanDercy": 3,
+        "LudoMir_Franziska": 4,
+        "AnanDeep_Marinus": 3,
+        "Elfrie_Zin": 5,
+        "Dalloshioki": 3,
+        "Che ian_Brijesh": 3,
+        "AthushiBelli": 4,
+        "LudomiR_Franziska": 4,
+        "Tatsuro_": 2
+      }
+    },
+    "surname": {
+      "column": "surname",
+      "missing_rate": 0.00507,
+      "non_null_count": 198986,
+      "unique_count": 276,
+      "unique_ratio": 0.001387,
+      "numeric_parse_ratio": 0.0,
+      "entropy": 7.629505,
+      "detected_type": "text",
+      "semantic_type": "person_name",
+      "index_like": false,
+      "avg_length": 6.938966,
+      "top_values": [
+        {
+          "value": "Cagman",
+          "count": 2944,
+          "ratio": 0.014795
+        },
+        {
+          "value": "Rayne",
+          "count": 2513,
+          "ratio": 0.012629
+        },
+        {
+          "value": "Musselman",
+          "count": 2510,
+          "ratio": 0.012614
+        },
+        {
+          "value": "Matyska",
+          "count": 2508,
+          "ratio": 0.012604
+        },
+        {
+          "value": "Felciano",
+          "count": 2360,
+          "ratio": 0.01186
+        },
+        {
+          "value": "Gove",
+          "count": 2068,
+          "ratio": 0.010393
+        },
+        {
+          "value": "McCain",
+          "count": 2066,
+          "ratio": 0.010383
+        },
+        {
+          "value": "Favre",
+          "count": 2008,
+          "ratio": 0.010091
+        },
+        {
+          "value": "Haining",
+          "count": 2001,
+          "ratio": 0.010056
+        },
+        {
+          "value": "Wolin",
+          "count": 1985,
+          "ratio": 0.009976
+        },
+        {
+          "value": "Hofstetter",
+          "count": 1976,
+          "ratio": 0.00993
+        },
+        {
+          "value": "Noltemeier",
+          "count": 1914,
+          "ratio": 0.009619
+        },
+        {
+          "value": "Tomii",
+          "count": 1903,
+          "ratio": 0.009563
+        },
+        {
+          "value": "Aigrain",
+          "count": 1888,
+          "ratio": 0.009488
+        },
+        {
+          "value": "Togni",
+          "count": 1838,
+          "ratio": 0.009237
+        },
+        {
+          "value": "Babb",
+          "count": 1612,
+          "ratio": 0.008101
+        },
+        {
+          "value": "Prenel",
+          "count": 1552,
+          "ratio": 0.0078
+        },
+        {
+          "value": "Weener",
+          "count": 1546,
+          "ratio": 0.007769
+        },
+        {
+          "value": "Harloff",
+          "count": 1535,
+          "ratio": 0.007714
+        },
+        {
+          "value": "Dingle",
+          "count": 1532,
+          "ratio": 0.007699
+        }
+      ],
+      "top_patterns": [
+        {
+          "pattern": "L7",
+          "count": 45089,
+          "ratio": 0.226594
+        },
+        {
+          "pattern": "L6",
+          "count": 38012,
+          "ratio": 0.191029
+        },
+        {
+          "pattern": "L5",
+          "count": 32198,
+          "ratio": 0.16181
+        },
+        {
+          "pattern": "L8",
+          "count": 27216,
+          "ratio": 0.136773
+        },
+        {
+          "pattern": "L9",
+          "count": 18769,
+          "ratio": 0.094323
+        },
+        {
+          "pattern": "L10",
+          "count": 17582,
+          "ratio": 0.088358
+        },
+        {
+          "pattern": "L4",
+          "count": 14516,
+          "ratio": 0.07295
+        },
+        {
+          "pattern": "L11",
+          "count": 3504,
+          "ratio": 0.017609
+        },
+        {
+          "pattern": "L3",
+          "count": 543,
+          "ratio": 0.002729
+        },
+        {
+          "pattern": "L2S1L2",
+          "count": 527,
+          "ratio": 0.002648
+        }
+      ],
+      "value_counter": {
+        "Dighe": 1511,
+        "Hennebert": 481,
+        "Bouabdallah": 1025,
+        "Tulley": 991,
+        "Obermaier": 968,
+        "Guyton": 975,
+        "Togni": 1838,
+        "Molzberger": 489,
+        "Dabipi": 984,
+        "Newstead": 1080,
+        "Poulin": 1059,
+        "Handschuh": 1001,
+        "Besancenot": 1518,
+        "Derby": 953,
+        "Tomii": 1903,
+        "Bellosta": 988,
+        "Schwartzel": 531,
+        "Kubicka": 1012,
+        "Kolvik": 505,
+        "Hopewell": 436,
+        "Noltemeier": 1914,
+        "Hofstetter": 1976,
+        "Rikino": 474,
+        "Milicia": 547,
+        "Blix": 1484,
+        "Otillio": 969,
+        "Scofield": 1506,
+        "Bowhill": 983,
+        "Hoare": 996,
+        "Guoxing": 524,
+        "Gove": 2068,
+        "Felciano": 2360,
+        "Sezan": 1423,
+        "Maxson": 970,
+        "Muluszynski": 951,
+        "Favre": 2008,
+        "Rayne": 2513,
+        "Buttyan": 1053,
+        "Haining": 2001,
+        "Latch": 1040,
+        "Grems": 504,
+        "Waack": 524,
+        "Yntema": 501,
+        "VieriS": 6,
+        "Miles": 474,
+        "Hudelmaier": 1469,
+        "Sherratt": 964,
+        "Zabele": 956,
+        "Jungst": 919,
+        "Brugnano": 529,
+        "Benn": 953,
+        "Nobauer": 525,
+        "Schloegel": 980,
+        "Usha": 1363,
+        "Knauff": 551,
+        "Aigrain": 1888,
+        "Cremilleux": 479,
+        "Llewellyn": 1025,
+        "Devroye": 1466,
+        "Pascual": 1015,
+        "Zajak": 969,
+        "Tchernykh": 944,
+        "Prenel": 1552,
+        "Dedood": 1484,
+        "Cagman": 2944,
+        "Kubicar": 1531,
+        "Abraham": 479,
+        "Vafaie": 535,
+        "Rouchaleau": 515,
+        "Matyska": 2508,
+        "Broch": 1004,
+        "Strevell": 997,
+        "Burtschick": 1408,
+        "Blaschek": 1366,
+        "Nurmeev": 505,
+        "Kehrer": 1017,
+        "Ro;dl": 527,
+        "Waldherr": 512,
+        "Wolin": 1985,
+        "Harloff": 1535,
+        "Grillner": 502,
+        "Clasen": 501,
+        "McCain": 2066,
+        "Remp": 1524,
+        "Timkovsky": 1467,
+        "Weener": 1546,
+        "Annaratone": 505,
+        "Alpuente": 1510,
+        "Ziavras": 1051,
+        "Kusakabe": 927,
+        "Ruckebusch": 496,
+        "Brunk": 501,
+        "Kavvadias": 471,
+        "Onaga": 491,
+        "Rudstrom": 1454,
+        "Preas": 434,
+        "Capps": 523,
+        "Goni": 1034,
+        "Kwasny": 968,
+        "Clemm": 1488,
+        "Kawakami": 1003,
+        "Shackel": 982,
+        "Specker": 470,
+        "Berthiaume": 1109,
+        "Kopanas": 945,
+        "Henriksson": 1081,
+        "Hermanns": 534,
+        "Ebbinghaus": 539,
+        "Weatherhead": 976,
+        "Kraetzl": 1024,
+        "Musselman": 2510,
+        "Savaria": 480,
+        "Mattison": 463,
+        "Rosinski": 539,
+        "Godo": 1503,
+        "Steffan": 451,
+        "Hogan": 1058,
+        "Symes": 481,
+        "Codenie": 516,
+        "Gawlick": 979,
+        "Gabalda": 947,
+        "Gull": 1018,
+        "Spehner": 555,
+        "Touretzky": 539,
+        "Gotoda": 541,
+        "Leifker": 970,
+        "Larab": 525,
+        "Tischendorf": 539,
+        "Ogawa": 1043,
+        "Zallocco": 1015,
+        "Pierro": 1476,
+        "Bernabeu": 449,
+        "Lichnewsky": 493,
+        "Clark": 1001,
+        "Schachter": 1401,
+        "Mikelsons": 547,
+        "Senator": 1062,
+        "Bollman": 1474,
+        "Badache": 526,
+        "Marciano": 522,
+        "Bottreau": 497,
+        "Dingle": 1532,
+        "Rezende": 1014,
+        "Herger": 1060,
+        "Longobardi": 564,
+        "Ruocco": 530,
+        "Shindo": 491,
+        "Fabrizio": 1031,
+        "Borgelt": 1077,
+        "Rensink": 475,
+        "Benaini": 470,
+        "Keskin": 1088,
+        "Cippico": 511,
+        "Kadar": 1048,
+        "Merico": 485,
+        "Babb": 1612,
+        "Eisenstadt": 253,
+        "Seppanen": 469,
+        "Guerriero": 455,
+        "Nuzman": 548,
+        "Yochum": 504,
+        "Vieri": 462,
+        "Ducasse": 507,
+        "Palomar": 1419,
+        "Ghezal": 947,
+        "Gnutzmann": 510,
+        "Macgregor": 508,
+        "Hinnebusch": 479,
+        "Strohmeir": 509,
+        "Konikowska": 519,
+        "Harbison": 502,
+        "Nozaka": 488,
+        "Kavasseri": 483,
+        "Kontos": 455,
+        "Valette": 954,
+        "Miike": 422,
+        "Bouabdallahs": 5,
+        "Sittig": 444,
+        "Gewali": 510,
+        "Leenaerts": 549,
+        "Villalba": 496,
+        "Gubitoso": 520,
+        "Yoccoz": 1030,
+        "Danneberg": 497,
+        "Scanlon": 1071,
+        "Kakuta": 519,
+        "Yannakoudakis": 502,
+        "Farrag": 870,
+        "Munster": 519,
+        "Bertsekas": 526,
+        "Batz": 450,
+        "Balboni": 462,
+        "Kappner": 966,
+        "Schupeta": 1016,
+        "Mallorqui": 923,
+        "Heiserman": 1008,
+        "Ashish": 501,
+        "Lebib": 535,
+        "Cun": 528,
+        "Kupper": 503,
+        "Berrebi": 535,
+        "Cucka": 1027,
+        "Corvi": 503,
+        "Quitte": 539,
+        "Walrath": 942,
+        "Bolan": 3,
+        "Coppola": 541,
+        "Stolovitch": 478,
+        "Schmerl": 488,
+        "Nekvinda": 1023,
+        "Saloma": 478,
+        "Astor": 485,
+        "Lesperance": 747,
+        "Andraka": 558,
+        "Sokolin": 480,
+        "Yang": 484,
+        "Roeseler": 1032,
+        "Osterloh": 462,
+        "Kameda": 464,
+        "Vinay": 504,
+        "Rahmat": 499,
+        "Goss": 503,
+        "Balfanz": 556,
+        "Neuwirth": 467,
+        "Roussille": 452,
+        "Gevinti": 537,
+        "Rael": 517,
+        "Hooghiemstra": 493,
+        "Ba1boni": 5,
+        "Reri": 3,
+        "PascualS": 4,
+        "BollmanE": 7,
+        "BalbonI": 5,
+        "Hinnebuschs": 5,
+        "ZalloccoO": 6,
+        "Speer": 2,
+        "ViD": 4,
+        "burtschick": 5,
+        "Hinebusch": 7,
+        "MikeLons": 5,
+        "BaLboni": 5,
+        "PasCual": 6,
+        "LG26333ichnewsky": 4,
+        "Bouabdallaha": 6,
+        "Bouabddllah": 3,
+        "CoppolaA": 3,
+        "BollmaN": 4,
+        "Bo3man": 5,
+        "Bowhills": 4,
+        "Gml": 7,
+        "Boill": 3,
+        "Ses": 4,
+        "BowhilL": 5,
+        "Bburtschick": 5,
+        "Kavaseri": 6,
+        "KavasseriS": 7,
+        "Gulls": 2,
+        "SYmes": 4,
+        "Cobpola": 3,
+        "VieEi": 3,
+        "Gul1": 6,
+        "Buschick": 4,
+        "SpeckerS": 4,
+        "BouabdSlah": 3,
+        "S": 4,
+        "LIchnewsky": 5,
+        "BowHll": 4,
+        "Burthick": 3,
+        "Zalocco": 4,
+        "Copola": 2,
+        "Burchick": 3,
+        "Burtshick": 2,
+        "SymeS": 5,
+        "Kaasseri": 1,
+        "coppola": 2,
+        "CoppolaS": 1
+      }
+    },
+    "birthyear": {
+      "column": "birthyear",
+      "missing_rate": 0.00515,
+      "non_null_count": 198970,
+      "unique_count": 59,
+      "unique_ratio": 0.000297,
+      "numeric_parse_ratio": 0.999859,
+      "entropy": 4.463021,
+      "detected_type": "numeric",
+      "semantic_type": "birth_year",
+      "index_like": false,
+      "avg_length": 4.000111,
+      "top_values": [
+        {
+          "value": "1984",
+          "count": 16397,
+          "ratio": 0.082409
+        },
+        {
+          "value": "1983",
+          "count": 14032,
+          "ratio": 0.070523
+        },
+        {
+          "value": "1991",
+          "count": 11358,
+          "ratio": 0.057084
+        },
+        {
+          "value": "1976",
+          "count": 10867,
+          "ratio": 0.054616
+        },
+        {
+          "value": "1980",
+          "count": 10809,
+          "ratio": 0.054325
+        },
+        {
+          "value": "1990",
+          "count": 10747,
+          "ratio": 0.054013
+        },
+        {
+          "value": "1989",
+          "count": 10256,
+          "ratio": 0.051545
+        },
+        {
+          "value": "1988",
+          "count": 10012,
+          "ratio": 0.050319
+        },
+        {
+          "value": "1995",
+          "count": 9409,
+          "ratio": 0.047289
+        },
+        {
+          "value": "1994",
+          "count": 8538,
+          "ratio": 0.042911
+        },
+        {
+          "value": "1979",
+          "count": 8499,
+          "ratio": 0.042715
+        },
+        {
+          "value": "1986",
+          "count": 8362,
+          "ratio": 0.042026
+        },
+        {
+          "value": "1993",
+          "count": 7970,
+          "ratio": 0.040056
+        },
+        {
+          "value": "1975",
+          "count": 7623,
+          "ratio": 0.038312
+        },
+        {
+          "value": "1982",
+          "count": 7415,
+          "ratio": 0.037267
+        },
+        {
+          "value": "1996",
+          "count": 7362,
+          "ratio": 0.037001
+        },
+        {
+          "value": "1978",
+          "count": 7177,
+          "ratio": 0.036071
+        },
+        {
+          "value": "1977",
+          "count": 6669,
+          "ratio": 0.033518
+        },
+        {
+          "value": "1992",
+          "count": 5880,
+          "ratio": 0.029552
+        },
+        {
+          "value": "1997",
+          "count": 5559,
+          "ratio": 0.027939
+        }
+      ],
+      "top_patterns": [
+        {
+          "pattern": "D4",
+          "count": 198936,
+          "ratio": 0.999829
+        },
+        {
+          "pattern": "D4L1",
+          "count": 17,
+          "ratio": 8.5e-05
+        },
+        {
+          "pattern": "D5",
+          "count": 4,
+          "ratio": 2e-05
+        },
+        {
+          "pattern": "D3L1",
+          "count": 2,
+          "ratio": 1e-05
+        },
+        {
+          "pattern": "D3",
+          "count": 2,
+          "ratio": 1e-05
+        },
+        {
+          "pattern": "D2S1D2",
+          "count": 2,
+          "ratio": 1e-05
+        },
+        {
+          "pattern": "D1L3",
+          "count": 1,
+          "ratio": 5e-06
+        },
+        {
+          "pattern": "D1L1D1",
+          "count": 1,
+          "ratio": 5e-06
+        },
+        {
+          "pattern": "D2L1D2",
+          "count": 1,
+          "ratio": 5e-06
+        },
+        {
+          "pattern": "D2L1D1",
+          "count": 1,
+          "ratio": 5e-06
+        }
+      ],
+      "value_counter": {
+        "1977": 6669,
+        "1986": 8362,
+        "1984": 16397,
+        "1981": 5495,
+        "1992": 5880,
+        "1980": 10809,
+        "1994": 8538,
+        "1975": 7623,
+        "1996": 7362,
+        "1976": 10867,
+        "1989": 10256,
+        "1991": 11358,
+        "1993": 7970,
+        "1983": 14032,
+        "1982": 7415,
+        "1985": 4899,
+        "1995": 9409,
+        "1987": 2572,
+        "1979": 8499,
+        "1990": 10747,
+        "1997": 5559,
+        "1978": 7177,
+        "1988": 10012,
+        "198b": 1,
+        "1998": 1024,
+        "1984X": 1,
+        "1978D": 1,
+        "1978S": 2,
+        "1995S": 1,
+        "21986": 1,
+        "1XXX": 1,
+        "1984s": 2,
+        "126": 1,
+        "1x4": 1,
+        "1886": 1,
+        "19842": 1,
+        "19S86": 1,
+        "198x": 1,
+        "1984S": 3,
+        "19826": 1,
+        "1984d": 1,
+        "19d4": 1,
+        "1979S": 1,
+        "19889": 1,
+        "198": 1,
+        "1994S": 1,
+        "1977S": 1,
+        "1977X": 1,
+        "1928": 1,
+        "1968": 1,
+        "1976s": 1,
+        "1111": 1,
+        "1984D": 1,
+        "19 12": 1,
+        "19 75": 1,
+        "1x77": 1,
+        "1972": 1,
+        "1ss7": 1,
+        "1X984": 1
+      }
+    },
+    "birthplace": {
+      "column": "birthplace",
+      "missing_rate": 0.005385,
+      "non_null_count": 198923,
+      "unique_count": 183,
+      "unique_ratio": 0.00092,
+      "numeric_parse_ratio": 0.0,
+      "entropy": 6.944432,
+      "detected_type": "categorical",
+      "semantic_type": "location",
+      "index_like": false,
+      "avg_length": 6.917611,
+      "top_values": [
+        {
+          "value": "Mobile",
+          "count": 5516,
+          "ratio": 0.027729
+        },
+        {
+          "value": "Beaumont",
+          "count": 4006,
+          "ratio": 0.020138
+        },
+        {
+          "value": "Des",
+          "count": 3918,
+          "ratio": 0.019696
+        },
+        {
+          "value": "Pasco",
+          "count": 3593,
+          "ratio": 0.018062
+        },
+        {
+          "value": "Amarillo",
+          "count": 3509,
+          "ratio": 0.01764
+        },
+        {
+          "value": "Barcelona",
+          "count": 3075,
+          "ratio": 0.015458
+        },
+        {
+          "value": "Istanbul",
+          "count": 3072,
+          "ratio": 0.015443
+        },
+        {
+          "value": "Valdosta",
+          "count": 3066,
+          "ratio": 0.015413
+        },
+        {
+          "value": "Guatemala",
+          "count": 2972,
+          "ratio": 0.01494
+        },
+        {
+          "value": "South",
+          "count": 2949,
+          "ratio": 0.014825
+        },
+        {
+          "value": "Corpus",
+          "count": 2949,
+          "ratio": 0.014825
+        },
+        {
+          "value": "Santiago",
+          "count": 2899,
+          "ratio": 0.014573
+        },
+        {
+          "value": "Prague",
+          "count": 2583,
+          "ratio": 0.012985
+        },
+        {
+          "value": "Birmingham",
+          "count": 2520,
+          "ratio": 0.012668
+        },
+        {
+          "value": "Elko",
+          "count": 2468,
+          "ratio": 0.012407
+        },
+        {
+          "value": "Cozumel",
+          "count": 2466,
+          "ratio": 0.012397
+        },
+        {
+          "value": "Charleston",
+          "count": 2437,
+          "ratio": 0.012251
+        },
+        {
+          "value": "Monroe",
+          "count": 2405,
+          "ratio": 0.01209
+        },
+        {
+          "value": "Vail",
+          "count": 2378,
+          "ratio": 0.011954
+        },
+        {
+          "value": "Milan",
+          "count": 2360,
+          "ratio": 0.011864
+        }
+      ],
+      "top_patterns": [
+        {
+          "pattern": "L6",
+          "count": 38836,
+          "ratio": 0.195231
+        },
+        {
+          "pattern": "L8",
+          "count": 35530,
+          "ratio": 0.178612
+        },
+        {
+          "pattern": "L9",
+          "count": 23104,
+          "ratio": 0.116145
+        },
+        {
+          "pattern": "L5",
+          "count": 20475,
+          "ratio": 0.102929
+        },
+        {
+          "pattern": "L7",
+          "count": 20260,
+          "ratio": 0.101848
+        },
+        {
+          "pattern": "L4",
+          "count": 16159,
+          "ratio": 0.081232
+        },
+        {
+          "pattern": "L10",
+          "count": 14576,
+          "ratio": 0.073275
+        },
+        {
+          "pattern": "L3",
+          "count": 13448,
+          "ratio": 0.067604
+        },
+        {
+          "pattern": "L11",
+          "count": 6308,
+          "ratio": 0.031711
+        },
+        {
+          "pattern": "L2",
+          "count": 4141,
+          "ratio": 0.020817
+        }
+      ],
+      "value_counter": {
+        "Frankfurt": 1513,
+        "Elko": 2468,
+        "Greensboro": 985,
+        "Warsaw": 2027,
+        "Des": 3918,
+        "Vienna": 1845,
+        "Florence": 486,
+        "La": 988,
+        "Istanbul": 3072,
+        "Buffalo": 1813,
+        "Missoula": 2013,
+        "Mobile": 5516,
+        "Savannah": 961,
+        "Myrtle": 1917,
+        "Cozumel": 2466,
+        "Beaumont": 4006,
+        "Barcelona": 3075,
+        "Killeen": 501,
+        "Tallahassee": 440,
+        "Reno": 1921,
+        "Prague": 2583,
+        "New": 1104,
+        "Zihuatenejo": 1508,
+        "Birmingham": 2520,
+        "Colorado": 1498,
+        "Gulfport": 1478,
+        "Appleton": 514,
+        "Paris": 2063,
+        "Milan": 2360,
+        "Lisbon": 1438,
+        "Tokyo": 1505,
+        "Gainesville": 1906,
+        "Amarillo": 3509,
+        "South": 2949,
+        "Wichita": 2000,
+        "Guatemala": 2972,
+        "Toronto": 503,
+        "Cape": 534,
+        "Portland": 500,
+        "Guaymas": 471,
+        "Santiago": 2899,
+        "Wilkes": 969,
+        "Twin": 953,
+        "Durban": 927,
+        "Los": 952,
+        "Louisville": 1492,
+        "Charleston": 2437,
+        "Nice": 1926,
+        "Vail": 2378,
+        "Melbourne": 1011,
+        "Nassau": 1509,
+        "Lexington": 1468,
+        "Caracas": 1025,
+        "Guangzhou": 1498,
+        "Conakry": 2238,
+        "Toulouse": 1468,
+        "Worcester": 2088,
+        "Corpus": 2949,
+        "Albuquerque": 477,
+        "Tampa": 535,
+        "Wilmington": 1061,
+        "Pasco": 3593,
+        "Roanoke": 1528,
+        "Indianapolis": 1919,
+        "Windhoek": 1002,
+        "Montgomery": 523,
+        "Sarasota": 1539,
+        "Monterrey": 1527,
+        "Pocatello": 503,
+        "Fairbanks": 500,
+        "Panama": 1470,
+        "Kiev": 1552,
+        "Shannon": 1006,
+        "Asheville": 1516,
+        "San": 1554,
+        "Orange": 2029,
+        "Cody": 930,
+        "Ouagadougou": 499,
+        "Huntington": 488,
+        "Budapest": 1492,
+        "Billings": 1478,
+        "Memphis": 1475,
+        "Shreveport": 1523,
+        "Augusta": 943,
+        "Tri": 1087,
+        "Sao": 1393,
+        "Manchester": 540,
+        "Macon": 1032,
+        "Valdosta": 3066,
+        "Vancouver": 1485,
+        "Palm": 538,
+        "Baton": 1507,
+        "Chihuahua": 450,
+        "Salvador": 1058,
+        "Montreal": 513,
+        "Veracruz": 949,
+        "Key": 1549,
+        "Monroe": 2405,
+        "Aguascalientes": 1614,
+        "Leon": 1012,
+        "Chattanooga": 1477,
+        "Boise": 451,
+        "Ontario": 977,
+        "Sun": 1400,
+        "El": 2121,
+        "Brussels": 1476,
+        "Puebla": 525,
+        "Casper": 2082,
+        "Providenciales": 1016,
+        "Fresno": 533,
+        "Baltimore": 1082,
+        "Washington": 937,
+        "Green": 961,
+        "Detroit": 484,
+        "Copenhagen": 1612,
+        "Harrisburg": 451,
+        "Great": 1524,
+        "Dothan": 982,
+        "Orlando": 949,
+        "Madrid": 475,
+        "Bucharest": 499,
+        "White": 488,
+        "Jackson": 503,
+        "Jacksonville": 522,
+        "Lome": 497,
+        "Berlin": 1005,
+        "Nashville": 885,
+        "Seattle": 486,
+        "Chicago": 438,
+        "Dakar": 1028,
+        "Cancun": 500,
+        "Amsterdam": 523,
+        "Dayton": 1035,
+        "Munich": 1067,
+        "Puerto": 531,
+        "Athens": 441,
+        "Lyon": 963,
+        "Fayetteville": 1013,
+        "Toledo": 499,
+        "Dallas": 532,
+        "Ciudad": 547,
+        "Las": 489,
+        "Hartford": 550,
+        "Idaho": 479,
+        "Long": 483,
+        "St": 1032,
+        "Newark": 496,
+        "Rochester": 501,
+        "Abidjan": 446,
+        "GuangzZhou": 1,
+        "Brussel": 2,
+        "Bucharests": 1,
+        "BrusSls": 1,
+        "BrusEels": 1,
+        "GuanDzhou": 1,
+        "GuaGzhou": 1,
+        "Bru4ls": 1,
+        "BrusselsS": 1,
+        "KeyS": 1,
+        "Shrevert": 1,
+        "Ontari": 1,
+        "LeoN": 1,
+        "GuangZhou": 3,
+        "PraguE": 1,
+        "PraE": 1,
+        "PrRague": 1,
+        "PraRgue": 1,
+        "ShrevePYOR": 1,
+        "PRrague": 1,
+        "bucharest": 1,
+        "BucRarest": 1,
+        "BuchbarestD": 1,
+        "Buchadrest": 1,
+        "Val": 1,
+        "Vanuver": 1,
+        "BucharestS": 1,
+        "Buchawrest": 1,
+        "GuateMala": 1,
+        "GuangzhouD": 1,
+        "kts": 1,
+        "Keys": 1,
+        "s": 1,
+        "Guazhou": 1
+      }
+    },
+    "position": {
+      "column": "position",
+      "missing_rate": 0.00532,
+      "non_null_count": 198936,
+      "unique_count": 18,
+      "unique_ratio": 9e-05,
+      "numeric_parse_ratio": 0.0,
+      "entropy": 1.90827,
+      "detected_type": "categorical",
+      "semantic_type": "position_category",
+      "index_like": false,
+      "avg_length": 8.106306,
+      "top_values": [
+        {
+          "value": "Midfield",
+          "count": 73500,
+          "ratio": 0.369466
+        },
+        {
+          "value": "Defender",
+          "count": 59729,
+          "ratio": 0.300242
+        },
+        {
+          "value": "Forward",
+          "count": 36744,
+          "ratio": 0.184703
+        },
+        {
+          "value": "Goalkeeper",
+          "count": 28943,
+          "ratio": 0.145489
+        },
+        {
+          "value": "Midfields",
+          "count": 4,
+          "ratio": 2e-05
+        },
+        {
+          "value": "Defenders",
+          "count": 2,
+          "ratio": 1e-05
+        },
+        {
+          "value": "DefenderS",
+          "count": 2,
+          "ratio": 1e-05
+        },
+        {
+          "value": "ForwardS",
+          "count": 2,
+          "ratio": 1e-05
+        },
+        {
+          "value": "Defeder",
+          "count": 1,
+          "ratio": 5e-06
+        },
+        {
+          "value": "dfender",
+          "count": 1,
+          "ratio": 5e-06
+        },
+        {
+          "value": "DeDender",
+          "count": 1,
+          "ratio": 5e-06
+        },
+        {
+          "value": "MidfieldS",
+          "count": 1,
+          "ratio": 5e-06
+        },
+        {
+          "value": "Goaleeper",
+          "count": 1,
+          "ratio": 5e-06
+        },
+        {
+          "value": "MidfielD",
+          "count": 1,
+          "ratio": 5e-06
+        },
+        {
+          "value": "MiDfield",
+          "count": 1,
+          "ratio": 5e-06
+        },
+        {
+          "value": "ForwAard",
+          "count": 1,
+          "ratio": 5e-06
+        },
+        {
+          "value": "Forw3ard",
+          "count": 1,
+          "ratio": 5e-06
+        },
+        {
+          "value": "Foward",
+          "count": 1,
+          "ratio": 5e-06
+        }
+      ],
+      "top_patterns": [
+        {
+          "pattern": "L8",
+          "count": 133235,
+          "ratio": 0.669738
+        },
+        {
+          "pattern": "L7",
+          "count": 36746,
+          "ratio": 0.184713
+        },
+        {
+          "pattern": "L10",
+          "count": 28943,
+          "ratio": 0.145489
+        },
+        {
+          "pattern": "L9",
+          "count": 10,
+          "ratio": 5e-05
+        },
+        {
+          "pattern": "L4D1L3",
+          "count": 1,
+          "ratio": 5e-06
+        },
+        {
+          "pattern": "L6",
+          "count": 1,
+          "ratio": 5e-06
+        }
+      ],
+      "value_counter": {
+        "Defender": 59729,
+        "Midfield": 73500,
+        "Forward": 36744,
+        "Goalkeeper": 28943,
+        "Defenders": 2,
+        "Defeder": 1,
+        "dfender": 1,
+        "DeDender": 1,
+        "DefenderS": 2,
+        "MidfieldS": 1,
+        "ForwardS": 2,
+        "Midfields": 4,
+        "Goaleeper": 1,
+        "MidfielD": 1,
+        "MiDfield": 1,
+        "ForwAard": 1,
+        "Forw3ard": 1,
+        "Foward": 1
+      }
+    },
+    "team": {
+      "column": "team",
+      "missing_rate": 0.00488,
+      "non_null_count": 199024,
+      "unique_count": 73,
+      "unique_ratio": 0.000367,
+      "numeric_parse_ratio": 0.0,
+      "entropy": 4.881786,
+      "detected_type": "categorical",
+      "semantic_type": "team_entity",
+      "index_like": false,
+      "avg_length": 16.178079,
+      "top_values": [
+        {
+          "value": "Valencia_CF",
+          "count": 16562,
+          "ratio": 0.083216
+        },
+        {
+          "value": "Boavista_F.C.",
+          "count": 13069,
+          "ratio": 0.065665
+        },
+        {
+          "value": "P.a.o.k_Fc",
+          "count": 12058,
+          "ratio": 0.060586
+        },
+        {
+          "value": "Juventus",
+          "count": 11601,
+          "ratio": 0.058289
+        },
+        {
+          "value": "ACF_Fiorentina",
+          "count": 9504,
+          "ratio": 0.047753
+        },
+        {
+          "value": "S.C._Braga",
+          "count": 9415,
+          "ratio": 0.047306
+        },
+        {
+          "value": "The_New_Saints_F.C.",
+          "count": 9111,
+          "ratio": 0.045778
+        },
+        {
+          "value": "A.C._Perugia_Calcio",
+          "count": 8640,
+          "ratio": 0.043412
+        },
+        {
+          "value": "Wolverhampton_Wanderers_Football_Club",
+          "count": 7955,
+          "ratio": 0.03997
+        },
+        {
+          "value": "FC_Spartak_Moscow",
+          "count": 7559,
+          "ratio": 0.03798
+        },
+        {
+          "value": "West_Ham_United_F.C.",
+          "count": 6255,
+          "ratio": 0.031428
+        },
+        {
+          "value": "Clube_de_Regatas_do_Flamengo",
+          "count": 6017,
+          "ratio": 0.030233
+        },
+        {
+          "value": "New_York_Red_Bulls",
+          "count": 5946,
+          "ratio": 0.029876
+        },
+        {
+          "value": "Royal_Antwerp_F.C.",
+          "count": 5833,
+          "ratio": 0.029308
+        },
+        {
+          "value": "VfL_Wolfsburg",
+          "count": 5367,
+          "ratio": 0.026967
+        },
+        {
+          "value": "FC_Anzhi_Makhachkala",
+          "count": 5321,
+          "ratio": 0.026735
+        },
+        {
+          "value": "Borussia_Monchengladbach",
+          "count": 4477,
+          "ratio": 0.022495
+        },
+        {
+          "value": "FC_Bayern_Munich",
+          "count": 4383,
+          "ratio": 0.022022
+        },
+        {
+          "value": "Lille_OSC",
+          "count": 4056,
+          "ratio": 0.020379
+        },
+        {
+          "value": "Forest_Green_Rovers_F.C.",
+          "count": 4024,
+          "ratio": 0.020219
+        }
+      ],
+      "top_patterns": [
+        {
+          "pattern": "L8S1L2",
+          "count": 16564,
+          "ratio": 0.083226
+        },
+        {
+          "pattern": "L8S1L1S1L1S1",
+          "count": 13069,
+          "ratio": 0.065665
+        },
+        {
+          "pattern": "L1S1L1S1L1S1L1S1L2",
+          "count": 12059,
+          "ratio": 0.060591
+        },
+        {
+          "pattern": "L8",
+          "count": 11601,
+          "ratio": 0.058289
+        },
+        {
+          "pattern": "L3S1L10",
+          "count": 9504,
+          "ratio": 0.047753
+        },
+        {
+          "pattern": "L1S1L1S2L5",
+          "count": 9415,
+          "ratio": 0.047306
+        },
+        {
+          "pattern": "L3S1L3S1L6S1L1S1L1S1",
+          "count": 9111,
+          "ratio": 0.045778
+        },
+        {
+          "pattern": "L1S1L1S2L7S1L6",
+          "count": 8642,
+          "ratio": 0.043422
+        },
+        {
+          "pattern": "L13S1L9S1L8S1L4",
+          "count": 7955,
+          "ratio": 0.03997
+        },
+        {
+          "pattern": "L2S1L7S1L6",
+          "count": 7559,
+          "ratio": 0.03798
+        }
+      ],
+      "value_counter": {
+        "P.a.o.k_Fc": 12058,
+        "Juventus": 11601,
+        "Boavista_F.C.": 13069,
+        "VfL_Wolfsburg": 5367,
+        "Valencia_CF": 16562,
+        "FK_Partizan": 3458,
+        "FC_Kaiserslautern": 3568,
+        "Clube_de_Regatas_do_Flamengo": 6017,
+        "The_New_Saints_F.C.": 9111,
+        "Aalborg_Boldspilklub": 2543,
+        "Montpellier_HSC": 1545,
+        "Forest_Green_Rovers_F.C.": 4024,
+        "FC_Midtjylland": 2975,
+        "Toronto_FC": 3439,
+        "ACF_Fiorentina": 9504,
+        "West_Ham_United_F.C.": 6255,
+        "Wolverhampton_Wanderers_Football_Club": 7955,
+        "FC_Bayern_Munich": 4383,
+        "S.C._Braga": 9415,
+        "A.C._Perugia_Calcio": 8640,
+        "Royal_Antwerp_F.C.": 5833,
+        "FC_Spartak_Moscow": 7559,
+        "New_York_Red_Bulls": 5946,
+        "Seattle_Sounders": 3984,
+        "FC_Anzhi_Makhachkala": 5321,
+        "FC_Dinamo_Bucuresti": 1570,
+        "Delfino_Pescara_1936": 1543,
+        "Sport_Club_Internacional": 2593,
+        "FC_Nordsjelland": 1456,
+        "SV_Werder_Bremen": 2525,
+        "Borussia_Monchengladbach": 4477,
+        "Lille_OSC": 4056,
+        "Tianjin_Teda_F.C.": 3978,
+        "Aik_Solna": 3816,
+        "Grasshopper_Club_Zurich": 1313,
+        "Club_Atletico_Velez_Sarsfield": 1523,
+        "ForesTt_Green_Rovers_F.C.": 1,
+        "Forest_Green_ vers_F.C.": 1,
+        "ValenEcia_CF": 1,
+        "FForest_Green_Rovers_F.C.": 1,
+        "Royal_AntweYrp_F.C.R": 1,
+        "ValeTUncia_CF": 1,
+        "WestEm_United_F.C.": 1,
+        "RoyaWntwerp_F.C.": 1,
+        "The_New_Sa s_F.C.": 1,
+        "S.CBraga": 1,
+        "VfL_WoDburg": 1,
+        "ACSF_Fiorentina": 1,
+        "P.a.o.k_Fcd": 1,
+        "aP.a.o.k_Fc": 1,
+        "P.a.o.k_Fcs": 1,
+        "P.ad.k_Fc": 1,
+        "Pea.o.k_Ftc": 1,
+        "Valenia_CF": 1,
+        "ACF_Fiorentinas": 1,
+        "aACF_Fiorentina": 1,
+        "VaAlencia_CF": 1,
+        "S.C._BragaS": 1,
+        "Royantwerp_F.C.": 1,
+        "S.C._BragaX": 1,
+        "Valencia_FD": 1,
+        "P.a..ok_Fc": 6,
+        "orest_Green_Rovers_F.C.": 1,
+        "Forest_Green_Rovers.C.": 1,
+        "valencia_CF": 1,
+        "s.C._Perugia_Calcio": 1,
+        "S.s_Braga": 1,
+        "For_Green_Rovers_F.C.": 1,
+        "FC_Dinacuresti": 1,
+        "ACF_Fentina": 1,
+        "FC_Dinamcuresti": 1,
+        "A.C._Perdgia_Calcio": 1,
+        "P.A.o.k_Fc": 1
+      }
+    },
+    "city": {
+      "column": "city",
+      "missing_rate": 0.004935,
+      "non_null_count": 199013,
+      "unique_count": 48,
+      "unique_ratio": 0.000241,
+      "numeric_parse_ratio": 0.0,
+      "entropy": 4.451377,
+      "detected_type": "categorical",
+      "semantic_type": "location",
+      "index_like": false,
+      "avg_length": 7.606513,
+      "top_values": [
+        {
+          "value": "Solna",
+          "count": 24307,
+          "ratio": 0.122138
+        },
+        {
+          "value": "Hamburg",
+          "count": 15297,
+          "ratio": 0.076864
+        },
+        {
+          "value": "Salvador",
+          "count": 13122,
+          "ratio": 0.065935
+        },
+        {
+          "value": "Naples",
+          "count": 12631,
+          "ratio": 0.063468
+        },
+        {
+          "value": "Brasilia",
+          "count": 12148,
+          "ratio": 0.061041
+        },
+        {
+          "value": "Munich",
+          "count": 11507,
+          "ratio": 0.05782
+        },
+        {
+          "value": "London",
+          "count": 10981,
+          "ratio": 0.055177
+        },
+        {
+          "value": "Gelsenkirchen",
+          "count": 9416,
+          "ratio": 0.047313
+        },
+        {
+          "value": "Arlington",
+          "count": 8062,
+          "ratio": 0.04051
+        },
+        {
+          "value": "Rio_de_Janeiro",
+          "count": 7926,
+          "ratio": 0.039827
+        },
+        {
+          "value": "Montevideo",
+          "count": 7439,
+          "ratio": 0.037379
+        },
+        {
+          "value": "Dortmund",
+          "count": 7005,
+          "ratio": 0.035199
+        },
+        {
+          "value": "Cardiff",
+          "count": 6591,
+          "ratio": 0.033118
+        },
+        {
+          "value": "Stuttgart",
+          "count": 6571,
+          "ratio": 0.033018
+        },
+        {
+          "value": "Tokyo",
+          "count": 5862,
+          "ratio": 0.029455
+        },
+        {
+          "value": "Istanbul",
+          "count": 5647,
+          "ratio": 0.028375
+        },
+        {
+          "value": "Orlando",
+          "count": 5003,
+          "ratio": 0.025139
+        },
+        {
+          "value": "Glasgow",
+          "count": 4955,
+          "ratio": 0.024898
+        },
+        {
+          "value": "Seattle",
+          "count": 4384,
+          "ratio": 0.022029
+        },
+        {
+          "value": "Mexico_City",
+          "count": 3811,
+          "ratio": 0.01915
+        }
+      ],
+      "top_patterns": [
+        {
+          "pattern": "L6",
+          "count": 43350,
+          "ratio": 0.217825
+        },
+        {
+          "pattern": "L8",
+          "count": 40523,
+          "ratio": 0.20362
+        },
+        {
+          "pattern": "L7",
+          "count": 39215,
+          "ratio": 0.197047
+        },
+        {
+          "pattern": "L5",
+          "count": 30170,
+          "ratio": 0.151598
+        },
+        {
+          "pattern": "L9",
+          "count": 17156,
+          "ratio": 0.086205
+        },
+        {
+          "pattern": "L13",
+          "count": 9416,
+          "ratio": 0.047313
+        },
+        {
+          "pattern": "L3S1L2S1L7",
+          "count": 7926,
+          "ratio": 0.039827
+        },
+        {
+          "pattern": "L10",
+          "count": 7442,
+          "ratio": 0.037395
+        },
+        {
+          "pattern": "L6S1L4",
+          "count": 3811,
+          "ratio": 0.01915
+        },
+        {
+          "pattern": "L11",
+          "count": 1,
+          "ratio": 5e-06
+        }
+      ],
+      "value_counter": {
+        "Tokyo": 5862,
+        "Salvador": 13122,
+        "Naples": 12631,
+        "Brasilia": 12148,
+        "Solna": 24307,
+        "Montevideo": 7439,
+        "Orlando": 5003,
+        "Munich": 11507,
+        "Rio_de_Janeiro": 7926,
+        "Arlington": 8062,
+        "London": 10981,
+        "Recife": 1546,
+        "Hamburg": 15297,
+        "Houston": 2980,
+        "Stuttgart": 6571,
+        "Dortmund": 7005,
+        "Seattle": 4384,
+        "Gelsenkirchen": 9416,
+        "Glasgow": 4955,
+        "Istanbul": 5647,
+        "Berlin": 2390,
+        "Montreal": 2597,
+        "Moscow": 2766,
+        "Barcelona": 2522,
+        "Cardiff": 6591,
+        "Mexico_City": 3811,
+        "Athens": 1525,
+        "Gelskirchen": 1,
+        "SolDna": 1,
+        "Gelserchen": 1,
+        "SolnA": 1,
+        "HAmburg": 1,
+        "MonteDideo": 1,
+        "LonEdon": 1,
+        "brasilia": 2,
+        "NaplDes": 1,
+        "Genkirchen": 1,
+        "HambuDrg": 1,
+        "LondonS": 1,
+        "HamburgD": 1,
+        "Rio_Janeiro": 1,
+        "Brilia": 1,
+        "HambMrg": 1,
+        "STuttgart": 1,
+        "SolnaS": 1,
+        "SolnaA": 1,
+        "Rio_de_Jaeiro": 1,
+        "Soln": 1
+      }
+    },
+    "stadium": {
+      "column": "stadium",
+      "missing_rate": 0.00506,
+      "non_null_count": 198988,
+      "unique_count": 47,
+      "unique_ratio": 0.000236,
+      "numeric_parse_ratio": 0.0,
+      "entropy": 4.436058,
+      "detected_type": "categorical",
+      "semantic_type": "stadium_entity",
+      "index_like": false,
+      "avg_length": 16.822376,
+      "top_values": [
+        {
+          "value": "King_Power_Stadium",
+          "count": 22687,
+          "ratio": 0.114012
+        },
+        {
+          "value": "BMO_Field",
+          "count": 18980,
+          "ratio": 0.095383
+        },
+        {
+          "value": "Allianz_Arena_Olympic_Stadium_Munich",
+          "count": 14417,
+          "ratio": 0.072452
+        },
+        {
+          "value": "Stadio_Olimpico",
+          "count": 14413,
+          "ratio": 0.072432
+        },
+        {
+          "value": "Veltins-Arena",
+          "count": 12639,
+          "ratio": 0.063516
+        },
+        {
+          "value": "Sporting_Park",
+          "count": 9417,
+          "ratio": 0.047324
+        },
+        {
+          "value": "Estadio_da_Luz",
+          "count": 9264,
+          "ratio": 0.046556
+        },
+        {
+          "value": "Donbass_Arena",
+          "count": 8627,
+          "ratio": 0.043354
+        },
+        {
+          "value": "Santiago_Bernabeu_Stadium",
+          "count": 8423,
+          "ratio": 0.042329
+        },
+        {
+          "value": "Parc_des_Princes",
+          "count": 8074,
+          "ratio": 0.040575
+        },
+        {
+          "value": "San_Siro_Stadium",
+          "count": 7924,
+          "ratio": 0.039821
+        },
+        {
+          "value": "Constant_Vanden_Stock_Stadium",
+          "count": 7454,
+          "ratio": 0.03746
+        },
+        {
+          "value": "Stadio_San_Paolo",
+          "count": 6999,
+          "ratio": 0.035173
+        },
+        {
+          "value": "Camp_Nou",
+          "count": 6553,
+          "ratio": 0.032932
+        },
+        {
+          "value": "Balaidos",
+          "count": 6254,
+          "ratio": 0.031429
+        },
+        {
+          "value": "Jan_Breydel_Stadium",
+          "count": 5638,
+          "ratio": 0.028333
+        },
+        {
+          "value": "Emirates_Stadium",
+          "count": 4936,
+          "ratio": 0.024806
+        },
+        {
+          "value": "Vicente_Calderon_Stadium",
+          "count": 3814,
+          "ratio": 0.019167
+        },
+        {
+          "value": "White_Hart_Lane",
+          "count": 3459,
+          "ratio": 0.017383
+        },
+        {
+          "value": "Stade_Louis_II",
+          "count": 2986,
+          "ratio": 0.015006
+        }
+      ],
+      "top_patterns": [
+        {
+          "pattern": "L4S1L5S1L7",
+          "count": 22687,
+          "ratio": 0.114012
+        },
+        {
+          "pattern": "L7S1L5",
+          "count": 21266,
+          "ratio": 0.106871
+        },
+        {
+          "pattern": "L3S1L5",
+          "count": 18980,
+          "ratio": 0.095383
+        },
+        {
+          "pattern": "L7S1L5S1L7S1L7S1L6",
+          "count": 14418,
+          "ratio": 0.072457
+        },
+        {
+          "pattern": "L6S1L8",
+          "count": 14413,
+          "ratio": 0.072432
+        },
+        {
+          "pattern": "L8S1L4",
+          "count": 9417,
+          "ratio": 0.047324
+        },
+        {
+          "pattern": "L7S1L2S1L3",
+          "count": 9264,
+          "ratio": 0.046556
+        },
+        {
+          "pattern": "L8S1L8S1L7",
+          "count": 8423,
+          "ratio": 0.042329
+        },
+        {
+          "pattern": "L4S1L3S1L7",
+          "count": 8074,
+          "ratio": 0.040575
+        },
+        {
+          "pattern": "L3S1L4S1L7",
+          "count": 7924,
+          "ratio": 0.039821
+        }
+      ],
+      "value_counter": {
+        "BMO_Field": 18980,
+        "Veltins-Arena": 12639,
+        "King_Power_Stadium": 22687,
+        "Allianz_Arena_Olympic_Stadium_Munich": 14417,
+        "Constant_Vanden_Stock_Stadium": 7454,
+        "White_Hart_Lane": 3459,
+        "Stadio_Olimpico": 14413,
+        "Parc_des_Princes": 8074,
+        "Anfield": 2535,
+        "Stade_Velodrome": 1547,
+        "Estadio_da_Luz": 9264,
+        "Stade_Louis_II": 2986,
+        "Camp_Nou": 6553,
+        "Balaidos": 6254,
+        "Stadio_San_Paolo": 6999,
+        "San_Siro_Stadium": 7924,
+        "Sporting_Park": 9417,
+        "Donbass_Arena": 8627,
+        "Santiago_Bernabeu_Stadium": 8423,
+        "Emirates_Stadium": 4936,
+        "Jan_Breydel_Stadium": 5638,
+        "Amsterdam_Arena": 1563,
+        "Westfalenstadion": 2394,
+        "Boleyn_Ground": 2516,
+        "St_James__Park": 2630,
+        "Vicente_Calderon_Stadium": 3814,
+        "Gerhard_Hanappi_Stadium": 1305,
+        "Stadio_Artemio_Franchi": 1521,
+        "allianz_Arena_Olympic_Stadium_Munich": 1,
+        "Camou": 1,
+        "Sportiark": 1,
+        "Esio_da_Luz": 1,
+        "Amstedam_Arena": 1,
+        "Amstm_Arena": 1,
+        "Amsterdam_Arenas": 1,
+        "Jan_Breydel_StadiumS": 1,
+        "Estadio_da_LuzZ": 1,
+        "AlSnz_Arena_Olympic_Stadium_Munich": 1,
+        "VelDs-Arena": 1,
+        "SEstadio_da_Luz": 1,
+        "Allianz_Arena_Olymp tadium_Munich": 1,
+        "King_Po_Stadium": 1,
+        "CampNou": 1,
+        "Sporting_Parks": 1,
+        "San_SiroStadium": 1,
+        "Veltins-ArenaS": 1,
+        "Sporting_prk": 1
+      }
+    },
+    "season": {
+      "column": "season",
+      "missing_rate": 0.004975,
+      "non_null_count": 199005,
+      "unique_count": 35,
+      "unique_ratio": 0.000176,
+      "numeric_parse_ratio": 0.999849,
+      "entropy": 2.403439,
+      "detected_type": "numeric",
+      "semantic_type": "season_year",
+      "index_like": false,
+      "avg_length": 4.000035,
+      "top_values": [
+        {
+          "value": "2011",
+          "count": 57190,
+          "ratio": 0.28738
+        },
+        {
+          "value": "2012",
+          "count": 42664,
+          "ratio": 0.214387
+        },
+        {
+          "value": "2013",
+          "count": 39237,
+          "ratio": 0.197166
+        },
+        {
+          "value": "2014",
+          "count": 34307,
+          "ratio": 0.172393
+        },
+        {
+          "value": "2015",
+          "count": 14179,
+          "ratio": 0.071249
+        },
+        {
+          "value": "2010",
+          "count": 11389,
+          "ratio": 0.05723
+        },
+        {
+          "value": "2O13",
+          "count": 4,
+          "ratio": 2e-05
+        },
+        {
+          "value": "2013x",
+          "count": 3,
+          "ratio": 1.5e-05
+        },
+        {
+          "value": "201l",
+          "count": 3,
+          "ratio": 1.5e-05
+        },
+        {
+          "value": "2018",
+          "count": 2,
+          "ratio": 1e-05
+        },
+        {
+          "value": "2O14",
+          "count": 2,
+          "ratio": 1e-05
+        },
+        {
+          "value": "2011S",
+          "count": 2,
+          "ratio": 1e-05
+        },
+        {
+          "value": "201O",
+          "count": 1,
+          "ratio": 5e-06
+        },
+        {
+          "value": "20123",
+          "count": 1,
+          "ratio": 5e-06
+        },
+        {
+          "value": "20133",
+          "count": 1,
+          "ratio": 5e-06
+        },
+        {
+          "value": "2023",
+          "count": 1,
+          "ratio": 5e-06
+        },
+        {
+          "value": "2X3",
+          "count": 1,
+          "ratio": 5e-06
+        },
+        {
+          "value": "20L4",
+          "count": 1,
+          "ratio": 5e-06
+        },
+        {
+          "value": "20S5",
+          "count": 1,
+          "ratio": 5e-06
+        },
+        {
+          "value": "2043",
+          "count": 1,
+          "ratio": 5e-06
+        }
+      ],
+      "top_patterns": [
+        {
+          "pattern": "D4",
+          "count": 198972,
+          "ratio": 0.999834
+        },
+        {
+          "pattern": "D1L1D2",
+          "count": 12,
+          "ratio": 6e-05
+        },
+        {
+          "pattern": "D4L1",
+          "count": 7,
+          "ratio": 3.5e-05
+        },
+        {
+          "pattern": "D3L1",
+          "count": 6,
+          "ratio": 3e-05
+        },
+        {
+          "pattern": "D5",
+          "count": 3,
+          "ratio": 1.5e-05
+        },
+        {
+          "pattern": "D1L1D1",
+          "count": 2,
+          "ratio": 1e-05
+        },
+        {
+          "pattern": "D2L1D1",
+          "count": 2,
+          "ratio": 1e-05
+        },
+        {
+          "pattern": "D2L1",
+          "count": 1,
+          "ratio": 5e-06
+        }
+      ],
+      "value_counter": {
+        "2012": 42664,
+        "2010": 11389,
+        "2015": 14179,
+        "2011": 57190,
+        "2013": 39237,
+        "2014": 34307,
+        "201O": 1,
+        "2018": 2,
+        "20123": 1,
+        "2O14": 2,
+        "20133": 1,
+        "2023": 1,
+        "2011S": 2,
+        "2X3": 1,
+        "20L4": 1,
+        "20S5": 1,
+        "2043": 1,
+        "2X11": 1,
+        "2X12": 1,
+        "2009": 1,
+        "2o11": 1,
+        "2013x": 3,
+        "201b": 1,
+        "2o14": 1,
+        "23014": 1,
+        "201L": 1,
+        "2O13": 4,
+        "2014S": 1,
+        "201l": 3,
+        "2O12": 1,
+        "2o13": 1,
+        "2L4": 1,
+        "2013B": 1,
+        "1983": 1,
+        "20L": 1
+      }
+    },
+    "manager": {
+      "column": "manager",
+      "missing_rate": 0.005045,
+      "non_null_count": 198991,
+      "unique_count": 75,
+      "unique_ratio": 0.000377,
+      "numeric_parse_ratio": 0.0,
+      "entropy": 5.094756,
+      "detected_type": "text",
+      "semantic_type": "person_name",
+      "index_like": false,
+      "avg_length": 14.610877,
+      "top_values": [
+        {
+          "value": "Atsufumi_Comparetto",
+          "count": 15311,
+          "ratio": 0.076943
+        },
+        {
+          "value": "Sigenobu_Bodagala",
+          "count": 12484,
+          "ratio": 0.062737
+        },
+        {
+          "value": "Robert_Lally",
+          "count": 9370,
+          "ratio": 0.047088
+        },
+        {
+          "value": "Veit_Luks",
+          "count": 9085,
+          "ratio": 0.045655
+        },
+        {
+          "value": "Aiqun_Levergood",
+          "count": 8935,
+          "ratio": 0.044902
+        },
+        {
+          "value": "Vagan_Smallwood",
+          "count": 8450,
+          "ratio": 0.042464
+        },
+        {
+          "value": "Srikanth_Chimia",
+          "count": 7590,
+          "ratio": 0.038142
+        },
+        {
+          "value": "Atsuyuki_Jayaprakash",
+          "count": 7479,
+          "ratio": 0.037585
+        },
+        {
+          "value": "Jeremy_Cantu",
+          "count": 7017,
+          "ratio": 0.035263
+        },
+        {
+          "value": "Nabih_Rios",
+          "count": 6592,
+          "ratio": 0.033127
+        },
+        {
+          "value": "Xiaomin_Saoudi",
+          "count": 6508,
+          "ratio": 0.032705
+        },
+        {
+          "value": "Kazuhiko_Claybrook",
+          "count": 5894,
+          "ratio": 0.029619
+        },
+        {
+          "value": "Rashi_Papadourakis",
+          "count": 5843,
+          "ratio": 0.029363
+        },
+        {
+          "value": "Olavi_Gurd",
+          "count": 5719,
+          "ratio": 0.02874
+        },
+        {
+          "value": "Mayan_Tautenhahn",
+          "count": 5571,
+          "ratio": 0.027996
+        },
+        {
+          "value": "Masum_Kasprzak",
+          "count": 5095,
+          "ratio": 0.025604
+        },
+        {
+          "value": "Robbert_Flach",
+          "count": 5085,
+          "ratio": 0.025554
+        },
+        {
+          "value": "Bernando_Jesus",
+          "count": 5069,
+          "ratio": 0.025474
+        },
+        {
+          "value": "Duckyoung_Padhye",
+          "count": 4944,
+          "ratio": 0.024845
+        },
+        {
+          "value": "Shigetomo_Abbas",
+          "count": 4824,
+          "ratio": 0.024242
+        }
+      ],
+      "top_patterns": [
+        {
+          "pattern": "L6S1L5",
+          "count": 17397,
+          "ratio": 0.087426
+        },
+        {
+          "pattern": "L5S1L9",
+          "count": 17385,
+          "ratio": 0.087366
+        },
+        {
+          "pattern": "L8S1L10",
+          "count": 15314,
+          "ratio": 0.076958
+        },
+        {
+          "pattern": "L7S1L5",
+          "count": 13182,
+          "ratio": 0.066244
+        },
+        {
+          "pattern": "L8S1L8",
+          "count": 12485,
+          "ratio": 0.062742
+        },
+        {
+          "pattern": "L5S1L4",
+          "count": 12311,
+          "ratio": 0.061867
+        },
+        {
+          "pattern": "L4S1L4",
+          "count": 9085,
+          "ratio": 0.045655
+        },
+        {
+          "pattern": "L7S1L6",
+          "count": 8615,
+          "ratio": 0.043293
+        },
+        {
+          "pattern": "L8S1L6",
+          "count": 7591,
+          "ratio": 0.038147
+        },
+        {
+          "pattern": "L8S1L11",
+          "count": 7479,
+          "ratio": 0.037585
+        }
+      ],
+      "value_counter": {
+        "Xiaomin_Saoudi": 6508,
+        "Masum_Kasprzak": 5095,
+        "Duckyoung_Padhye": 4944,
+        "Sreenivas_Wohr": 3085,
+        "Atsufumi_Comparetto": 15311,
+        "Veit_Luks": 9085,
+        "Ryouji_Dare": 3964,
+        "Srikanth_Chimia": 7590,
+        "IlYoung_Giese": 3523,
+        "Jeremy_Cantu": 7017,
+        "Sigenobu_Bodagala": 12484,
+        "Mayan_Tautenhahn": 5571,
+        "Rosangela_Ketz": 2539,
+        "Bernando_Jesus": 5069,
+        "Vagan_Smallwood": 8450,
+        "Mattan_Edelhoff": 3993,
+        "Kazuhiko_Claybrook": 5894,
+        "Aiqun_Levergood": 8935,
+        "Jiangling_Micheaux": 3396,
+        "Shyamala_Gibbs": 986,
+        "Amandio_Klosowski": 1477,
+        "Nabih_Rios": 6592,
+        "Xiaolei_Ronchette": 3466,
+        "Rashi_Papadourakis": 5843,
+        "Olavi_Gurd": 5719,
+        "Atsuyuki_Jayaprakash": 7479,
+        "Torsten_Fedou": 2029,
+        "Robert_Lally": 9370,
+        "Anupam_Oxenboll": 2910,
+        "Yki_Villano": 3158,
+        "Bon_Kruiskamp": 2053,
+        "Robbert_Flach": 5085,
+        "Ravindra_Grnarov": 1485,
+        "Piera_Faustini": 2003,
+        "Berardo_Gerber": 2106,
+        "Soung_Alt": 485,
+        "Cees_Gunal": 1454,
+        "Suranjan_Sakurai": 2429,
+        "Henryk_Kochs": 1009,
+        "Shigetomo_Abbas": 4824,
+        "Ahsan_Kliger": 1997,
+        "Zhouhui_Rubio": 2544,
+        "Vagan_SmallwoodS": 1,
+        "RRashi_Papadourakis": 1,
+        "Rashi_PapadourakisS": 2,
+        "Duckyouq_Padhye": 1,
+        "VRagan_Smallwood": 1,
+        "Atsufumwmparetto": 1,
+        "Bonn_Kruiskamp": 1,
+        "Jeremy_CantU": 1,
+        "Duckyoung_PadhyeE": 1,
+        "Aiqun_LevergoodS": 2,
+        "AtsuyukJayaprakash": 1,
+        "Suranja akurai": 1,
+        "SuranSakurai": 1,
+        "Suranjaakurai": 1,
+        "Kazuhiko_Claybrookh": 1,
+        "Kazuhgiko_Claybrook": 1,
+        "Mattan_Edelhoffd": 1,
+        "Kazuhiko_Claybrookd": 1,
+        "Kazuhiko_Claybrookw": 1,
+        "VUYLuks": 1,
+        "Bon_Kruiskamps": 1,
+        "Mattan_Edelhoffs": 1,
+        "Veit_Luk": 1,
+        "Bernano_Jesus": 1,
+        "Bernando_Jesus2": 1,
+        "Nabih_Riosd": 1,
+        "Kazuhiko_claybrook": 1,
+        "Kazuhiko_caybrook": 1,
+        "Ahsan_KligerS": 1,
+        "Duckyoungadhye": 1,
+        "Duckyoung_PadhyeS": 1,
+        "Atsufumi_omparetto": 1,
+        "Atsufumi_Compretto": 1
+      }
+    }
+  },
+  "rules": {
+    "schema_rules": [
+      {
+        "rule_id": "SCHEMA_1",
+        "rule_type": "not_null",
+        "column": "name",
+        "target_column": "name",
+        "description": "name should not be null in soccer records",
+        "confidence": 0.99469,
+        "support": 200000,
+        "usage_role": "strong_rule",
+        "target_scope": "primary_target",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_2",
+        "rule_type": "name_pattern",
+        "column": "name",
+        "target_column": "name",
+        "description": "name should contain alphabetic tokens separated by underscores",
+        "regex": "^[A-Za-z]+(?:_[A-Za-z]+)*$",
+        "confidence": 0.88,
+        "support": 198938,
+        "usage_role": "candidate_generation_rule",
+        "target_scope": "identity_format_guard",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_3",
+        "rule_type": "not_null",
+        "column": "surname",
+        "target_column": "surname",
+        "description": "surname should not be null in soccer records",
+        "confidence": 0.99493,
+        "support": 200000,
+        "usage_role": "strong_rule",
+        "target_scope": "primary_target",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_4",
+        "rule_type": "surname_pattern",
+        "column": "surname",
+        "target_column": "surname",
+        "description": "surname should be alphabetic, optionally with hyphen/underscore/apostrophe separators",
+        "regex": "^[A-Za-z]+(?:[-_'][A-Za-z]+)*$",
+        "confidence": 0.88,
+        "support": 198986,
+        "usage_role": "candidate_generation_rule",
+        "target_scope": "identity_format_guard",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_5",
+        "rule_type": "not_null",
+        "column": "birthyear",
+        "target_column": "birthyear",
+        "description": "birthyear should not be null in soccer records",
+        "confidence": 0.99485,
+        "support": 200000,
+        "usage_role": "strong_rule",
+        "target_scope": "primary_target",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_6",
+        "rule_type": "birthyear_numeric_range",
+        "column": "birthyear",
+        "target_column": "birthyear",
+        "description": "birthyear should be an integer year within 1940..2010",
+        "lower_bound": 1940,
+        "upper_bound": 2010,
+        "regex": "^\\d{4}$",
+        "confidence": 0.95,
+        "support": 198970,
+        "usage_role": "strong_rule",
+        "target_scope": "primary_target_numeric_guard",
+        "priority": "high"
+      },
+      {
+        "rule_id": "SCHEMA_7",
+        "rule_type": "not_null",
+        "column": "birthplace",
+        "target_column": "birthplace",
+        "description": "birthplace should not be null in soccer records",
+        "confidence": 0.994615,
+        "support": 200000,
+        "usage_role": "strong_rule",
+        "target_scope": "primary_target",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_8",
+        "rule_type": "birthplace_location_pattern",
+        "column": "birthplace",
+        "target_column": "birthplace",
+        "description": "birthplace should look like a location name",
+        "regex": "^[A-Za-z]+(?:[ _'\\-][A-Za-z]+)*$",
+        "confidence": 0.86,
+        "support": 198923,
+        "usage_role": "candidate_generation_rule",
+        "target_scope": "primary_target_format_guard",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_9",
+        "rule_type": "not_null",
+        "column": "position",
+        "target_column": "position",
+        "description": "position should not be null in soccer records",
+        "confidence": 0.99468,
+        "support": 200000,
+        "usage_role": "strong_rule",
+        "target_scope": "primary_target",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_10",
+        "rule_type": "position_domain",
+        "column": "position",
+        "target_column": "position",
+        "description": "position should be a known soccer playing position",
+        "valid_values": [
+          "Defender",
+          "Forward",
+          "Goalkeeper",
+          "Midfield",
+          "Midfielder",
+          "Striker",
+          "Winger"
+        ],
+        "canonical_map": {
+          "Midfielder": "Midfield"
+        },
+        "confidence": 0.96,
+        "support": 198936,
+        "usage_role": "strong_rule",
+        "target_scope": "primary_target_domain_guard",
+        "priority": "high"
+      },
+      {
+        "rule_id": "SCHEMA_11",
+        "rule_type": "not_null",
+        "column": "team",
+        "target_column": "team",
+        "description": "team should not be null in soccer records",
+        "confidence": 0.99512,
+        "support": 200000,
+        "usage_role": "strong_rule",
+        "target_scope": "primary_target",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_12",
+        "rule_type": "team_name_pattern",
+        "column": "team",
+        "target_column": "team",
+        "description": "team should look like a club/team entity string",
+        "regex": "^[A-Za-z0-9]+(?:[._'\\-][A-Za-z0-9]+)*$",
+        "confidence": 0.86,
+        "support": 199024,
+        "usage_role": "candidate_generation_rule",
+        "target_scope": "primary_target_format_guard",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_13",
+        "rule_type": "not_null",
+        "column": "city",
+        "target_column": "city",
+        "description": "city should not be null in soccer records",
+        "confidence": 0.995065,
+        "support": 200000,
+        "usage_role": "strong_rule",
+        "target_scope": "primary_target",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_14",
+        "rule_type": "city_location_pattern",
+        "column": "city",
+        "target_column": "city",
+        "description": "city should look like a location name",
+        "regex": "^[A-Za-z]+(?:[ _'\\-][A-Za-z]+)*$",
+        "confidence": 0.86,
+        "support": 199013,
+        "usage_role": "candidate_generation_rule",
+        "target_scope": "primary_target_format_guard",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_15",
+        "rule_type": "not_null",
+        "column": "stadium",
+        "target_column": "stadium",
+        "description": "stadium should not be null in soccer records",
+        "confidence": 0.99494,
+        "support": 200000,
+        "usage_role": "strong_rule",
+        "target_scope": "primary_target",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_16",
+        "rule_type": "stadium_name_pattern",
+        "column": "stadium",
+        "target_column": "stadium",
+        "description": "stadium should look like a stadium/entity string",
+        "regex": "^[A-Za-z0-9]+(?:[ _'\\-][A-Za-z0-9]+)*$",
+        "confidence": 0.86,
+        "support": 198988,
+        "usage_role": "candidate_generation_rule",
+        "target_scope": "primary_target_format_guard",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_17",
+        "rule_type": "not_null",
+        "column": "season",
+        "target_column": "season",
+        "description": "season should not be null in soccer records",
+        "confidence": 0.995025,
+        "support": 200000,
+        "usage_role": "strong_rule",
+        "target_scope": "primary_target",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_18",
+        "rule_type": "season_numeric_range",
+        "column": "season",
+        "target_column": "season",
+        "description": "season should be an integer year within 1900..2035",
+        "lower_bound": 1900,
+        "upper_bound": 2035,
+        "regex": "^\\d{4}$",
+        "confidence": 0.95,
+        "support": 199005,
+        "usage_role": "strong_rule",
+        "target_scope": "primary_target_numeric_guard",
+        "priority": "high"
+      },
+      {
+        "rule_id": "SCHEMA_19",
+        "rule_type": "not_null",
+        "column": "manager",
+        "target_column": "manager",
+        "description": "manager should not be null in soccer records",
+        "confidence": 0.994955,
+        "support": 200000,
+        "usage_role": "strong_rule",
+        "target_scope": "primary_target",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "SCHEMA_20",
+        "rule_type": "manager_name_pattern",
+        "column": "manager",
+        "target_column": "manager",
+        "description": "manager should look like a person name, often with underscore-separated tokens",
+        "regex": "^[A-Za-z]+(?:_[A-Za-z]+)*$",
+        "confidence": 0.88,
+        "support": 198991,
+        "usage_role": "candidate_generation_rule",
+        "target_scope": "primary_target_format_guard",
+        "priority": "medium"
+      }
+    ],
+    "fd_rules": [
+      {
+        "rule_id": "FD_1",
+        "rule_type": "functional_dependency",
+        "lhs": [
+          "team",
+          "stadium"
+        ],
+        "rhs": "city",
+        "target_column": "city",
+        "description": "team, stadium -> city",
+        "confidence": 0.999807,
+        "support": 196932,
+        "usage_role": "strong_rule",
+        "priority": "low",
+        "candidate_trigger": "strict_fd_only",
+        "fd_quality_profile": {
+          "support": 197045,
+          "used_support": 196932,
+          "confidence": 0.999807,
+          "usable_group_count": 51,
+          "avg_group_size": 3861.411765,
+          "min_group_size": 429,
+          "qualified_group_count": 51,
+          "qualified_support": 196932,
+          "qualified_ratio": 1.0
+        },
+        "candidate_trigger_conditions": {
+          "min_group_size": 10,
+          "min_dominant_ratio": 0.98,
+          "min_dominant_margin": 5,
+          "min_qualified_ratio": 0.8
+        }
+      }
+    ],
+    "soft_fd_rules": [
+      {
+        "rule_id": "SOFTFD_EVID_1",
+        "rule_type": "soft_functional_dependency",
+        "lhs": [
+          "birthyear",
+          "team"
+        ],
+        "rhs": "city",
+        "target_column": "city",
+        "description": "soft FD evidence only: birthyear, team -> city",
+        "confidence": 0.935726,
+        "support": 196907,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "fd_quality_profile": {
+          "support": 197024,
+          "used_support": 196907,
+          "confidence": 0.935726,
+          "usable_group_count": 284,
+          "avg_group_size": 693.334507,
+          "min_group_size": 245,
+          "qualified_group_count": 261,
+          "qualified_support": 168629,
+          "qualified_ratio": 0.856389
+        },
+        "note": "soft FD is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "SOFTFD_EVID_2",
+        "rule_type": "soft_functional_dependency",
+        "lhs": [
+          "birthyear",
+          "team"
+        ],
+        "rhs": "stadium",
+        "target_column": "stadium",
+        "description": "soft FD evidence only: birthyear, team -> stadium",
+        "confidence": 0.933219,
+        "support": 196883,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "fd_quality_profile": {
+          "support": 196999,
+          "used_support": 196883,
+          "confidence": 0.933219,
+          "usable_group_count": 284,
+          "avg_group_size": 693.25,
+          "min_group_size": 248,
+          "qualified_group_count": 260,
+          "qualified_support": 167619,
+          "qualified_ratio": 0.851364
+        },
+        "note": "soft FD is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "SOFTFD_EVID_3",
+        "rule_type": "soft_functional_dependency",
+        "lhs": [
+          "birthyear",
+          "city"
+        ],
+        "rhs": "stadium",
+        "target_column": "stadium",
+        "description": "soft FD evidence only: birthyear, city -> stadium",
+        "confidence": 0.921641,
+        "support": 196913,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "fd_quality_profile": {
+          "support": 196991,
+          "used_support": 196913,
+          "confidence": 0.921641,
+          "usable_group_count": 261,
+          "avg_group_size": 754.455939,
+          "min_group_size": 245,
+          "qualified_group_count": 235,
+          "qualified_support": 159987,
+          "qualified_ratio": 0.812476
+        },
+        "note": "soft FD is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "SOFTFD_EVID_4",
+        "rule_type": "soft_functional_dependency",
+        "lhs": [
+          "birthyear",
+          "stadium"
+        ],
+        "rhs": "city",
+        "target_column": "city",
+        "description": "soft FD evidence only: birthyear, stadium -> city",
+        "confidence": 0.912997,
+        "support": 196912,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "fd_quality_profile": {
+          "support": 196991,
+          "used_support": 196912,
+          "confidence": 0.912997,
+          "usable_group_count": 259,
+          "avg_group_size": 760.277992,
+          "min_group_size": 245,
+          "qualified_group_count": 230,
+          "qualified_support": 154009,
+          "qualified_ratio": 0.782121
+        },
+        "note": "soft FD is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "SOFTFD_EVID_5",
+        "rule_type": "soft_functional_dependency",
+        "lhs": [
+          "birthplace",
+          "team"
+        ],
+        "rhs": "city",
+        "target_column": "city",
+        "description": "soft FD evidence only: birthplace, team -> city",
+        "confidence": 0.987514,
+        "support": 196860,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "fd_quality_profile": {
+          "support": 196977,
+          "used_support": 196860,
+          "confidence": 0.987514,
+          "usable_group_count": 381,
+          "avg_group_size": 516.692913,
+          "min_group_size": 244,
+          "qualified_group_count": 376,
+          "qualified_support": 191848,
+          "qualified_ratio": 0.97454
+        },
+        "note": "soft FD is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "SOFTFD_EVID_6",
+        "rule_type": "soft_functional_dependency",
+        "lhs": [
+          "birthplace",
+          "team"
+        ],
+        "rhs": "position",
+        "target_column": "position",
+        "description": "soft FD evidence only: birthplace, team -> position",
+        "confidence": 0.982784,
+        "support": 196788,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "fd_quality_profile": {
+          "support": 196905,
+          "used_support": 196788,
+          "confidence": 0.982784,
+          "usable_group_count": 381,
+          "avg_group_size": 516.503937,
+          "min_group_size": 249,
+          "qualified_group_count": 374,
+          "qualified_support": 189800,
+          "qualified_ratio": 0.96449
+        },
+        "note": "soft FD is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "SOFTFD_EVID_7",
+        "rule_type": "soft_functional_dependency",
+        "lhs": [
+          "birthplace",
+          "team"
+        ],
+        "rhs": "manager",
+        "target_column": "manager",
+        "description": "soft FD evidence only: birthplace, team -> manager",
+        "confidence": 0.97375,
+        "support": 196838,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "fd_quality_profile": {
+          "support": 196956,
+          "used_support": 196838,
+          "confidence": 0.97375,
+          "usable_group_count": 381,
+          "avg_group_size": 516.635171,
+          "min_group_size": 248,
+          "qualified_group_count": 369,
+          "qualified_support": 185557,
+          "qualified_ratio": 0.942689
+        },
+        "note": "soft FD is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "SOFTFD_EVID_8",
+        "rule_type": "soft_functional_dependency",
+        "lhs": [
+          "birthplace",
+          "team"
+        ],
+        "rhs": "season",
+        "target_column": "season",
+        "description": "soft FD evidence only: birthplace, team -> season",
+        "confidence": 0.979752,
+        "support": 196855,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "fd_quality_profile": {
+          "support": 196972,
+          "used_support": 196855,
+          "confidence": 0.979752,
+          "usable_group_count": 381,
+          "avg_group_size": 516.67979,
+          "min_group_size": 248,
+          "qualified_group_count": 373,
+          "qualified_support": 188837,
+          "qualified_ratio": 0.95927
+        },
+        "note": "soft FD is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "SOFTFD_EVID_9",
+        "rule_type": "soft_functional_dependency",
+        "lhs": [
+          "birthplace",
+          "team"
+        ],
+        "rhs": "stadium",
+        "target_column": "stadium",
+        "description": "soft FD evidence only: birthplace, team -> stadium",
+        "confidence": 0.987467,
+        "support": 196839,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "fd_quality_profile": {
+          "support": 196957,
+          "used_support": 196839,
+          "confidence": 0.987467,
+          "usable_group_count": 381,
+          "avg_group_size": 516.637795,
+          "min_group_size": 247,
+          "qualified_group_count": 376,
+          "qualified_support": 191824,
+          "qualified_ratio": 0.974522
+        },
+        "note": "soft FD is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "SOFTFD_EVID_10",
+        "rule_type": "soft_functional_dependency",
+        "lhs": [
+          "birthplace",
+          "city"
+        ],
+        "rhs": "team",
+        "target_column": "team",
+        "description": "soft FD evidence only: birthplace, city -> team",
+        "confidence": 0.959875,
+        "support": 196887,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "fd_quality_profile": {
+          "support": 196977,
+          "used_support": 196887,
+          "confidence": 0.959875,
+          "usable_group_count": 369,
+          "avg_group_size": 533.569106,
+          "min_group_size": 244,
+          "qualified_group_count": 354,
+          "qualified_support": 181214,
+          "qualified_ratio": 0.920396
+        },
+        "note": "soft FD is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "SOFTFD_EVID_11",
+        "rule_type": "soft_functional_dependency",
+        "lhs": [
+          "birthplace",
+          "city"
+        ],
+        "rhs": "position",
+        "target_column": "position",
+        "description": "soft FD evidence only: birthplace, city -> position",
+        "confidence": 0.96871,
+        "support": 196804,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "fd_quality_profile": {
+          "support": 196892,
+          "used_support": 196804,
+          "confidence": 0.96871,
+          "usable_group_count": 369,
+          "avg_group_size": 533.344173,
+          "min_group_size": 246,
+          "qualified_group_count": 358,
+          "qualified_support": 184730,
+          "qualified_ratio": 0.93865
+        },
+        "note": "soft FD is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "SOFTFD_EVID_12",
+        "rule_type": "soft_functional_dependency",
+        "lhs": [
+          "birthplace",
+          "city"
+        ],
+        "rhs": "manager",
+        "target_column": "manager",
+        "description": "soft FD evidence only: birthplace, city -> manager",
+        "confidence": 0.936441,
+        "support": 196855,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "fd_quality_profile": {
+          "support": 196946,
+          "used_support": 196855,
+          "confidence": 0.936441,
+          "usable_group_count": 369,
+          "avg_group_size": 533.482385,
+          "min_group_size": 245,
+          "qualified_group_count": 344,
+          "qualified_support": 171676,
+          "qualified_ratio": 0.872094
+        },
+        "note": "soft FD is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "SOFTFD_EVID_13",
+        "rule_type": "soft_functional_dependency",
+        "lhs": [
+          "birthplace",
+          "city"
+        ],
+        "rhs": "season",
+        "target_column": "season",
+        "description": "soft FD evidence only: birthplace, city -> season",
+        "confidence": 0.948649,
+        "support": 196861,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "fd_quality_profile": {
+          "support": 196951,
+          "used_support": 196861,
+          "confidence": 0.948649,
+          "usable_group_count": 369,
+          "avg_group_size": 533.498645,
+          "min_group_size": 245,
+          "qualified_group_count": 349,
+          "qualified_support": 175994,
+          "qualified_ratio": 0.894001
+        },
+        "note": "soft FD is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "SOFTFD_EVID_14",
+        "rule_type": "soft_functional_dependency",
+        "lhs": [
+          "birthplace",
+          "city"
+        ],
+        "rhs": "stadium",
+        "target_column": "stadium",
+        "description": "soft FD evidence only: birthplace, city -> stadium",
+        "confidence": 0.976251,
+        "support": 196853,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "fd_quality_profile": {
+          "support": 196943,
+          "used_support": 196853,
+          "confidence": 0.976251,
+          "usable_group_count": 369,
+          "avg_group_size": 533.476965,
+          "min_group_size": 244,
+          "qualified_group_count": 360,
+          "qualified_support": 187005,
+          "qualified_ratio": 0.949973
+        },
+        "note": "soft FD is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "SOFTFD_EVID_15",
+        "rule_type": "soft_functional_dependency",
+        "lhs": [
+          "birthplace",
+          "stadium"
+        ],
+        "rhs": "city",
+        "target_column": "city",
+        "description": "soft FD evidence only: birthplace, stadium -> city",
+        "confidence": 0.977536,
+        "support": 196849,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "fd_quality_profile": {
+          "support": 196943,
+          "used_support": 196849,
+          "confidence": 0.977536,
+          "usable_group_count": 370,
+          "avg_group_size": 532.024324,
+          "min_group_size": 244,
+          "qualified_group_count": 361,
+          "qualified_support": 187391,
+          "qualified_ratio": 0.951953
+        },
+        "note": "soft FD is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "SOFTFD_EVID_16",
+        "rule_type": "soft_functional_dependency",
+        "lhs": [
+          "birthplace",
+          "stadium"
+        ],
+        "rhs": "team",
+        "target_column": "team",
+        "description": "soft FD evidence only: birthplace, stadium -> team",
+        "confidence": 0.960998,
+        "support": 196863,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "fd_quality_profile": {
+          "support": 196957,
+          "used_support": 196863,
+          "confidence": 0.960998,
+          "usable_group_count": 370,
+          "avg_group_size": 532.062162,
+          "min_group_size": 247,
+          "qualified_group_count": 354,
+          "qualified_support": 180684,
+          "qualified_ratio": 0.917816
+        },
+        "note": "soft FD is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "SOFTFD_EVID_17",
+        "rule_type": "soft_functional_dependency",
+        "lhs": [
+          "birthplace",
+          "stadium"
+        ],
+        "rhs": "position",
+        "target_column": "position",
+        "description": "soft FD evidence only: birthplace, stadium -> position",
+        "confidence": 0.9705,
+        "support": 196779,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "fd_quality_profile": {
+          "support": 196873,
+          "used_support": 196779,
+          "confidence": 0.9705,
+          "usable_group_count": 370,
+          "avg_group_size": 531.835135,
+          "min_group_size": 249,
+          "qualified_group_count": 358,
+          "qualified_support": 184373,
+          "qualified_ratio": 0.936955
+        },
+        "note": "soft FD is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "SOFTFD_EVID_18",
+        "rule_type": "soft_functional_dependency",
+        "lhs": [
+          "birthplace",
+          "stadium"
+        ],
+        "rhs": "manager",
+        "target_column": "manager",
+        "description": "soft FD evidence only: birthplace, stadium -> manager",
+        "confidence": 0.937597,
+        "support": 196834,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "fd_quality_profile": {
+          "support": 196928,
+          "used_support": 196834,
+          "confidence": 0.937597,
+          "usable_group_count": 370,
+          "avg_group_size": 531.983784,
+          "min_group_size": 248,
+          "qualified_group_count": 344,
+          "qualified_support": 171418,
+          "qualified_ratio": 0.870876
+        },
+        "note": "soft FD is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "SOFTFD_EVID_19",
+        "rule_type": "soft_functional_dependency",
+        "lhs": [
+          "birthplace",
+          "stadium"
+        ],
+        "rhs": "season",
+        "target_column": "season",
+        "description": "soft FD evidence only: birthplace, stadium -> season",
+        "confidence": 0.94579,
+        "support": 196846,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "fd_quality_profile": {
+          "support": 196941,
+          "used_support": 196846,
+          "confidence": 0.94579,
+          "usable_group_count": 370,
+          "avg_group_size": 532.016216,
+          "min_group_size": 248,
+          "qualified_group_count": 349,
+          "qualified_support": 175617,
+          "qualified_ratio": 0.892154
+        },
+        "note": "soft FD is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "SOFTFD_EVID_20",
+        "rule_type": "soft_functional_dependency",
+        "lhs": [
+          "birthplace",
+          "season"
+        ],
+        "rhs": "position",
+        "target_column": "position",
+        "description": "soft FD evidence only: birthplace, season -> position",
+        "confidence": 0.906766,
+        "support": 196774,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "fd_quality_profile": {
+          "support": 196883,
+          "used_support": 196774,
+          "confidence": 0.906766,
+          "usable_group_count": 302,
+          "avg_group_size": 651.569536,
+          "min_group_size": 381,
+          "qualified_group_count": 269,
+          "qualified_support": 157158,
+          "qualified_ratio": 0.798673
+        },
+        "note": "soft FD is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "SOFTFD_EVID_21",
+        "rule_type": "soft_functional_dependency",
+        "lhs": [
+          "team",
+          "city"
+        ],
+        "rhs": "stadium",
+        "target_column": "stadium",
+        "description": "soft FD evidence only: team, city -> stadium",
+        "confidence": 0.992099,
+        "support": 196940,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "fd_quality_profile": {
+          "support": 197045,
+          "used_support": 196940,
+          "confidence": 0.992099,
+          "usable_group_count": 50,
+          "avg_group_size": 3938.8,
+          "min_group_size": 429,
+          "qualified_group_count": 49,
+          "qualified_support": 187547,
+          "qualified_ratio": 0.952305
+        },
+        "note": "soft FD is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "SOFTFD_EVID_22",
+        "rule_type": "soft_functional_dependency",
+        "lhs": [
+          "city",
+          "season"
+        ],
+        "rhs": "stadium",
+        "target_column": "stadium",
+        "description": "soft FD evidence only: city, season -> stadium",
+        "confidence": 0.937887,
+        "support": 196947,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "fd_quality_profile": {
+          "support": 197028,
+          "used_support": 196947,
+          "confidence": 0.937887,
+          "usable_group_count": 59,
+          "avg_group_size": 3338.084746,
+          "min_group_size": 431,
+          "qualified_group_count": 53,
+          "qualified_support": 160039,
+          "qualified_ratio": 0.812599
+        },
+        "note": "soft FD is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "SOFTFD_EVID_23",
+        "rule_type": "soft_functional_dependency",
+        "lhs": [
+          "stadium",
+          "season"
+        ],
+        "rhs": "city",
+        "target_column": "city",
+        "description": "soft FD evidence only: stadium, season -> city",
+        "confidence": 0.940508,
+        "support": 196950,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "fd_quality_profile": {
+          "support": 197028,
+          "used_support": 196950,
+          "confidence": 0.940508,
+          "usable_group_count": 58,
+          "avg_group_size": 3395.689655,
+          "min_group_size": 430,
+          "qualified_group_count": 51,
+          "qualified_support": 156586,
+          "qualified_ratio": 0.795055
+        },
+        "note": "soft FD is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      }
+    ],
+    "candidate_rules": [
+      {
+        "rule_id": "CAND_HRMISS_1",
+        "rule_type": "high_risk_missing",
+        "column": "city",
+        "target_column": "city",
+        "description": "city missing values are suspicious in soccer candidate generation",
+        "confidence": 0.82,
+        "support": 199013,
+        "usage_role": "candidate_generation_rule",
+        "priority": "medium",
+        "target_scope": "schema_missing_guard"
+      },
+      {
+        "rule_id": "CAND_HRMISS_2",
+        "rule_type": "high_risk_missing",
+        "column": "team",
+        "target_column": "team",
+        "description": "team missing values are suspicious in soccer candidate generation",
+        "confidence": 0.82,
+        "support": 199024,
+        "usage_role": "candidate_generation_rule",
+        "priority": "medium",
+        "target_scope": "schema_missing_guard"
+      },
+      {
+        "rule_id": "CAND_HRMISS_3",
+        "rule_type": "high_risk_missing",
+        "column": "manager",
+        "target_column": "manager",
+        "description": "manager missing values are suspicious in soccer candidate generation",
+        "confidence": 0.82,
+        "support": 198991,
+        "usage_role": "candidate_generation_rule",
+        "priority": "medium",
+        "target_scope": "schema_missing_guard"
+      },
+      {
+        "rule_id": "CAND_HRMISS_4",
+        "rule_type": "high_risk_missing",
+        "column": "name",
+        "target_column": "name",
+        "description": "name missing values are suspicious in soccer candidate generation",
+        "confidence": 0.82,
+        "support": 198938,
+        "usage_role": "candidate_generation_rule",
+        "priority": "medium",
+        "target_scope": "schema_missing_guard"
+      },
+      {
+        "rule_id": "CAND_HRMISS_5",
+        "rule_type": "high_risk_missing",
+        "column": "stadium",
+        "target_column": "stadium",
+        "description": "stadium missing values are suspicious in soccer candidate generation",
+        "confidence": 0.82,
+        "support": 198988,
+        "usage_role": "candidate_generation_rule",
+        "priority": "medium",
+        "target_scope": "schema_missing_guard"
+      },
+      {
+        "rule_id": "CAND_HRMISS_6",
+        "rule_type": "high_risk_missing",
+        "column": "birthplace",
+        "target_column": "birthplace",
+        "description": "birthplace missing values are suspicious in soccer candidate generation",
+        "confidence": 0.82,
+        "support": 198923,
+        "usage_role": "candidate_generation_rule",
+        "priority": "medium",
+        "target_scope": "schema_missing_guard"
+      },
+      {
+        "rule_id": "CAND_HRMISS_7",
+        "rule_type": "high_risk_missing",
+        "column": "position",
+        "target_column": "position",
+        "description": "position missing values are suspicious in soccer candidate generation",
+        "confidence": 0.82,
+        "support": 198936,
+        "usage_role": "candidate_generation_rule",
+        "priority": "medium",
+        "target_scope": "schema_missing_guard"
+      },
+      {
+        "rule_id": "CAND_HRMISS_8",
+        "rule_type": "high_risk_missing",
+        "column": "season",
+        "target_column": "season",
+        "description": "season missing values are suspicious in soccer candidate generation",
+        "confidence": 0.82,
+        "support": 199005,
+        "usage_role": "candidate_generation_rule",
+        "priority": "medium",
+        "target_scope": "schema_missing_guard"
+      },
+      {
+        "rule_id": "CAND_HRMISS_9",
+        "rule_type": "high_risk_missing",
+        "column": "birthyear",
+        "target_column": "birthyear",
+        "description": "birthyear missing values are suspicious in soccer candidate generation",
+        "confidence": 0.82,
+        "support": 198970,
+        "usage_role": "candidate_generation_rule",
+        "priority": "medium",
+        "target_scope": "schema_missing_guard"
+      },
+      {
+        "rule_id": "CAND_HRMISS_10",
+        "rule_type": "high_risk_missing",
+        "column": "surname",
+        "target_column": "surname",
+        "description": "surname missing values are suspicious in soccer candidate generation",
+        "confidence": 0.82,
+        "support": 198986,
+        "usage_role": "candidate_generation_rule",
+        "priority": "medium",
+        "target_scope": "schema_missing_guard"
+      },
+      {
+        "rule_id": "CAND_TEAMCTX_1",
+        "rule_type": "team_context_dominant",
+        "lhs": [
+          "team",
+          "season"
+        ],
+        "rhs": "city",
+        "target_column": "city",
+        "description": "soccer context dominant: team, season -> city",
+        "mapping_size": 45,
+        "majority_map": {
+          "A.C._Perugia_Calcio||2013": {
+            "dominant_value": "Solna",
+            "group_size": 4539,
+            "ratio": 1.0,
+            "dominant_margin": 4539
+          },
+          "A.C._Perugia_Calcio||2014": {
+            "dominant_value": "Solna",
+            "group_size": 4023,
+            "ratio": 1.0,
+            "dominant_margin": 4023
+          },
+          "ACF_Fiorentina||2012": {
+            "dominant_value": "Hamburg",
+            "group_size": 1514,
+            "ratio": 1.0,
+            "dominant_margin": 1514
+          },
+          "ACF_Fiorentina||2013": {
+            "dominant_value": "Hamburg",
+            "group_size": 3858,
+            "ratio": 0.999482,
+            "dominant_margin": 3855
+          },
+          "ACF_Fiorentina||2014": {
+            "dominant_value": "Hamburg",
+            "group_size": 4024,
+            "ratio": 0.999254,
+            "dominant_margin": 4020
+          },
+          "Aalborg_Boldspilklub||2014": {
+            "dominant_value": "London",
+            "group_size": 2514,
+            "ratio": 1.0,
+            "dominant_margin": 2514
+          },
+          "Aik_Solna||2010": {
+            "dominant_value": "Mexico_City",
+            "group_size": 3780,
+            "ratio": 1.0,
+            "dominant_margin": 3780
+          },
+          "Boavista_F.C.||2013": {
+            "dominant_value": "Naples",
+            "group_size": 4057,
+            "ratio": 1.0,
+            "dominant_margin": 4057
+          },
+          "Boavista_F.C.||2014": {
+            "dominant_value": "Naples",
+            "group_size": 3991,
+            "ratio": 1.0,
+            "dominant_margin": 3991
+          },
+          "Club_Atletico_Velez_Sarsfield||2014": {
+            "dominant_value": "Athens",
+            "group_size": 1510,
+            "ratio": 1.0,
+            "dominant_margin": 1510
+          },
+          "Clube_de_Regatas_do_Flamengo||2011": {
+            "dominant_value": "Rio_de_Janeiro",
+            "group_size": 3440,
+            "ratio": 1.0,
+            "dominant_margin": 3440
+          },
+          "Clube_de_Regatas_do_Flamengo||2013": {
+            "dominant_value": "Rio_de_Janeiro",
+            "group_size": 2509,
+            "ratio": 0.998804,
+            "dominant_margin": 2505
+          },
+          "Delfino_Pescara_1936||2012": {
+            "dominant_value": "Orlando",
+            "group_size": 1531,
+            "ratio": 1.0,
+            "dominant_margin": 1531
+          },
+          "FC_Bayern_Munich||2014": {
+            "dominant_value": "Seattle",
+            "group_size": 1004,
+            "ratio": 1.0,
+            "dominant_margin": 1004
+          },
+          "FC_Bayern_Munich||2015": {
+            "dominant_value": "Seattle",
+            "group_size": 3336,
+            "ratio": 1.0,
+            "dominant_margin": 3336
+          },
+          "FC_Dinamo_Bucuresti||2013": {
+            "dominant_value": "Hamburg",
+            "group_size": 1546,
+            "ratio": 0.996766,
+            "dominant_margin": 1539
+          },
+          "FC_Kaiserslautern||2012": {
+            "dominant_value": "Munich",
+            "group_size": 3539,
+            "ratio": 1.0,
+            "dominant_margin": 3539
+          },
+          "FC_Midtjylland||2011": {
+            "dominant_value": "Houston",
+            "group_size": 2947,
+            "ratio": 1.0,
+            "dominant_margin": 2947
+          },
+          "FC_Nordsjelland||2011": {
+            "dominant_value": "Moscow",
+            "group_size": 1443,
+            "ratio": 1.0,
+            "dominant_margin": 1443
+          },
+          "FC_Spartak_Moscow||2011": {
+            "dominant_value": "Istanbul",
+            "group_size": 3124,
+            "ratio": 1.0,
+            "dominant_margin": 3124
+          },
+          "FK_Partizan||2012": {
+            "dominant_value": "Orlando",
+            "group_size": 1467,
+            "ratio": 0.999318,
+            "dominant_margin": 1465
+          },
+          "FK_Partizan||2013": {
+            "dominant_value": "Orlando",
+            "group_size": 1956,
+            "ratio": 1.0,
+            "dominant_margin": 1956
+          },
+          "Forest_Green_Rovers_F.C.||2012": {
+            "dominant_value": "Solna",
+            "group_size": 1946,
+            "ratio": 1.0,
+            "dominant_margin": 1946
+          },
+          "Forest_Green_Rovers_F.C.||2014": {
+            "dominant_value": "Solna",
+            "group_size": 2024,
+            "ratio": 0.998518,
+            "dominant_margin": 2019
+          },
+          "Grasshopper_Club_Zurich||2015": {
+            "dominant_value": "Moscow",
+            "group_size": 1293,
+            "ratio": 1.0,
+            "dominant_margin": 1293
+          },
+          "Juventus||2010": {
+            "dominant_value": "Salvador",
+            "group_size": 3488,
+            "ratio": 1.0,
+            "dominant_margin": 3488
+          },
+          "Juventus||2012": {
+            "dominant_value": "Salvador",
+            "group_size": 3490,
+            "ratio": 1.0,
+            "dominant_margin": 3490
+          },
+          "Juventus||2015": {
+            "dominant_value": "Salvador",
+            "group_size": 4505,
+            "ratio": 1.0,
+            "dominant_margin": 4505
+          },
+          "Lille_OSC||2010": {
+            "dominant_value": "Munich",
+            "group_size": 4018,
+            "ratio": 1.0,
+            "dominant_margin": 4018
+          },
+          "Montpellier_HSC||2013": {
+            "dominant_value": "Recife",
+            "group_size": 1524,
+            "ratio": 1.0,
+            "dominant_margin": 1524
+          },
+          "S.C._Braga||2011": {
+            "dominant_value": "Gelsenkirchen",
+            "group_size": 2898,
+            "ratio": 0.99931,
+            "dominant_margin": 2895
+          },
+          "S.C._Braga||2013": {
+            "dominant_value": "Gelsenkirchen",
+            "group_size": 2956,
+            "ratio": 1.0,
+            "dominant_margin": 2956
+          },
+          "S.C._Braga||2014": {
+            "dominant_value": "Gelsenkirchen",
+            "group_size": 3482,
+            "ratio": 0.998851,
+            "dominant_margin": 3477
+          },
+          "SV_Werder_Bremen||2014": {
+            "dominant_value": "Barcelona",
+            "group_size": 2511,
+            "ratio": 1.0,
+            "dominant_margin": 2511
+          },
+          "Seattle_Sounders||2011": {
+            "dominant_value": "Dortmund",
+            "group_size": 1975,
+            "ratio": 1.0,
+            "dominant_margin": 1975
+          },
+          "Seattle_Sounders||2013": {
+            "dominant_value": "Dortmund",
+            "group_size": 1966,
+            "ratio": 1.0,
+            "dominant_margin": 1966
+          },
+          "Sport_Club_Internacional||2011": {
+            "dominant_value": "Montreal",
+            "group_size": 2091,
+            "ratio": 1.0,
+            "dominant_margin": 2091
+          },
+          "Sport_Club_Internacional||2013": {
+            "dominant_value": "Montreal",
+            "group_size": 483,
+            "ratio": 1.0,
+            "dominant_margin": 483
+          },
+          "The_New_Saints_F.C.||2014": {
+            "dominant_value": "Arlington",
+            "group_size": 3506,
+            "ratio": 1.0,
+            "dominant_margin": 3506
+          },
+          "Tianjin_Teda_F.C.||2011": {
+            "dominant_value": "Cardiff",
+            "group_size": 1974,
+            "ratio": 1.0,
+            "dominant_margin": 1974
+          },
+          "Tianjin_Teda_F.C.||2014": {
+            "dominant_value": "Cardiff",
+            "group_size": 1960,
+            "ratio": 1.0,
+            "dominant_margin": 1960
+          },
+          "Toronto_FC||2014": {
+            "dominant_value": "Stuttgart",
+            "group_size": 3411,
+            "ratio": 1.0,
+            "dominant_margin": 3411
+          },
+          "West_Ham_United_F.C.||2011": {
+            "dominant_value": "Solna",
+            "group_size": 3368,
+            "ratio": 1.0,
+            "dominant_margin": 3368
+          },
+          "West_Ham_United_F.C.||2013": {
+            "dominant_value": "Solna",
+            "group_size": 2821,
+            "ratio": 0.999646,
+            "dominant_margin": 2819
+          },
+          "Wolverhampton_Wanderers_Football_Club||2012": {
+            "dominant_value": "Glasgow",
+            "group_size": 2530,
+            "ratio": 1.0,
+            "dominant_margin": 2530
+          }
+        },
+        "confidence": 0.84,
+        "support": 121872,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "min_group_size": 20,
+        "min_ratio": 0.98,
+        "min_dominant_margin": 5,
+        "note": "team context is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "CAND_TEAMCTX_2",
+        "rule_type": "team_context_dominant",
+        "lhs": [
+          "team"
+        ],
+        "rhs": "city",
+        "target_column": "city",
+        "description": "soccer context dominant: team -> city",
+        "mapping_size": 25,
+        "majority_map": {
+          "A.C._Perugia_Calcio": {
+            "dominant_value": "Solna",
+            "group_size": 8602,
+            "ratio": 1.0,
+            "dominant_margin": 8602
+          },
+          "ACF_Fiorentina": {
+            "dominant_value": "Hamburg",
+            "group_size": 9456,
+            "ratio": 0.999365,
+            "dominant_margin": 9449
+          },
+          "Aalborg_Boldspilklub": {
+            "dominant_value": "London",
+            "group_size": 2533,
+            "ratio": 1.0,
+            "dominant_margin": 2533
+          },
+          "Aik_Solna": {
+            "dominant_value": "Mexico_City",
+            "group_size": 3797,
+            "ratio": 1.0,
+            "dominant_margin": 3797
+          },
+          "Club_Atletico_Velez_Sarsfield": {
+            "dominant_value": "Athens",
+            "group_size": 1518,
+            "ratio": 1.0,
+            "dominant_margin": 1518
+          },
+          "Clube_de_Regatas_do_Flamengo": {
+            "dominant_value": "Rio_de_Janeiro",
+            "group_size": 5981,
+            "ratio": 0.999498,
+            "dominant_margin": 5977
+          },
+          "Delfino_Pescara_1936": {
+            "dominant_value": "Orlando",
+            "group_size": 1539,
+            "ratio": 1.0,
+            "dominant_margin": 1539
+          },
+          "FC_Bayern_Munich": {
+            "dominant_value": "Seattle",
+            "group_size": 4359,
+            "ratio": 1.0,
+            "dominant_margin": 4359
+          },
+          "FC_Dinamo_Bucuresti": {
+            "dominant_value": "Hamburg",
+            "group_size": 1557,
+            "ratio": 0.996789,
+            "dominant_margin": 1550
+          },
+          "FC_Kaiserslautern": {
+            "dominant_value": "Munich",
+            "group_size": 3552,
+            "ratio": 1.0,
+            "dominant_margin": 3552
+          },
+          "FC_Midtjylland": {
+            "dominant_value": "Houston",
+            "group_size": 2959,
+            "ratio": 1.0,
+            "dominant_margin": 2959
+          },
+          "FC_Nordsjelland": {
+            "dominant_value": "Moscow",
+            "group_size": 1448,
+            "ratio": 1.0,
+            "dominant_margin": 1448
+          },
+          "FK_Partizan": {
+            "dominant_value": "Orlando",
+            "group_size": 3443,
+            "ratio": 0.998838,
+            "dominant_margin": 3437
+          },
+          "Forest_Green_Rovers_F.C.": {
+            "dominant_value": "Solna",
+            "group_size": 3996,
+            "ratio": 0.999249,
+            "dominant_margin": 3991
+          },
+          "Grasshopper_Club_Zurich": {
+            "dominant_value": "Moscow",
+            "group_size": 1301,
+            "ratio": 1.0,
+            "dominant_margin": 1301
+          },
+          "Juventus": {
+            "dominant_value": "Salvador",
+            "group_size": 11549,
+            "ratio": 1.0,
+            "dominant_margin": 11549
+          },
+          "Lille_OSC": {
+            "dominant_value": "Munich",
+            "group_size": 4041,
+            "ratio": 1.0,
+            "dominant_margin": 4041
+          },
+          "Montpellier_HSC": {
+            "dominant_value": "Recife",
+            "group_size": 1537,
+            "ratio": 1.0,
+            "dominant_margin": 1537
+          },
+          "S.C._Braga": {
+            "dominant_value": "Gelsenkirchen",
+            "group_size": 9374,
+            "ratio": 0.999147,
+            "dominant_margin": 9364
+          },
+          "SV_Werder_Bremen": {
+            "dominant_value": "Barcelona",
+            "group_size": 2516,
+            "ratio": 1.0,
+            "dominant_margin": 2516
+          },
+          "Seattle_Sounders": {
+            "dominant_value": "Dortmund",
+            "group_size": 3967,
+            "ratio": 0.999244,
+            "dominant_margin": 3963
+          },
+          "Sport_Club_Internacional": {
+            "dominant_value": "Montreal",
+            "group_size": 2584,
+            "ratio": 1.0,
+            "dominant_margin": 2584
+          },
+          "Tianjin_Teda_F.C.": {
+            "dominant_value": "Cardiff",
+            "group_size": 3950,
+            "ratio": 1.0,
+            "dominant_margin": 3950
+          },
+          "Toronto_FC": {
+            "dominant_value": "Stuttgart",
+            "group_size": 3427,
+            "ratio": 1.0,
+            "dominant_margin": 3427
+          },
+          "West_Ham_United_F.C.": {
+            "dominant_value": "Solna",
+            "group_size": 6229,
+            "ratio": 0.999839,
+            "dominant_margin": 6227
+          }
+        },
+        "confidence": 0.84,
+        "support": 105215,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "min_group_size": 20,
+        "min_ratio": 0.98,
+        "min_dominant_margin": 5,
+        "note": "team context is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "CAND_TEAMCTX_3",
+        "rule_type": "team_context_dominant",
+        "lhs": [
+          "stadium"
+        ],
+        "rhs": "city",
+        "target_column": "city",
+        "description": "soccer context dominant: stadium -> city",
+        "mapping_size": 22,
+        "majority_map": {
+          "Amsterdam_Arena": {
+            "dominant_value": "Hamburg",
+            "group_size": 1550,
+            "ratio": 0.996774,
+            "dominant_margin": 1543
+          },
+          "Anfield": {
+            "dominant_value": "London",
+            "group_size": 2525,
+            "ratio": 1.0,
+            "dominant_margin": 2525
+          },
+          "Balaidos": {
+            "dominant_value": "Solna",
+            "group_size": 6228,
+            "ratio": 0.999839,
+            "dominant_margin": 6226
+          },
+          "Boleyn_Ground": {
+            "dominant_value": "Barcelona",
+            "group_size": 2506,
+            "ratio": 1.0,
+            "dominant_margin": 2506
+          },
+          "Camp_Nou": {
+            "dominant_value": "Stuttgart",
+            "group_size": 6519,
+            "ratio": 0.999847,
+            "dominant_margin": 6517
+          },
+          "Constant_Vanden_Stock_Stadium": {
+            "dominant_value": "Montevideo",
+            "group_size": 7404,
+            "ratio": 0.999865,
+            "dominant_margin": 7402
+          },
+          "Donbass_Arena": {
+            "dominant_value": "Solna",
+            "group_size": 8589,
+            "ratio": 0.999884,
+            "dominant_margin": 8587
+          },
+          "Emirates_Stadium": {
+            "dominant_value": "Glasgow",
+            "group_size": 4923,
+            "ratio": 1.0,
+            "dominant_margin": 4923
+          },
+          "Gerhard_Hanappi_Stadium": {
+            "dominant_value": "Moscow",
+            "group_size": 1293,
+            "ratio": 1.0,
+            "dominant_margin": 1293
+          },
+          "Jan_Breydel_Stadium": {
+            "dominant_value": "Istanbul",
+            "group_size": 5608,
+            "ratio": 0.999465,
+            "dominant_margin": 5602
+          },
+          "Parc_des_Princes": {
+            "dominant_value": "Arlington",
+            "group_size": 8028,
+            "ratio": 0.999502,
+            "dominant_margin": 8022
+          },
+          "Santiago_Bernabeu_Stadium": {
+            "dominant_value": "London",
+            "group_size": 8389,
+            "ratio": 0.999762,
+            "dominant_margin": 8386
+          },
+          "Sporting_Park": {
+            "dominant_value": "Gelsenkirchen",
+            "group_size": 9377,
+            "ratio": 0.99968,
+            "dominant_margin": 9373
+          },
+          "St_James__Park": {
+            "dominant_value": "Cardiff",
+            "group_size": 2610,
+            "ratio": 1.0,
+            "dominant_margin": 2610
+          },
+          "Stade_Louis_II": {
+            "dominant_value": "Houston",
+            "group_size": 2970,
+            "ratio": 1.0,
+            "dominant_margin": 2970
+          },
+          "Stade_Velodrome": {
+            "dominant_value": "Recife",
+            "group_size": 1539,
+            "ratio": 1.0,
+            "dominant_margin": 1539
+          },
+          "Stadio_Artemio_Franchi": {
+            "dominant_value": "Athens",
+            "group_size": 1517,
+            "ratio": 1.0,
+            "dominant_margin": 1517
+          },
+          "Stadio_San_Paolo": {
+            "dominant_value": "Dortmund",
+            "group_size": 6969,
+            "ratio": 0.999426,
+            "dominant_margin": 6963
+          },
+          "Veltins-Arena": {
+            "dominant_value": "Naples",
+            "group_size": 12574,
+            "ratio": 0.99992,
+            "dominant_margin": 12572
+          },
+          "Vicente_Calderon_Stadium": {
+            "dominant_value": "Mexico_City",
+            "group_size": 3796,
+            "ratio": 1.0,
+            "dominant_margin": 3796
+          },
+          "Westfalenstadion": {
+            "dominant_value": "Berlin",
+            "group_size": 2380,
+            "ratio": 1.0,
+            "dominant_margin": 2380
+          },
+          "White_Hart_Lane": {
+            "dominant_value": "Orlando",
+            "group_size": 3444,
+            "ratio": 1.0,
+            "dominant_margin": 3444
+          }
+        },
+        "confidence": 0.84,
+        "support": 110738,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "min_group_size": 20,
+        "min_ratio": 0.98,
+        "min_dominant_margin": 5,
+        "note": "team context is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "CAND_TEAMCTX_4",
+        "rule_type": "team_context_dominant",
+        "lhs": [
+          "team",
+          "season"
+        ],
+        "rhs": "stadium",
+        "target_column": "stadium",
+        "description": "soccer context dominant: team, season -> stadium",
+        "mapping_size": 45,
+        "majority_map": {
+          "A.C._Perugia_Calcio||2013": {
+            "dominant_value": "Donbass_Arena",
+            "group_size": 4538,
+            "ratio": 1.0,
+            "dominant_margin": 4538
+          },
+          "A.C._Perugia_Calcio||2014": {
+            "dominant_value": "Donbass_Arena",
+            "group_size": 4011,
+            "ratio": 1.0,
+            "dominant_margin": 4011
+          },
+          "ACF_Fiorentina||2012": {
+            "dominant_value": "Estadio_da_Luz",
+            "group_size": 1515,
+            "ratio": 0.99736,
+            "dominant_margin": 1507
+          },
+          "ACF_Fiorentina||2013": {
+            "dominant_value": "King_Power_Stadium",
+            "group_size": 3851,
+            "ratio": 1.0,
+            "dominant_margin": 3851
+          },
+          "ACF_Fiorentina||2014": {
+            "dominant_value": "King_Power_Stadium",
+            "group_size": 4022,
+            "ratio": 0.998757,
+            "dominant_margin": 4013
+          },
+          "Aalborg_Boldspilklub||2014": {
+            "dominant_value": "Anfield",
+            "group_size": 2507,
+            "ratio": 1.0,
+            "dominant_margin": 2507
+          },
+          "Aik_Solna||2010": {
+            "dominant_value": "Vicente_Calderon_Stadium",
+            "group_size": 3784,
+            "ratio": 1.0,
+            "dominant_margin": 3784
+          },
+          "Boavista_F.C.||2013": {
+            "dominant_value": "Veltins-Arena",
+            "group_size": 4058,
+            "ratio": 1.0,
+            "dominant_margin": 4058
+          },
+          "Boavista_F.C.||2014": {
+            "dominant_value": "Veltins-Arena",
+            "group_size": 3982,
+            "ratio": 1.0,
+            "dominant_margin": 3982
+          },
+          "Club_Atletico_Velez_Sarsfield||2014": {
+            "dominant_value": "Stadio_Artemio_Franchi",
+            "group_size": 1506,
+            "ratio": 1.0,
+            "dominant_margin": 1506
+          },
+          "Clube_de_Regatas_do_Flamengo||2011": {
+            "dominant_value": "Stadio_Olimpico",
+            "group_size": 3441,
+            "ratio": 1.0,
+            "dominant_margin": 3441
+          },
+          "Clube_de_Regatas_do_Flamengo||2013": {
+            "dominant_value": "Stadio_Olimpico",
+            "group_size": 2513,
+            "ratio": 1.0,
+            "dominant_margin": 2513
+          },
+          "Delfino_Pescara_1936||2012": {
+            "dominant_value": "King_Power_Stadium",
+            "group_size": 1527,
+            "ratio": 1.0,
+            "dominant_margin": 1527
+          },
+          "FC_Bayern_Munich||2014": {
+            "dominant_value": "San_Siro_Stadium",
+            "group_size": 1001,
+            "ratio": 1.0,
+            "dominant_margin": 1001
+          },
+          "FC_Bayern_Munich||2015": {
+            "dominant_value": "San_Siro_Stadium",
+            "group_size": 3340,
+            "ratio": 1.0,
+            "dominant_margin": 3340
+          },
+          "FC_Dinamo_Bucuresti||2013": {
+            "dominant_value": "Amsterdam_Arena",
+            "group_size": 1548,
+            "ratio": 0.997416,
+            "dominant_margin": 1543
+          },
+          "FC_Kaiserslautern||2012": {
+            "dominant_value": "Stadio_Olimpico",
+            "group_size": 3536,
+            "ratio": 1.0,
+            "dominant_margin": 3536
+          },
+          "FC_Midtjylland||2011": {
+            "dominant_value": "Stade_Louis_II",
+            "group_size": 2953,
+            "ratio": 1.0,
+            "dominant_margin": 2953
+          },
+          "FC_Nordsjelland||2011": {
+            "dominant_value": "Estadio_da_Luz",
+            "group_size": 1444,
+            "ratio": 1.0,
+            "dominant_margin": 1444
+          },
+          "FC_Spartak_Moscow||2011": {
+            "dominant_value": "Jan_Breydel_Stadium",
+            "group_size": 3119,
+            "ratio": 0.999679,
+            "dominant_margin": 3117
+          },
+          "FK_Partizan||2012": {
+            "dominant_value": "White_Hart_Lane",
+            "group_size": 1472,
+            "ratio": 0.999321,
+            "dominant_margin": 1470
+          },
+          "FK_Partizan||2013": {
+            "dominant_value": "White_Hart_Lane",
+            "group_size": 1953,
+            "ratio": 1.0,
+            "dominant_margin": 1953
+          },
+          "Forest_Green_Rovers_F.C.||2012": {
+            "dominant_value": "Allianz_Arena_Olympic_Stadium_Munich",
+            "group_size": 1948,
+            "ratio": 1.0,
+            "dominant_margin": 1948
+          },
+          "Forest_Green_Rovers_F.C.||2014": {
+            "dominant_value": "Allianz_Arena_Olympic_Stadium_Munich",
+            "group_size": 2033,
+            "ratio": 0.998032,
+            "dominant_margin": 2027
+          },
+          "Grasshopper_Club_Zurich||2015": {
+            "dominant_value": "Gerhard_Hanappi_Stadium",
+            "group_size": 1292,
+            "ratio": 1.0,
+            "dominant_margin": 1292
+          },
+          "Juventus||2010": {
+            "dominant_value": "BMO_Field",
+            "group_size": 3487,
+            "ratio": 1.0,
+            "dominant_margin": 3487
+          },
+          "Juventus||2012": {
+            "dominant_value": "BMO_Field",
+            "group_size": 3490,
+            "ratio": 1.0,
+            "dominant_margin": 3490
+          },
+          "Juventus||2015": {
+            "dominant_value": "BMO_Field",
+            "group_size": 4503,
+            "ratio": 1.0,
+            "dominant_margin": 4503
+          },
+          "Lille_OSC||2010": {
+            "dominant_value": "Allianz_Arena_Olympic_Stadium_Munich",
+            "group_size": 4005,
+            "ratio": 1.0,
+            "dominant_margin": 4005
+          },
+          "Montpellier_HSC||2013": {
+            "dominant_value": "Stade_Velodrome",
+            "group_size": 1525,
+            "ratio": 1.0,
+            "dominant_margin": 1525
+          },
+          "S.C._Braga||2011": {
+            "dominant_value": "Sporting_Park",
+            "group_size": 2898,
+            "ratio": 0.99931,
+            "dominant_margin": 2895
+          },
+          "S.C._Braga||2013": {
+            "dominant_value": "Sporting_Park",
+            "group_size": 2960,
+            "ratio": 1.0,
+            "dominant_margin": 2960
+          },
+          "S.C._Braga||2014": {
+            "dominant_value": "Sporting_Park",
+            "group_size": 3480,
+            "ratio": 0.998851,
+            "dominant_margin": 3475
+          },
+          "SV_Werder_Bremen||2014": {
+            "dominant_value": "Boleyn_Ground",
+            "group_size": 2504,
+            "ratio": 1.0,
+            "dominant_margin": 2504
+          },
+          "Seattle_Sounders||2011": {
+            "dominant_value": "Stadio_San_Paolo",
+            "group_size": 1978,
+            "ratio": 1.0,
+            "dominant_margin": 1978
+          },
+          "Seattle_Sounders||2013": {
+            "dominant_value": "Stadio_San_Paolo",
+            "group_size": 1965,
+            "ratio": 1.0,
+            "dominant_margin": 1965
+          },
+          "Sport_Club_Internacional||2011": {
+            "dominant_value": "King_Power_Stadium",
+            "group_size": 2082,
+            "ratio": 1.0,
+            "dominant_margin": 2082
+          },
+          "Sport_Club_Internacional||2013": {
+            "dominant_value": "King_Power_Stadium",
+            "group_size": 482,
+            "ratio": 1.0,
+            "dominant_margin": 482
+          },
+          "The_New_Saints_F.C.||2014": {
+            "dominant_value": "Parc_des_Princes",
+            "group_size": 3503,
+            "ratio": 1.0,
+            "dominant_margin": 3503
+          },
+          "Tianjin_Teda_F.C.||2011": {
+            "dominant_value": "Estadio_da_Luz",
+            "group_size": 1968,
+            "ratio": 1.0,
+            "dominant_margin": 1968
+          },
+          "Tianjin_Teda_F.C.||2014": {
+            "dominant_value": "Estadio_da_Luz",
+            "group_size": 1975,
+            "ratio": 0.998987,
+            "dominant_margin": 1971
+          },
+          "Toronto_FC||2014": {
+            "dominant_value": "Camp_Nou",
+            "group_size": 3403,
+            "ratio": 1.0,
+            "dominant_margin": 3403
+          },
+          "West_Ham_United_F.C.||2011": {
+            "dominant_value": "Balaidos",
+            "group_size": 3365,
+            "ratio": 1.0,
+            "dominant_margin": 3365
+          },
+          "West_Ham_United_F.C.||2013": {
+            "dominant_value": "Balaidos",
+            "group_size": 2817,
+            "ratio": 0.999645,
+            "dominant_margin": 2815
+          },
+          "Wolverhampton_Wanderers_Football_Club||2012": {
+            "dominant_value": "Emirates_Stadium",
+            "group_size": 2518,
+            "ratio": 1.0,
+            "dominant_margin": 2518
+          }
+        },
+        "confidence": 0.84,
+        "support": 121802,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "min_group_size": 20,
+        "min_ratio": 0.98,
+        "min_dominant_margin": 5,
+        "note": "team context is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "CAND_TEAMCTX_5",
+        "rule_type": "team_context_dominant",
+        "lhs": [
+          "team"
+        ],
+        "rhs": "stadium",
+        "target_column": "stadium",
+        "description": "soccer context dominant: team -> stadium",
+        "mapping_size": 24,
+        "majority_map": {
+          "A.C._Perugia_Calcio": {
+            "dominant_value": "Donbass_Arena",
+            "group_size": 8588,
+            "ratio": 1.0,
+            "dominant_margin": 8588
+          },
+          "Aalborg_Boldspilklub": {
+            "dominant_value": "Anfield",
+            "group_size": 2526,
+            "ratio": 1.0,
+            "dominant_margin": 2526
+          },
+          "Aik_Solna": {
+            "dominant_value": "Vicente_Calderon_Stadium",
+            "group_size": 3800,
+            "ratio": 1.0,
+            "dominant_margin": 3800
+          },
+          "Club_Atletico_Velez_Sarsfield": {
+            "dominant_value": "Stadio_Artemio_Franchi",
+            "group_size": 1514,
+            "ratio": 1.0,
+            "dominant_margin": 1514
+          },
+          "Clube_de_Regatas_do_Flamengo": {
+            "dominant_value": "Stadio_Olimpico",
+            "group_size": 5988,
+            "ratio": 1.0,
+            "dominant_margin": 5988
+          },
+          "Delfino_Pescara_1936": {
+            "dominant_value": "King_Power_Stadium",
+            "group_size": 1535,
+            "ratio": 1.0,
+            "dominant_margin": 1535
+          },
+          "FC_Bayern_Munich": {
+            "dominant_value": "San_Siro_Stadium",
+            "group_size": 4360,
+            "ratio": 1.0,
+            "dominant_margin": 4360
+          },
+          "FC_Dinamo_Bucuresti": {
+            "dominant_value": "Amsterdam_Arena",
+            "group_size": 1559,
+            "ratio": 0.997434,
+            "dominant_margin": 1554
+          },
+          "FC_Kaiserslautern": {
+            "dominant_value": "Stadio_Olimpico",
+            "group_size": 3548,
+            "ratio": 1.0,
+            "dominant_margin": 3548
+          },
+          "FC_Midtjylland": {
+            "dominant_value": "Stade_Louis_II",
+            "group_size": 2965,
+            "ratio": 1.0,
+            "dominant_margin": 2965
+          },
+          "FC_Nordsjelland": {
+            "dominant_value": "Estadio_da_Luz",
+            "group_size": 1449,
+            "ratio": 1.0,
+            "dominant_margin": 1449
+          },
+          "FK_Partizan": {
+            "dominant_value": "White_Hart_Lane",
+            "group_size": 3445,
+            "ratio": 0.998839,
+            "dominant_margin": 3439
+          },
+          "Forest_Green_Rovers_F.C.": {
+            "dominant_value": "Allianz_Arena_Olympic_Stadium_Munich",
+            "group_size": 4006,
+            "ratio": 0.999001,
+            "dominant_margin": 4000
+          },
+          "Grasshopper_Club_Zurich": {
+            "dominant_value": "Gerhard_Hanappi_Stadium",
+            "group_size": 1300,
+            "ratio": 1.0,
+            "dominant_margin": 1300
+          },
+          "Juventus": {
+            "dominant_value": "BMO_Field",
+            "group_size": 11546,
+            "ratio": 1.0,
+            "dominant_margin": 11546
+          },
+          "Lille_OSC": {
+            "dominant_value": "Allianz_Arena_Olympic_Stadium_Munich",
+            "group_size": 4028,
+            "ratio": 1.0,
+            "dominant_margin": 4028
+          },
+          "Montpellier_HSC": {
+            "dominant_value": "Stade_Velodrome",
+            "group_size": 1538,
+            "ratio": 1.0,
+            "dominant_margin": 1538
+          },
+          "S.C._Braga": {
+            "dominant_value": "Sporting_Park",
+            "group_size": 9376,
+            "ratio": 0.999147,
+            "dominant_margin": 9366
+          },
+          "SV_Werder_Bremen": {
+            "dominant_value": "Boleyn_Ground",
+            "group_size": 2509,
+            "ratio": 1.0,
+            "dominant_margin": 2509
+          },
+          "Seattle_Sounders": {
+            "dominant_value": "Stadio_San_Paolo",
+            "group_size": 3969,
+            "ratio": 0.999244,
+            "dominant_margin": 3965
+          },
+          "Sport_Club_Internacional": {
+            "dominant_value": "King_Power_Stadium",
+            "group_size": 2574,
+            "ratio": 1.0,
+            "dominant_margin": 2574
+          },
+          "Tianjin_Teda_F.C.": {
+            "dominant_value": "Estadio_da_Luz",
+            "group_size": 3958,
+            "ratio": 0.999495,
+            "dominant_margin": 3954
+          },
+          "Toronto_FC": {
+            "dominant_value": "Camp_Nou",
+            "group_size": 3419,
+            "ratio": 1.0,
+            "dominant_margin": 3419
+          },
+          "West_Ham_United_F.C.": {
+            "dominant_value": "Balaidos",
+            "group_size": 6222,
+            "ratio": 0.999839,
+            "dominant_margin": 6220
+          }
+        },
+        "confidence": 0.84,
+        "support": 95722,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "min_group_size": 20,
+        "min_ratio": 0.98,
+        "min_dominant_margin": 5,
+        "note": "team context is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "CAND_TEAMCTX_6",
+        "rule_type": "team_context_dominant",
+        "lhs": [
+          "team",
+          "season"
+        ],
+        "rhs": "manager",
+        "target_column": "manager",
+        "description": "soccer context dominant: team, season -> manager",
+        "mapping_size": 49,
+        "majority_map": {
+          "A.C._Perugia_Calcio||2014": {
+            "dominant_value": "Nabih_Rios",
+            "group_size": 4018,
+            "ratio": 0.999502,
+            "dominant_margin": 4015
+          },
+          "ACF_Fiorentina||2012": {
+            "dominant_value": "Atsuyuki_Jayaprakash",
+            "group_size": 1511,
+            "ratio": 0.997353,
+            "dominant_margin": 1504
+          },
+          "ACF_Fiorentina||2014": {
+            "dominant_value": "Aiqun_Levergood",
+            "group_size": 4016,
+            "ratio": 0.999502,
+            "dominant_margin": 4012
+          },
+          "Aalborg_Boldspilklub||2014": {
+            "dominant_value": "Rosangela_Ketz",
+            "group_size": 2511,
+            "ratio": 1.0,
+            "dominant_margin": 2511
+          },
+          "Aik_Solna||2010": {
+            "dominant_value": "Shigetomo_Abbas",
+            "group_size": 3780,
+            "ratio": 1.0,
+            "dominant_margin": 3780
+          },
+          "Boavista_F.C.||2013": {
+            "dominant_value": "Srikanth_Chimia",
+            "group_size": 4062,
+            "ratio": 1.0,
+            "dominant_margin": 4062
+          },
+          "Boavista_F.C.||2015": {
+            "dominant_value": "Duckyoung_Padhye",
+            "group_size": 4888,
+            "ratio": 0.999182,
+            "dominant_margin": 4883
+          },
+          "Borussia_Monchengladbach||2012": {
+            "dominant_value": "Jeremy_Cantu",
+            "group_size": 4423,
+            "ratio": 0.999548,
+            "dominant_margin": 4419
+          },
+          "Club_Atletico_Velez_Sarsfield||2014": {
+            "dominant_value": "Srikanth_Chimia",
+            "group_size": 1507,
+            "ratio": 1.0,
+            "dominant_margin": 1507
+          },
+          "Clube_de_Regatas_do_Flamengo||2011": {
+            "dominant_value": "Xiaolei_Ronchette",
+            "group_size": 3432,
+            "ratio": 1.0,
+            "dominant_margin": 3432
+          },
+          "Clube_de_Regatas_do_Flamengo||2013": {
+            "dominant_value": "Jeremy_Cantu",
+            "group_size": 2512,
+            "ratio": 0.999602,
+            "dominant_margin": 2510
+          },
+          "Delfino_Pescara_1936||2012": {
+            "dominant_value": "Robbert_Flach",
+            "group_size": 1529,
+            "ratio": 1.0,
+            "dominant_margin": 1529
+          },
+          "FC_Anzhi_Makhachkala||2013": {
+            "dominant_value": "Robert_Lally",
+            "group_size": 5268,
+            "ratio": 0.99981,
+            "dominant_margin": 5266
+          },
+          "FC_Bayern_Munich||2014": {
+            "dominant_value": "Shigetomo_Abbas",
+            "group_size": 1002,
+            "ratio": 1.0,
+            "dominant_margin": 1002
+          },
+          "FC_Bayern_Munich||2015": {
+            "dominant_value": "Atsufumi_Comparetto",
+            "group_size": 3344,
+            "ratio": 1.0,
+            "dominant_margin": 3344
+          },
+          "FC_Dinamo_Bucuresti||2013": {
+            "dominant_value": "Mattan_Edelhoff",
+            "group_size": 1549,
+            "ratio": 0.998709,
+            "dominant_margin": 1546
+          },
+          "FC_Kaiserslautern||2012": {
+            "dominant_value": "Atsufumi_Comparetto",
+            "group_size": 3538,
+            "ratio": 1.0,
+            "dominant_margin": 3538
+          },
+          "FC_Nordsjelland||2011": {
+            "dominant_value": "Cees_Gunal",
+            "group_size": 1437,
+            "ratio": 1.0,
+            "dominant_margin": 1437
+          },
+          "FC_Spartak_Moscow||2011": {
+            "dominant_value": "Yki_Villano",
+            "group_size": 3128,
+            "ratio": 1.0,
+            "dominant_margin": 3128
+          },
+          "FC_Spartak_Moscow||2012": {
+            "dominant_value": "Olavi_Gurd",
+            "group_size": 4363,
+            "ratio": 1.0,
+            "dominant_margin": 4363
+          },
+          "FK_Partizan||2012": {
+            "dominant_value": "Ravindra_Grnarov",
+            "group_size": 1471,
+            "ratio": 0.99932,
+            "dominant_margin": 1469
+          },
+          "FK_Partizan||2013": {
+            "dominant_value": "Ryouji_Dare",
+            "group_size": 1956,
+            "ratio": 1.0,
+            "dominant_margin": 1956
+          },
+          "Forest_Green_Rovers_F.C.||2012": {
+            "dominant_value": "Srikanth_Chimia",
+            "group_size": 1943,
+            "ratio": 1.0,
+            "dominant_margin": 1943
+          },
+          "Forest_Green_Rovers_F.C.||2014": {
+            "dominant_value": "Bon_Kruiskamp",
+            "group_size": 2026,
+            "ratio": 0.999013,
+            "dominant_margin": 2023
+          },
+          "Grasshopper_Club_Zurich||2015": {
+            "dominant_value": "Olavi_Gurd",
+            "group_size": 1299,
+            "ratio": 1.0,
+            "dominant_margin": 1299
+          },
+          "Juventus||2010": {
+            "dominant_value": "Masum_Kasprzak",
+            "group_size": 3488,
+            "ratio": 1.0,
+            "dominant_margin": 3488
+          },
+          "Juventus||2012": {
+            "dominant_value": "IlYoung_Giese",
+            "group_size": 3487,
+            "ratio": 1.0,
+            "dominant_margin": 3487
+          },
+          "Juventus||2015": {
+            "dominant_value": "Sigenobu_Bodagala",
+            "group_size": 4501,
+            "ratio": 1.0,
+            "dominant_margin": 4501
+          },
+          "Lille_OSC||2010": {
+            "dominant_value": "Robert_Lally",
+            "group_size": 4010,
+            "ratio": 1.0,
+            "dominant_margin": 4010
+          },
+          "Montpellier_HSC||2013": {
+            "dominant_value": "Bernando_Jesus",
+            "group_size": 1522,
+            "ratio": 1.0,
+            "dominant_margin": 1522
+          },
+          "New_York_Red_Bulls||2011": {
+            "dominant_value": "Atsuyuki_Jayaprakash",
+            "group_size": 5876,
+            "ratio": 0.99983,
+            "dominant_margin": 5874
+          },
+          "Royal_Antwerp_F.C.||2011": {
+            "dominant_value": "Rashi_Papadourakis",
+            "group_size": 5772,
+            "ratio": 0.999134,
+            "dominant_margin": 5765
+          },
+          "S.C._Braga||2011": {
+            "dominant_value": "Anupam_Oxenboll",
+            "group_size": 2896,
+            "ratio": 0.999309,
+            "dominant_margin": 2893
+          },
+          "S.C._Braga||2014": {
+            "dominant_value": "Bernando_Jesus",
+            "group_size": 3472,
+            "ratio": 0.999136,
+            "dominant_margin": 3468
+          },
+          "SV_Werder_Bremen||2014": {
+            "dominant_value": "Sigenobu_Bodagala",
+            "group_size": 2509,
+            "ratio": 1.0,
+            "dominant_margin": 2509
+          },
+          "Seattle_Sounders||2011": {
+            "dominant_value": "Aiqun_Levergood",
+            "group_size": 1981,
+            "ratio": 1.0,
+            "dominant_margin": 1981
+          },
+          "Seattle_Sounders||2013": {
+            "dominant_value": "Nabih_Rios",
+            "group_size": 1961,
+            "ratio": 1.0,
+            "dominant_margin": 1961
+          },
+          "Sport_Club_Internacional||2011": {
+            "dominant_value": "Berardo_Gerber",
+            "group_size": 2089,
+            "ratio": 1.0,
+            "dominant_margin": 2089
+          },
+          "Sport_Club_Internacional||2013": {
+            "dominant_value": "Soung_Alt",
+            "group_size": 479,
+            "ratio": 1.0,
+            "dominant_margin": 479
+          },
+          "The_New_Saints_F.C.||2012": {
+            "dominant_value": "Mayan_Tautenhahn",
+            "group_size": 5508,
+            "ratio": 1.0,
+            "dominant_margin": 5508
+          },
+          "The_New_Saints_F.C.||2014": {
+            "dominant_value": "Robbert_Flach",
+            "group_size": 3505,
+            "ratio": 1.0,
+            "dominant_margin": 3505
+          },
+          "Tianjin_Teda_F.C.||2011": {
+            "dominant_value": "Ryouji_Dare",
+            "group_size": 1972,
+            "ratio": 1.0,
+            "dominant_margin": 1972
+          },
+          "Tianjin_Teda_F.C.||2014": {
+            "dominant_value": "Ahsan_Kliger",
+            "group_size": 1973,
+            "ratio": 0.998986,
+            "dominant_margin": 1970
+          },
+          "Toronto_FC||2014": {
+            "dominant_value": "Kazuhiko_Claybrook",
+            "group_size": 3403,
+            "ratio": 1.0,
+            "dominant_margin": 3403
+          },
+          "VfL_Wolfsburg||2011": {
+            "dominant_value": "Atsufumi_Comparetto",
+            "group_size": 5320,
+            "ratio": 0.998684,
+            "dominant_margin": 5310
+          },
+          "West_Ham_United_F.C.||2011": {
+            "dominant_value": "Jiangling_Micheaux",
+            "group_size": 3360,
+            "ratio": 1.0,
+            "dominant_margin": 3360
+          },
+          "West_Ham_United_F.C.||2013": {
+            "dominant_value": "Aiqun_Levergood",
+            "group_size": 2824,
+            "ratio": 0.998229,
+            "dominant_margin": 2816
+          },
+          "Wolverhampton_Wanderers_Football_Club||2012": {
+            "dominant_value": "Zhouhui_Rubio",
+            "group_size": 2525,
+            "ratio": 1.0,
+            "dominant_margin": 2525
+          },
+          "Wolverhampton_Wanderers_Football_Club||2013": {
+            "dominant_value": "Sigenobu_Bodagala",
+            "group_size": 5359,
+            "ratio": 1.0,
+            "dominant_margin": 5359
+          }
+        },
+        "confidence": 0.84,
+        "support": 150305,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "min_group_size": 20,
+        "min_ratio": 0.98,
+        "min_dominant_margin": 5,
+        "note": "team context is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "CAND_TEAMCTX_7",
+        "rule_type": "team_context_dominant",
+        "lhs": [
+          "team"
+        ],
+        "rhs": "manager",
+        "target_column": "manager",
+        "description": "soccer context dominant: team -> manager",
+        "mapping_size": 17,
+        "majority_map": {
+          "Aalborg_Boldspilklub": {
+            "dominant_value": "Rosangela_Ketz",
+            "group_size": 2530,
+            "ratio": 1.0,
+            "dominant_margin": 2530
+          },
+          "Aik_Solna": {
+            "dominant_value": "Shigetomo_Abbas",
+            "group_size": 3797,
+            "ratio": 1.0,
+            "dominant_margin": 3797
+          },
+          "Borussia_Monchengladbach": {
+            "dominant_value": "Jeremy_Cantu",
+            "group_size": 4454,
+            "ratio": 0.999326,
+            "dominant_margin": 4448
+          },
+          "Club_Atletico_Velez_Sarsfield": {
+            "dominant_value": "Srikanth_Chimia",
+            "group_size": 1515,
+            "ratio": 1.0,
+            "dominant_margin": 1515
+          },
+          "Delfino_Pescara_1936": {
+            "dominant_value": "Robbert_Flach",
+            "group_size": 1536,
+            "ratio": 1.0,
+            "dominant_margin": 1536
+          },
+          "FC_Anzhi_Makhachkala": {
+            "dominant_value": "Robert_Lally",
+            "group_size": 5292,
+            "ratio": 0.999811,
+            "dominant_margin": 5290
+          },
+          "FC_Dinamo_Bucuresti": {
+            "dominant_value": "Mattan_Edelhoff",
+            "group_size": 1560,
+            "ratio": 0.998718,
+            "dominant_margin": 1557
+          },
+          "FC_Kaiserslautern": {
+            "dominant_value": "Atsufumi_Comparetto",
+            "group_size": 3551,
+            "ratio": 1.0,
+            "dominant_margin": 3551
+          },
+          "FC_Nordsjelland": {
+            "dominant_value": "Cees_Gunal",
+            "group_size": 1442,
+            "ratio": 1.0,
+            "dominant_margin": 1442
+          },
+          "Grasshopper_Club_Zurich": {
+            "dominant_value": "Olavi_Gurd",
+            "group_size": 1307,
+            "ratio": 1.0,
+            "dominant_margin": 1307
+          },
+          "Lille_OSC": {
+            "dominant_value": "Robert_Lally",
+            "group_size": 4033,
+            "ratio": 1.0,
+            "dominant_margin": 4033
+          },
+          "Montpellier_HSC": {
+            "dominant_value": "Bernando_Jesus",
+            "group_size": 1535,
+            "ratio": 1.0,
+            "dominant_margin": 1535
+          },
+          "New_York_Red_Bulls": {
+            "dominant_value": "Atsuyuki_Jayaprakash",
+            "group_size": 5920,
+            "ratio": 0.999831,
+            "dominant_margin": 5918
+          },
+          "Royal_Antwerp_F.C.": {
+            "dominant_value": "Rashi_Papadourakis",
+            "group_size": 5808,
+            "ratio": 0.999139,
+            "dominant_margin": 5801
+          },
+          "SV_Werder_Bremen": {
+            "dominant_value": "Sigenobu_Bodagala",
+            "group_size": 2514,
+            "ratio": 1.0,
+            "dominant_margin": 2514
+          },
+          "Toronto_FC": {
+            "dominant_value": "Kazuhiko_Claybrook",
+            "group_size": 3419,
+            "ratio": 1.0,
+            "dominant_margin": 3419
+          },
+          "VfL_Wolfsburg": {
+            "dominant_value": "Atsufumi_Comparetto",
+            "group_size": 5337,
+            "ratio": 0.998314,
+            "dominant_margin": 5325
+          }
+        },
+        "confidence": 0.84,
+        "support": 55550,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "min_group_size": 20,
+        "min_ratio": 0.98,
+        "min_dominant_margin": 5,
+        "note": "team context is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "CAND_TEAMCTX_8",
+        "rule_type": "team_context_dominant",
+        "lhs": [
+          "stadium"
+        ],
+        "rhs": "manager",
+        "target_column": "manager",
+        "description": "soccer context dominant: stadium -> manager",
+        "mapping_size": 9,
+        "majority_map": {
+          "Amsterdam_Arena": {
+            "dominant_value": "Mattan_Edelhoff",
+            "group_size": 1553,
+            "ratio": 0.998712,
+            "dominant_margin": 1550
+          },
+          "Anfield": {
+            "dominant_value": "Rosangela_Ketz",
+            "group_size": 2522,
+            "ratio": 1.0,
+            "dominant_margin": 2522
+          },
+          "Boleyn_Ground": {
+            "dominant_value": "Sigenobu_Bodagala",
+            "group_size": 2504,
+            "ratio": 1.0,
+            "dominant_margin": 2504
+          },
+          "Gerhard_Hanappi_Stadium": {
+            "dominant_value": "Olavi_Gurd",
+            "group_size": 1299,
+            "ratio": 1.0,
+            "dominant_margin": 1299
+          },
+          "St_James__Park": {
+            "dominant_value": "Jeremy_Cantu",
+            "group_size": 2614,
+            "ratio": 1.0,
+            "dominant_margin": 2614
+          },
+          "Stade_Velodrome": {
+            "dominant_value": "Bernando_Jesus",
+            "group_size": 1537,
+            "ratio": 1.0,
+            "dominant_margin": 1537
+          },
+          "Stadio_Artemio_Franchi": {
+            "dominant_value": "Srikanth_Chimia",
+            "group_size": 1513,
+            "ratio": 1.0,
+            "dominant_margin": 1513
+          },
+          "Vicente_Calderon_Stadium": {
+            "dominant_value": "Shigetomo_Abbas",
+            "group_size": 3795,
+            "ratio": 1.0,
+            "dominant_margin": 3795
+          },
+          "Westfalenstadion": {
+            "dominant_value": "Atsufumi_Comparetto",
+            "group_size": 2382,
+            "ratio": 1.0,
+            "dominant_margin": 2382
+          }
+        },
+        "confidence": 0.84,
+        "support": 19719,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "min_group_size": 20,
+        "min_ratio": 0.98,
+        "min_dominant_margin": 5,
+        "note": "team context is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "CAND_TEAMCTX_9",
+        "rule_type": "team_context_dominant",
+        "lhs": [
+          "city",
+          "stadium"
+        ],
+        "rhs": "manager",
+        "target_column": "manager",
+        "description": "soccer context dominant: city, stadium -> manager",
+        "mapping_size": 12,
+        "majority_map": {
+          "Athens||Stadio_Artemio_Franchi": {
+            "dominant_value": "Srikanth_Chimia",
+            "group_size": 1509,
+            "ratio": 1.0,
+            "dominant_margin": 1509
+          },
+          "Barcelona||Boleyn_Ground": {
+            "dominant_value": "Sigenobu_Bodagala",
+            "group_size": 2494,
+            "ratio": 1.0,
+            "dominant_margin": 2494
+          },
+          "Berlin||Westfalenstadion": {
+            "dominant_value": "Atsufumi_Comparetto",
+            "group_size": 2368,
+            "ratio": 1.0,
+            "dominant_margin": 2368
+          },
+          "Brasilia||San_Siro_Stadium": {
+            "dominant_value": "Atsuyuki_Jayaprakash",
+            "group_size": 3507,
+            "ratio": 0.999715,
+            "dominant_margin": 3505
+          },
+          "Cardiff||St_James__Park": {
+            "dominant_value": "Jeremy_Cantu",
+            "group_size": 2596,
+            "ratio": 1.0,
+            "dominant_margin": 2596
+          },
+          "Hamburg||Amsterdam_Arena": {
+            "dominant_value": "Mattan_Edelhoff",
+            "group_size": 1536,
+            "ratio": 0.998698,
+            "dominant_margin": 1533
+          },
+          "London||Anfield": {
+            "dominant_value": "Rosangela_Ketz",
+            "group_size": 2512,
+            "ratio": 1.0,
+            "dominant_margin": 2512
+          },
+          "Mexico_City||Vicente_Calderon_Stadium": {
+            "dominant_value": "Shigetomo_Abbas",
+            "group_size": 3777,
+            "ratio": 1.0,
+            "dominant_margin": 3777
+          },
+          "Moscow||Estadio_da_Luz": {
+            "dominant_value": "Cees_Gunal",
+            "group_size": 1439,
+            "ratio": 1.0,
+            "dominant_margin": 1439
+          },
+          "Moscow||Gerhard_Hanappi_Stadium": {
+            "dominant_value": "Olavi_Gurd",
+            "group_size": 1287,
+            "ratio": 1.0,
+            "dominant_margin": 1287
+          },
+          "Orlando||King_Power_Stadium": {
+            "dominant_value": "Robbert_Flach",
+            "group_size": 1531,
+            "ratio": 1.0,
+            "dominant_margin": 1531
+          },
+          "Recife||Stade_Velodrome": {
+            "dominant_value": "Bernando_Jesus",
+            "group_size": 1529,
+            "ratio": 1.0,
+            "dominant_margin": 1529
+          }
+        },
+        "confidence": 0.84,
+        "support": 26085,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false,
+        "min_group_size": 20,
+        "min_ratio": 0.98,
+        "min_dominant_margin": 5,
+        "note": "team context is retained only as evidence; shrink_search_space should not add candidates solely from this rule"
+      },
+      {
+        "rule_id": "CAND_SOCCERCONS_1",
+        "rule_type": "birthyear_season_age_consistency",
+        "columns": [
+          "birthyear",
+          "season"
+        ],
+        "target_column": "birthyear",
+        "description": "A player's age at the given season should usually be within a plausible professional football range; if season-birthyear is outside the configured range, birthyear is suspicious.",
+        "min_age": 15,
+        "max_age": 50,
+        "birthyear_lower_bound": 1940,
+        "birthyear_upper_bound": 2010,
+        "season_lower_bound": 1900,
+        "season_upper_bound": 2035,
+        "confidence": 0.9,
+        "support": 200000,
+        "usage_role": "strong_rule",
+        "priority": "high"
+      },
+      {
+        "rule_id": "CAND_SOCCERCONS_2",
+        "rule_type": "team_season_manager_consistency_hint",
+        "columns": [
+          "team",
+          "season",
+          "manager"
+        ],
+        "target_column": "manager",
+        "description": "Within a team-season group, manager is expected to be relatively stable; the actual majority mapping is provided by team_context_dominant rules.",
+        "confidence": 0.82,
+        "support": 200000,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false
+      },
+      {
+        "rule_id": "CAND_SOCCERCONS_3",
+        "rule_type": "city_stadium_consistency_hint",
+        "columns": [
+          "city",
+          "stadium"
+        ],
+        "target_column": "stadium",
+        "description": "A stadium and city pair should be contextually consistent; mined city/stadium majority mappings should be used as weak evidence.",
+        "confidence": 0.8,
+        "support": 200000,
+        "usage_role": "evidence_only",
+        "priority": "low",
+        "candidate_trigger": "disabled_evidence_only",
+        "allow_candidate_generation": false
+      }
+    ]
+  }
+}

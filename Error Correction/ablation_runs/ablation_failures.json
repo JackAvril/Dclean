@@ -1,0 +1,12 @@
+[
+  {
+    "experiment": "no_candidate_constraints",
+    "dataset": "soccer",
+    "error": "Detection prediction file not found for soccer. Tried: /mnt/mydata/dq/projects/Splittree/test/Error Detection Soccer/active_cleaning_loop_runs_soccer_v4/iter_3_infer/inference_all_predictions.csv"
+  },
+  {
+    "experiment": "no_pairwise_distillation",
+    "dataset": "soccer",
+    "error": "Detection prediction file not found for soccer. Tried: /mnt/mydata/dq/projects/Splittree/test/Error Detection Soccer/active_cleaning_loop_runs_soccer_v4/iter_3_infer/inference_all_predictions.csv"
+  }
+]

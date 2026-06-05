@@ -1,0 +1,37 @@
+{
+  "total_candidates": 103977,
+  "raw_sampled_count_before_budget": 347,
+  "final_sampled_count": 122,
+  "max_total_samples": 180,
+  "use_column_in_bucket": true,
+  "max_samples_per_bucket": 4,
+  "max_samples_per_cluster": 2,
+  "weak_signal_downsample_enabled": true,
+  "weak_signal_keep_ratio": 0.35,
+  "sampled_by_column": {
+    "sex": 60,
+    "relationship": 59,
+    "age": 3
+  },
+  "sample_role_distribution": {
+    "center": 45,
+    "outlier": 40,
+    "all": 37
+  },
+  "main_rule_type_distribution_top30": {
+    "soft_functional_dependency": 60,
+    "relationship_context_dominant": 31,
+    "relationship_marital_spouse_conflict": 16,
+    "relationship_sex_spouse_conflict": 10,
+    "age_bucket_format": 3,
+    "relationship_age_spouse_conflict": 2
+  },
+  "adult_v2_attribution_bucket_distribution": {
+    "sex_value_invalid": 60,
+    "relationship_sex_conflict": 24,
+    "relationship_marital_conflict": 20,
+    "relationship_v2_rule": 13,
+    "context_only_other": 3,
+    "relationship_age_conflict": 2
+  }
+}

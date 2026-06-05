@@ -1,0 +1,73 @@
+{
+  "dataset": "hospital",
+  "total_rows": 2722,
+  "error_count": 1089,
+  "correct_count": 1633,
+  "error_ratio": 0.4000734753857458,
+  "label_source_counter": {
+    "outside_clean": 1585,
+    "llm": 746,
+    "knn_propagation": 391
+  },
+  "outside_candidate_count": 1585,
+  "inside_candidate_count": 1137,
+  "column_counter_top20": {
+    "Sample": 437,
+    "Score": 244,
+    "HospitalOwner": 198,
+    "Condition": 166,
+    "ZipCode": 164,
+    "EmergencyService": 162,
+    "State": 161,
+    "CountyName": 160,
+    "City": 158,
+    "HospitalType": 150,
+    "MeasureName": 133,
+    "MeasureCode": 132,
+    "Stateavg": 129,
+    "PhoneNumber": 99,
+    "HospitalName": 84,
+    "Address1": 76,
+    "ProviderNumber": 59,
+    "index": 10
+  },
+  "label_by_source": [
+    {
+      "label_source": "knn_propagation",
+      "label": "error",
+      "count": 391
+    },
+    {
+      "label_source": "llm",
+      "label": "correct",
+      "count": 48
+    },
+    {
+      "label_source": "llm",
+      "label": "error",
+      "count": 698
+    },
+    {
+      "label_source": "outside_clean",
+      "label": "correct",
+      "count": 1585
+    }
+  ],
+  "config": {
+    "input_table_csv": "/mnt/mydata/dq/projects/Splittree/hospital/hospital_dirty_no_address23.csv",
+    "input_clustered_csv": "candidate_clustered_v2.csv",
+    "input_labeled_csv": "candidate_sampled_labeled_v2.csv",
+    "input_propagated_csv": "propagated_labels_v2.csv",
+    "cluster_prop_min_conf": 0.9,
+    "knn_prop_min_conf": 0.95,
+    "enable_outside_clean": true,
+    "outside_clean_per_column": 120,
+    "outside_clean_min_per_column": 20,
+    "enable_balance": true,
+    "max_correct_to_error_ratio": 1.5,
+    "min_correct_keep": null,
+    "dataset_gate": "generic",
+    "max_propagated_train_rows": null,
+    "max_outside_clean_total": null
+  }
+}

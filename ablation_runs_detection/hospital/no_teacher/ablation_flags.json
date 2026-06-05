@@ -1,0 +1,21 @@
+{
+  "dataset": "hospital",
+  "variant": "no_teacher",
+  "variant_display_name": "w/o Teacher",
+  "use_structured_evidence": true,
+  "use_multi_view_context": true,
+  "use_neighbor_evidence": true,
+  "use_bayesian_evidence": true,
+  "use_evidence_reliability_gate": true,
+  "use_precision_post_gate": true,
+  "use_teacher": false,
+  "use_deepseek_teacher": false,
+  "use_llm_labels": false,
+  "use_weak_rule_teacher": true,
+  "use_label_propagation": true,
+  "use_propagated_labels": true,
+  "use_hardcase_feedback": false,
+  "use_active_loop": false,
+  "max_active_iterations": 0,
+  "sampling_strategy": "cluster"
+}

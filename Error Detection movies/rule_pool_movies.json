@@ -72021,6 +72021,20 @@
           "Name",
           "Year"
         ],
+        "rhs": "RatingCount",
+        "description": "Name, Year -> RatingCount",
+        "confidence": 0.99986,
+        "support": 7156,
+        "usage_role": "strong_rule",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "FD_2",
+        "rule_type": "functional_dependency",
+        "lhs": [
+          "Name",
+          "Year"
+        ],
         "rhs": "RatingValue",
         "description": "Name, Year -> RatingValue",
         "confidence": 0.99986,
@@ -72029,7 +72043,7 @@
         "priority": "medium"
       },
       {
-        "rule_id": "FD_2",
+        "rule_id": "FD_3",
         "rule_type": "functional_dependency",
         "lhs": [
           "Name",
@@ -72043,49 +72057,7 @@
         "priority": "medium"
       },
       {
-        "rule_id": "FD_3",
-        "rule_type": "functional_dependency",
-        "lhs": [
-          "Name",
-          "Year"
-        ],
-        "rhs": "RatingCount",
-        "description": "Name, Year -> RatingCount",
-        "confidence": 0.99986,
-        "support": 7156,
-        "usage_role": "strong_rule",
-        "priority": "medium"
-      },
-      {
         "rule_id": "FD_4",
-        "rule_type": "functional_dependency",
-        "lhs": [
-          "Name",
-          "Release Date"
-        ],
-        "rhs": "RatingValue",
-        "description": "Name, Release Date -> RatingValue",
-        "confidence": 1.0,
-        "support": 7059,
-        "usage_role": "strong_rule",
-        "priority": "medium"
-      },
-      {
-        "rule_id": "FD_5",
-        "rule_type": "functional_dependency",
-        "lhs": [
-          "Name",
-          "Release Date"
-        ],
-        "rhs": "Duration",
-        "description": "Name, Release Date -> Duration",
-        "confidence": 1.0,
-        "support": 6935,
-        "usage_role": "strong_rule",
-        "priority": "medium"
-      },
-      {
-        "rule_id": "FD_6",
         "rule_type": "functional_dependency",
         "lhs": [
           "Name",
@@ -72099,35 +72071,35 @@
         "priority": "medium"
       },
       {
-        "rule_id": "FD_7",
+        "rule_id": "FD_5",
         "rule_type": "functional_dependency",
         "lhs": [
           "Name",
-          "Director"
+          "Release Date"
         ],
         "rhs": "RatingValue",
-        "description": "Name, Director -> RatingValue",
-        "confidence": 0.99986,
-        "support": 7134,
+        "description": "Name, Release Date -> RatingValue",
+        "confidence": 1.0,
+        "support": 7059,
         "usage_role": "strong_rule",
         "priority": "medium"
       },
       {
-        "rule_id": "FD_8",
+        "rule_id": "FD_6",
         "rule_type": "functional_dependency",
         "lhs": [
           "Name",
-          "Director"
+          "Release Date"
         ],
         "rhs": "Duration",
-        "description": "Name, Director -> Duration",
-        "confidence": 0.999857,
-        "support": 7007,
+        "description": "Name, Release Date -> Duration",
+        "confidence": 1.0,
+        "support": 6935,
         "usage_role": "strong_rule",
         "priority": "medium"
       },
       {
-        "rule_id": "FD_9",
+        "rule_id": "FD_7",
         "rule_type": "functional_dependency",
         "lhs": [
           "Name",
@@ -72141,35 +72113,35 @@
         "priority": "medium"
       },
       {
-        "rule_id": "FD_10",
+        "rule_id": "FD_8",
         "rule_type": "functional_dependency",
         "lhs": [
           "Name",
-          "Creator"
+          "Director"
         ],
         "rhs": "RatingValue",
-        "description": "Name, Creator -> RatingValue",
-        "confidence": 0.999134,
-        "support": 6930,
+        "description": "Name, Director -> RatingValue",
+        "confidence": 0.99986,
+        "support": 7134,
         "usage_role": "strong_rule",
         "priority": "medium"
       },
       {
-        "rule_id": "FD_11",
+        "rule_id": "FD_9",
         "rule_type": "functional_dependency",
         "lhs": [
           "Name",
-          "Creator"
+          "Director"
         ],
         "rhs": "Duration",
-        "description": "Name, Creator -> Duration",
-        "confidence": 0.998973,
-        "support": 6814,
+        "description": "Name, Director -> Duration",
+        "confidence": 0.999857,
+        "support": 7007,
         "usage_role": "strong_rule",
         "priority": "medium"
       },
       {
-        "rule_id": "FD_12",
+        "rule_id": "FD_10",
         "rule_type": "functional_dependency",
         "lhs": [
           "Name",
@@ -72183,35 +72155,35 @@
         "priority": "medium"
       },
       {
-        "rule_id": "FD_13",
+        "rule_id": "FD_11",
         "rule_type": "functional_dependency",
         "lhs": [
           "Name",
-          "Language"
+          "Creator"
         ],
         "rhs": "RatingValue",
-        "description": "Name, Language -> RatingValue",
-        "confidence": 0.983459,
-        "support": 7134,
+        "description": "Name, Creator -> RatingValue",
+        "confidence": 0.999134,
+        "support": 6930,
         "usage_role": "strong_rule",
         "priority": "medium"
       },
       {
-        "rule_id": "FD_14",
+        "rule_id": "FD_12",
         "rule_type": "functional_dependency",
         "lhs": [
           "Name",
-          "Language"
+          "Creator"
         ],
         "rhs": "Duration",
-        "description": "Name, Language -> Duration",
-        "confidence": 0.983302,
-        "support": 7007,
+        "description": "Name, Creator -> Duration",
+        "confidence": 0.998973,
+        "support": 6814,
         "usage_role": "strong_rule",
         "priority": "medium"
       },
       {
-        "rule_id": "FD_15",
+        "rule_id": "FD_13",
         "rule_type": "functional_dependency",
         "lhs": [
           "Name",
@@ -72225,35 +72197,35 @@
         "priority": "medium"
       },
       {
-        "rule_id": "FD_16",
+        "rule_id": "FD_14",
         "rule_type": "functional_dependency",
         "lhs": [
           "Name",
-          "Country"
+          "Language"
         ],
         "rhs": "RatingValue",
-        "description": "Name, Country -> RatingValue",
-        "confidence": 0.98402,
+        "description": "Name, Language -> RatingValue",
+        "confidence": 0.983459,
         "support": 7134,
         "usage_role": "strong_rule",
         "priority": "medium"
       },
       {
-        "rule_id": "FD_17",
+        "rule_id": "FD_15",
         "rule_type": "functional_dependency",
         "lhs": [
           "Name",
-          "Country"
+          "Language"
         ],
         "rhs": "Duration",
-        "description": "Name, Country -> Duration",
-        "confidence": 0.984159,
+        "description": "Name, Language -> Duration",
+        "confidence": 0.983302,
         "support": 7007,
         "usage_role": "strong_rule",
         "priority": "medium"
       },
       {
-        "rule_id": "FD_18",
+        "rule_id": "FD_16",
         "rule_type": "functional_dependency",
         "lhs": [
           "Name",
@@ -72267,21 +72239,35 @@
         "priority": "medium"
       },
       {
-        "rule_id": "FD_19",
+        "rule_id": "FD_17",
         "rule_type": "functional_dependency",
         "lhs": [
           "Name",
-          "Duration"
+          "Country"
         ],
         "rhs": "RatingValue",
-        "description": "Name, Duration -> RatingValue",
-        "confidence": 0.999568,
-        "support": 6938,
+        "description": "Name, Country -> RatingValue",
+        "confidence": 0.98402,
+        "support": 7134,
         "usage_role": "strong_rule",
         "priority": "medium"
       },
       {
-        "rule_id": "FD_20",
+        "rule_id": "FD_18",
+        "rule_type": "functional_dependency",
+        "lhs": [
+          "Name",
+          "Country"
+        ],
+        "rhs": "Duration",
+        "description": "Name, Country -> Duration",
+        "confidence": 0.984159,
+        "support": 7007,
+        "usage_role": "strong_rule",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "FD_19",
         "rule_type": "functional_dependency",
         "lhs": [
           "Name",
@@ -72295,16 +72281,30 @@
         "priority": "medium"
       },
       {
+        "rule_id": "FD_20",
+        "rule_type": "functional_dependency",
+        "lhs": [
+          "Name",
+          "Duration"
+        ],
+        "rhs": "RatingValue",
+        "description": "Name, Duration -> RatingValue",
+        "confidence": 0.999568,
+        "support": 6938,
+        "usage_role": "strong_rule",
+        "priority": "medium"
+      },
+      {
         "rule_id": "FD_21",
         "rule_type": "functional_dependency",
         "lhs": [
           "Name",
           "RatingValue"
         ],
-        "rhs": "Duration",
-        "description": "Name, RatingValue -> Duration",
-        "confidence": 0.999135,
-        "support": 6938,
+        "rhs": "RatingCount",
+        "description": "Name, RatingValue -> RatingCount",
+        "confidence": 0.998879,
+        "support": 7134,
         "usage_role": "strong_rule",
         "priority": "medium"
       },
@@ -72315,10 +72315,10 @@
           "Name",
           "RatingValue"
         ],
-        "rhs": "RatingCount",
-        "description": "Name, RatingValue -> RatingCount",
-        "confidence": 0.998879,
-        "support": 7134,
+        "rhs": "Duration",
+        "description": "Name, RatingValue -> Duration",
+        "confidence": 0.999135,
+        "support": 6938,
         "usage_role": "strong_rule",
         "priority": "medium"
       },
@@ -72357,6 +72357,20 @@
           "Name",
           "ReviewCount"
         ],
+        "rhs": "RatingCount",
+        "description": "Name, ReviewCount -> RatingCount",
+        "confidence": 1.0,
+        "support": 7019,
+        "usage_role": "strong_rule",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "FD_26",
+        "rule_type": "functional_dependency",
+        "lhs": [
+          "Name",
+          "ReviewCount"
+        ],
         "rhs": "RatingValue",
         "description": "Name, ReviewCount -> RatingValue",
         "confidence": 1.0,
@@ -72365,7 +72379,7 @@
         "priority": "medium"
       },
       {
-        "rule_id": "FD_26",
+        "rule_id": "FD_27",
         "rule_type": "functional_dependency",
         "lhs": [
           "Name",
@@ -72379,49 +72393,7 @@
         "priority": "medium"
       },
       {
-        "rule_id": "FD_27",
-        "rule_type": "functional_dependency",
-        "lhs": [
-          "Name",
-          "ReviewCount"
-        ],
-        "rhs": "RatingCount",
-        "description": "Name, ReviewCount -> RatingCount",
-        "confidence": 1.0,
-        "support": 7019,
-        "usage_role": "strong_rule",
-        "priority": "medium"
-      },
-      {
         "rule_id": "FD_28",
-        "rule_type": "functional_dependency",
-        "lhs": [
-          "Name",
-          "Genre"
-        ],
-        "rhs": "RatingValue",
-        "description": "Name, Genre -> RatingValue",
-        "confidence": 0.996349,
-        "support": 7121,
-        "usage_role": "strong_rule",
-        "priority": "medium"
-      },
-      {
-        "rule_id": "FD_29",
-        "rule_type": "functional_dependency",
-        "lhs": [
-          "Name",
-          "Genre"
-        ],
-        "rhs": "Duration",
-        "description": "Name, Genre -> Duration",
-        "confidence": 0.996143,
-        "support": 7000,
-        "usage_role": "strong_rule",
-        "priority": "medium"
-      },
-      {
-        "rule_id": "FD_30",
         "rule_type": "functional_dependency",
         "lhs": [
           "Name",
@@ -72435,35 +72407,35 @@
         "priority": "medium"
       },
       {
-        "rule_id": "FD_31",
+        "rule_id": "FD_29",
         "rule_type": "functional_dependency",
         "lhs": [
           "Name",
-          "Filming Locations"
+          "Genre"
         ],
         "rhs": "RatingValue",
-        "description": "Name, Filming Locations -> RatingValue",
-        "confidence": 0.999678,
-        "support": 6203,
+        "description": "Name, Genre -> RatingValue",
+        "confidence": 0.996349,
+        "support": 7121,
         "usage_role": "strong_rule",
         "priority": "medium"
       },
       {
-        "rule_id": "FD_32",
+        "rule_id": "FD_30",
         "rule_type": "functional_dependency",
         "lhs": [
           "Name",
-          "Filming Locations"
+          "Genre"
         ],
         "rhs": "Duration",
-        "description": "Name, Filming Locations -> Duration",
-        "confidence": 0.99951,
-        "support": 6117,
+        "description": "Name, Genre -> Duration",
+        "confidence": 0.996143,
+        "support": 7000,
         "usage_role": "strong_rule",
         "priority": "medium"
       },
       {
-        "rule_id": "FD_33",
+        "rule_id": "FD_31",
         "rule_type": "functional_dependency",
         "lhs": [
           "Name",
@@ -72477,7 +72449,49 @@
         "priority": "medium"
       },
       {
+        "rule_id": "FD_32",
+        "rule_type": "functional_dependency",
+        "lhs": [
+          "Name",
+          "Filming Locations"
+        ],
+        "rhs": "RatingValue",
+        "description": "Name, Filming Locations -> RatingValue",
+        "confidence": 0.999678,
+        "support": 6203,
+        "usage_role": "strong_rule",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "FD_33",
+        "rule_type": "functional_dependency",
+        "lhs": [
+          "Name",
+          "Filming Locations"
+        ],
+        "rhs": "Duration",
+        "description": "Name, Filming Locations -> Duration",
+        "confidence": 0.99951,
+        "support": 6117,
+        "usage_role": "strong_rule",
+        "priority": "medium"
+      },
+      {
         "rule_id": "FD_34",
+        "rule_type": "functional_dependency",
+        "lhs": [
+          "Year",
+          "Creator"
+        ],
+        "rhs": "RatingCount",
+        "description": "Year, Creator -> RatingCount",
+        "confidence": 0.991942,
+        "support": 6950,
+        "usage_role": "strong_rule",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "FD_35",
         "rule_type": "functional_dependency",
         "lhs": [
           "Year",
@@ -72491,7 +72505,7 @@
         "priority": "medium"
       },
       {
-        "rule_id": "FD_35",
+        "rule_id": "FD_36",
         "rule_type": "functional_dependency",
         "lhs": [
           "Year",
@@ -72501,20 +72515,6 @@
         "description": "Year, Creator -> Duration",
         "confidence": 0.992517,
         "support": 6815,
-        "usage_role": "strong_rule",
-        "priority": "medium"
-      },
-      {
-        "rule_id": "FD_36",
-        "rule_type": "functional_dependency",
-        "lhs": [
-          "Year",
-          "Creator"
-        ],
-        "rhs": "RatingCount",
-        "description": "Year, Creator -> RatingCount",
-        "confidence": 0.991942,
-        "support": 6950,
         "usage_role": "strong_rule",
         "priority": "medium"
       },
@@ -72553,6 +72553,20 @@
           "Release Date",
           "Director"
         ],
+        "rhs": "RatingCount",
+        "description": "Release Date, Director -> RatingCount",
+        "confidence": 0.999718,
+        "support": 7083,
+        "usage_role": "strong_rule",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "FD_40",
+        "rule_type": "functional_dependency",
+        "lhs": [
+          "Release Date",
+          "Director"
+        ],
         "rhs": "RatingValue",
         "description": "Release Date, Director -> RatingValue",
         "confidence": 0.999717,
@@ -72561,7 +72575,7 @@
         "priority": "medium"
       },
       {
-        "rule_id": "FD_40",
+        "rule_id": "FD_41",
         "rule_type": "functional_dependency",
         "lhs": [
           "Release Date",
@@ -72575,49 +72589,7 @@
         "priority": "medium"
       },
       {
-        "rule_id": "FD_41",
-        "rule_type": "functional_dependency",
-        "lhs": [
-          "Release Date",
-          "Director"
-        ],
-        "rhs": "RatingCount",
-        "description": "Release Date, Director -> RatingCount",
-        "confidence": 0.999718,
-        "support": 7083,
-        "usage_role": "strong_rule",
-        "priority": "medium"
-      },
-      {
         "rule_id": "FD_42",
-        "rule_type": "functional_dependency",
-        "lhs": [
-          "Release Date",
-          "Creator"
-        ],
-        "rhs": "RatingValue",
-        "description": "Release Date, Creator -> RatingValue",
-        "confidence": 0.999854,
-        "support": 6866,
-        "usage_role": "strong_rule",
-        "priority": "medium"
-      },
-      {
-        "rule_id": "FD_43",
-        "rule_type": "functional_dependency",
-        "lhs": [
-          "Release Date",
-          "Creator"
-        ],
-        "rhs": "Duration",
-        "description": "Release Date, Creator -> Duration",
-        "confidence": 1.0,
-        "support": 6751,
-        "usage_role": "strong_rule",
-        "priority": "medium"
-      },
-      {
-        "rule_id": "FD_44",
         "rule_type": "functional_dependency",
         "lhs": [
           "Release Date",
@@ -72631,21 +72603,35 @@
         "priority": "medium"
       },
       {
-        "rule_id": "FD_45",
+        "rule_id": "FD_43",
         "rule_type": "functional_dependency",
         "lhs": [
           "Release Date",
-          "Duration"
+          "Creator"
         ],
         "rhs": "RatingValue",
-        "description": "Release Date, Duration -> RatingValue",
-        "confidence": 0.99041,
-        "support": 6882,
+        "description": "Release Date, Creator -> RatingValue",
+        "confidence": 0.999854,
+        "support": 6866,
         "usage_role": "strong_rule",
         "priority": "medium"
       },
       {
-        "rule_id": "FD_46",
+        "rule_id": "FD_44",
+        "rule_type": "functional_dependency",
+        "lhs": [
+          "Release Date",
+          "Creator"
+        ],
+        "rhs": "Duration",
+        "description": "Release Date, Creator -> Duration",
+        "confidence": 1.0,
+        "support": 6751,
+        "usage_role": "strong_rule",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "FD_45",
         "rule_type": "functional_dependency",
         "lhs": [
           "Release Date",
@@ -72659,16 +72645,30 @@
         "priority": "medium"
       },
       {
+        "rule_id": "FD_46",
+        "rule_type": "functional_dependency",
+        "lhs": [
+          "Release Date",
+          "Duration"
+        ],
+        "rhs": "RatingValue",
+        "description": "Release Date, Duration -> RatingValue",
+        "confidence": 0.99041,
+        "support": 6882,
+        "usage_role": "strong_rule",
+        "priority": "medium"
+      },
+      {
         "rule_id": "FD_47",
         "rule_type": "functional_dependency",
         "lhs": [
           "Release Date",
           "RatingValue"
         ],
-        "rhs": "Duration",
-        "description": "Release Date, RatingValue -> Duration",
-        "confidence": 0.982127,
-        "support": 6882,
+        "rhs": "RatingCount",
+        "description": "Release Date, RatingValue -> RatingCount",
+        "confidence": 0.981589,
+        "support": 7061,
         "usage_role": "strong_rule",
         "priority": "medium"
       },
@@ -72679,10 +72679,10 @@
           "Release Date",
           "RatingValue"
         ],
-        "rhs": "RatingCount",
-        "description": "Release Date, RatingValue -> RatingCount",
-        "confidence": 0.981589,
-        "support": 7061,
+        "rhs": "Duration",
+        "description": "Release Date, RatingValue -> Duration",
+        "confidence": 0.982127,
+        "support": 6882,
         "usage_role": "strong_rule",
         "priority": "medium"
       },
@@ -72721,6 +72721,20 @@
           "Release Date",
           "ReviewCount"
         ],
+        "rhs": "RatingCount",
+        "description": "Release Date, ReviewCount -> RatingCount",
+        "confidence": 0.999856,
+        "support": 6965,
+        "usage_role": "strong_rule",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "FD_52",
+        "rule_type": "functional_dependency",
+        "lhs": [
+          "Release Date",
+          "ReviewCount"
+        ],
         "rhs": "RatingValue",
         "description": "Release Date, ReviewCount -> RatingValue",
         "confidence": 0.999856,
@@ -72729,7 +72743,7 @@
         "priority": "medium"
       },
       {
-        "rule_id": "FD_52",
+        "rule_id": "FD_53",
         "rule_type": "functional_dependency",
         "lhs": [
           "Release Date",
@@ -72743,49 +72757,7 @@
         "priority": "medium"
       },
       {
-        "rule_id": "FD_53",
-        "rule_type": "functional_dependency",
-        "lhs": [
-          "Release Date",
-          "ReviewCount"
-        ],
-        "rhs": "RatingCount",
-        "description": "Release Date, ReviewCount -> RatingCount",
-        "confidence": 0.999856,
-        "support": 6965,
-        "usage_role": "strong_rule",
-        "priority": "medium"
-      },
-      {
         "rule_id": "FD_54",
-        "rule_type": "functional_dependency",
-        "lhs": [
-          "Release Date",
-          "Genre"
-        ],
-        "rhs": "RatingValue",
-        "description": "Release Date, Genre -> RatingValue",
-        "confidence": 0.99206,
-        "support": 7053,
-        "usage_role": "strong_rule",
-        "priority": "medium"
-      },
-      {
-        "rule_id": "FD_55",
-        "rule_type": "functional_dependency",
-        "lhs": [
-          "Release Date",
-          "Genre"
-        ],
-        "rhs": "Duration",
-        "description": "Release Date, Genre -> Duration",
-        "confidence": 0.992642,
-        "support": 6931,
-        "usage_role": "strong_rule",
-        "priority": "medium"
-      },
-      {
-        "rule_id": "FD_56",
         "rule_type": "functional_dependency",
         "lhs": [
           "Release Date",
@@ -72799,7 +72771,49 @@
         "priority": "medium"
       },
       {
+        "rule_id": "FD_55",
+        "rule_type": "functional_dependency",
+        "lhs": [
+          "Release Date",
+          "Genre"
+        ],
+        "rhs": "RatingValue",
+        "description": "Release Date, Genre -> RatingValue",
+        "confidence": 0.99206,
+        "support": 7053,
+        "usage_role": "strong_rule",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "FD_56",
+        "rule_type": "functional_dependency",
+        "lhs": [
+          "Release Date",
+          "Genre"
+        ],
+        "rhs": "Duration",
+        "description": "Release Date, Genre -> Duration",
+        "confidence": 0.992642,
+        "support": 6931,
+        "usage_role": "strong_rule",
+        "priority": "medium"
+      },
+      {
         "rule_id": "FD_57",
+        "rule_type": "functional_dependency",
+        "lhs": [
+          "Release Date",
+          "Filming Locations"
+        ],
+        "rhs": "RatingCount",
+        "description": "Release Date, Filming Locations -> RatingCount",
+        "confidence": 0.99644,
+        "support": 6180,
+        "usage_role": "strong_rule",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "FD_58",
         "rule_type": "functional_dependency",
         "lhs": [
           "Release Date",
@@ -72813,7 +72827,7 @@
         "priority": "medium"
       },
       {
-        "rule_id": "FD_58",
+        "rule_id": "FD_59",
         "rule_type": "functional_dependency",
         "lhs": [
           "Release Date",
@@ -72823,20 +72837,6 @@
         "description": "Release Date, Filming Locations -> Duration",
         "confidence": 0.996874,
         "support": 6079,
-        "usage_role": "strong_rule",
-        "priority": "medium"
-      },
-      {
-        "rule_id": "FD_59",
-        "rule_type": "functional_dependency",
-        "lhs": [
-          "Release Date",
-          "Filming Locations"
-        ],
-        "rhs": "RatingCount",
-        "description": "Release Date, Filming Locations -> RatingCount",
-        "confidence": 0.99644,
-        "support": 6180,
         "usage_role": "strong_rule",
         "priority": "medium"
       },
@@ -72875,6 +72875,20 @@
           "Director",
           "ReviewCount"
         ],
+        "rhs": "RatingCount",
+        "description": "Director, ReviewCount -> RatingCount",
+        "confidence": 0.999003,
+        "support": 7021,
+        "usage_role": "strong_rule",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "FD_63",
+        "rule_type": "functional_dependency",
+        "lhs": [
+          "Director",
+          "ReviewCount"
+        ],
         "rhs": "RatingValue",
         "description": "Director, ReviewCount -> RatingValue",
         "confidence": 0.999,
@@ -72883,7 +72897,7 @@
         "priority": "medium"
       },
       {
-        "rule_id": "FD_63",
+        "rule_id": "FD_64",
         "rule_type": "functional_dependency",
         "lhs": [
           "Director",
@@ -72897,35 +72911,7 @@
         "priority": "medium"
       },
       {
-        "rule_id": "FD_64",
-        "rule_type": "functional_dependency",
-        "lhs": [
-          "Director",
-          "ReviewCount"
-        ],
-        "rhs": "RatingCount",
-        "description": "Director, ReviewCount -> RatingCount",
-        "confidence": 0.999003,
-        "support": 7021,
-        "usage_role": "strong_rule",
-        "priority": "medium"
-      },
-      {
         "rule_id": "FD_65",
-        "rule_type": "functional_dependency",
-        "lhs": [
-          "Creator",
-          "Duration"
-        ],
-        "rhs": "RatingValue",
-        "description": "Creator, Duration -> RatingValue",
-        "confidence": 0.990224,
-        "support": 6751,
-        "usage_role": "strong_rule",
-        "priority": "medium"
-      },
-      {
-        "rule_id": "FD_66",
         "rule_type": "functional_dependency",
         "lhs": [
           "Creator",
@@ -72939,16 +72925,30 @@
         "priority": "medium"
       },
       {
+        "rule_id": "FD_66",
+        "rule_type": "functional_dependency",
+        "lhs": [
+          "Creator",
+          "Duration"
+        ],
+        "rhs": "RatingValue",
+        "description": "Creator, Duration -> RatingValue",
+        "confidence": 0.990224,
+        "support": 6751,
+        "usage_role": "strong_rule",
+        "priority": "medium"
+      },
+      {
         "rule_id": "FD_67",
         "rule_type": "functional_dependency",
         "lhs": [
           "Creator",
           "RatingValue"
         ],
-        "rhs": "Duration",
-        "description": "Creator, RatingValue -> Duration",
-        "confidence": 0.988891,
-        "support": 6751,
+        "rhs": "RatingCount",
+        "description": "Creator, RatingValue -> RatingCount",
+        "confidence": 0.988459,
+        "support": 6932,
         "usage_role": "strong_rule",
         "priority": "medium"
       },
@@ -72959,10 +72959,10 @@
           "Creator",
           "RatingValue"
         ],
-        "rhs": "RatingCount",
-        "description": "Creator, RatingValue -> RatingCount",
-        "confidence": 0.988459,
-        "support": 6932,
+        "rhs": "Duration",
+        "description": "Creator, RatingValue -> Duration",
+        "confidence": 0.988891,
+        "support": 6751,
         "usage_role": "strong_rule",
         "priority": "medium"
       },
@@ -73001,6 +73001,20 @@
           "Creator",
           "ReviewCount"
         ],
+        "rhs": "RatingCount",
+        "description": "Creator, ReviewCount -> RatingCount",
+        "confidence": 1.0,
+        "support": 6829,
+        "usage_role": "strong_rule",
+        "priority": "medium"
+      },
+      {
+        "rule_id": "FD_72",
+        "rule_type": "functional_dependency",
+        "lhs": [
+          "Creator",
+          "ReviewCount"
+        ],
         "rhs": "RatingValue",
         "description": "Creator, ReviewCount -> RatingValue",
         "confidence": 1.0,
@@ -73009,7 +73023,7 @@
         "priority": "medium"
       },
       {
-        "rule_id": "FD_72",
+        "rule_id": "FD_73",
         "rule_type": "functional_dependency",
         "lhs": [
           "Creator",
@@ -73023,21 +73037,21 @@
         "priority": "medium"
       },
       {
-        "rule_id": "FD_73",
+        "rule_id": "FD_74",
         "rule_type": "functional_dependency",
         "lhs": [
           "Creator",
-          "ReviewCount"
+          "Filming Locations"
         ],
         "rhs": "RatingCount",
-        "description": "Creator, ReviewCount -> RatingCount",
-        "confidence": 1.0,
-        "support": 6829,
+        "description": "Creator, Filming Locations -> RatingCount",
+        "confidence": 0.989372,
+        "support": 6116,
         "usage_role": "strong_rule",
         "priority": "medium"
       },
       {
-        "rule_id": "FD_74",
+        "rule_id": "FD_75",
         "rule_type": "functional_dependency",
         "lhs": [
           "Creator",
@@ -73051,7 +73065,7 @@
         "priority": "medium"
       },
       {
-        "rule_id": "FD_75",
+        "rule_id": "FD_76",
         "rule_type": "functional_dependency",
         "lhs": [
           "Creator",
@@ -73061,20 +73075,6 @@
         "description": "Creator, Filming Locations -> Duration",
         "confidence": 0.990196,
         "support": 6018,
-        "usage_role": "strong_rule",
-        "priority": "medium"
-      },
-      {
-        "rule_id": "FD_76",
-        "rule_type": "functional_dependency",
-        "lhs": [
-          "Creator",
-          "Filming Locations"
-        ],
-        "rhs": "RatingCount",
-        "description": "Creator, Filming Locations -> RatingCount",
-        "confidence": 0.989372,
-        "support": 6116,
         "usage_role": "strong_rule",
         "priority": "medium"
       },
@@ -73225,10 +73225,10 @@
           "ReviewCount",
           "Filming Locations"
         ],
-        "rhs": "RatingValue",
-        "description": "ReviewCount, Filming Locations -> RatingValue",
-        "confidence": 0.995104,
-        "support": 6128,
+        "rhs": "RatingCount",
+        "description": "ReviewCount, Filming Locations -> RatingCount",
+        "confidence": 0.994467,
+        "support": 6145,
         "usage_role": "strong_rule",
         "priority": "medium"
       },
@@ -73239,10 +73239,10 @@
           "ReviewCount",
           "Filming Locations"
         ],
-        "rhs": "Duration",
-        "description": "ReviewCount, Filming Locations -> Duration",
-        "confidence": 0.995201,
-        "support": 6043,
+        "rhs": "RatingValue",
+        "description": "ReviewCount, Filming Locations -> RatingValue",
+        "confidence": 0.995104,
+        "support": 6128,
         "usage_role": "strong_rule",
         "priority": "medium"
       },
@@ -73253,10 +73253,10 @@
           "ReviewCount",
           "Filming Locations"
         ],
-        "rhs": "RatingCount",
-        "description": "ReviewCount, Filming Locations -> RatingCount",
-        "confidence": 0.994467,
-        "support": 6145,
+        "rhs": "Duration",
+        "description": "ReviewCount, Filming Locations -> Duration",
+        "confidence": 0.995201,
+        "support": 6043,
         "usage_role": "strong_rule",
         "priority": "medium"
       }
@@ -78659,26 +78659,6 @@
       {
         "rule_id": "CAND_HRMISS_8",
         "rule_type": "high_risk_missing",
-        "column": "Year",
-        "description": "Year missing values are suspicious in movie candidate generation",
-        "confidence": 0.8,
-        "support": 7390,
-        "usage_role": "candidate_generation_rule",
-        "priority": "low"
-      },
-      {
-        "rule_id": "CAND_HRMISS_9",
-        "rule_type": "high_risk_missing",
-        "column": "Duration",
-        "description": "Duration missing values are suspicious in movie candidate generation",
-        "confidence": 0.8,
-        "support": 7008,
-        "usage_role": "candidate_generation_rule",
-        "priority": "low"
-      },
-      {
-        "rule_id": "CAND_HRMISS_10",
-        "rule_type": "high_risk_missing",
         "column": "RatingCount",
         "description": "RatingCount missing values are suspicious in movie candidate generation",
         "confidence": 0.8,
@@ -78687,17 +78667,27 @@
         "priority": "low"
       },
       {
-        "rule_id": "CAND_HRMISS_11",
+        "rule_id": "CAND_HRMISS_9",
         "rule_type": "high_risk_missing",
-        "column": "RatingValue",
-        "description": "RatingValue missing values are suspicious in movie candidate generation",
+        "column": "Year",
+        "description": "Year missing values are suspicious in movie candidate generation",
         "confidence": 0.8,
-        "support": 7136,
+        "support": 7390,
         "usage_role": "candidate_generation_rule",
         "priority": "low"
       },
       {
-        "rule_id": "CAND_HRMISS_12",
+        "rule_id": "CAND_HRMISS_10",
+        "rule_type": "high_risk_missing",
+        "column": "Director",
+        "description": "Director missing values are suspicious in movie candidate generation",
+        "confidence": 0.8,
+        "support": 7390,
+        "usage_role": "candidate_generation_rule",
+        "priority": "low"
+      },
+      {
+        "rule_id": "CAND_HRMISS_11",
         "rule_type": "high_risk_missing",
         "column": "Release Date",
         "description": "Release Date missing values are suspicious in movie candidate generation",
@@ -78707,12 +78697,22 @@
         "priority": "low"
       },
       {
+        "rule_id": "CAND_HRMISS_12",
+        "rule_type": "high_risk_missing",
+        "column": "Name",
+        "description": "Name missing values are suspicious in movie candidate generation",
+        "confidence": 0.8,
+        "support": 7388,
+        "usage_role": "candidate_generation_rule",
+        "priority": "low"
+      },
+      {
         "rule_id": "CAND_HRMISS_13",
         "rule_type": "high_risk_missing",
-        "column": "Director",
-        "description": "Director missing values are suspicious in movie candidate generation",
+        "column": "Duration",
+        "description": "Duration missing values are suspicious in movie candidate generation",
         "confidence": 0.8,
-        "support": 7390,
+        "support": 7008,
         "usage_role": "candidate_generation_rule",
         "priority": "low"
       },
@@ -78729,10 +78729,10 @@
       {
         "rule_id": "CAND_HRMISS_15",
         "rule_type": "high_risk_missing",
-        "column": "Name",
-        "description": "Name missing values are suspicious in movie candidate generation",
+        "column": "RatingValue",
+        "description": "RatingValue missing values are suspicious in movie candidate generation",
         "confidence": 0.8,
-        "support": 7388,
+        "support": 7136,
         "usage_role": "candidate_generation_rule",
         "priority": "low"
       },

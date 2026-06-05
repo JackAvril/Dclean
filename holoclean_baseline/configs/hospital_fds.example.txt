@@ -1,0 +1,9 @@
+# 每行一个 FD，会自动转成 HoloClean denial constraint
+# 格式：LHS->RHS；多个 LHS 用逗号分隔
+ProviderNumber->HospitalName
+ProviderNumber->Address1
+ProviderNumber->City
+ProviderNumber->State
+ProviderNumber->ZipCode
+MeasureCode->MeasureName
+MeasureCode->Condition

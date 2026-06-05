@@ -1,0 +1,21 @@
+{
+  "dataset": "flights",
+  "variant": "no_label_propagation",
+  "variant_display_name": "w/o Label Propagation",
+  "use_structured_evidence": true,
+  "use_multi_view_context": true,
+  "use_neighbor_evidence": true,
+  "use_bayesian_evidence": true,
+  "use_evidence_reliability_gate": true,
+  "use_precision_post_gate": true,
+  "use_teacher": true,
+  "use_deepseek_teacher": true,
+  "use_llm_labels": true,
+  "use_weak_rule_teacher": false,
+  "use_label_propagation": false,
+  "use_propagated_labels": false,
+  "use_hardcase_feedback": true,
+  "use_active_loop": true,
+  "max_active_iterations": null,
+  "sampling_strategy": "cluster"
+}

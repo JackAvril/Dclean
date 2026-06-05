@@ -1,0 +1,19 @@
+{
+  "dataset": "flights",
+  "variant": "no_hardcase_feedback",
+  "dataset_dir": "/mnt/mydata/dq/projects/Splittree/test/Error Detection flights",
+  "run_dir": "/mnt/mydata/dq/projects/Splittree/test/ablation_runs_detection/flights/no_hardcase_feedback",
+  "status": "success",
+  "elapsed_sec": 0.001321554183959961,
+  "summary_path": "/mnt/mydata/dq/projects/Splittree/test/Error Detection flights/eval_outputs_flights_v4_with_verifier/evaluation_summary.csv",
+  "precision": 0.7589163237311386,
+  "recall": 0.8995934959349593,
+  "f1": 0.8232886904761905,
+  "candidate_coverage": 1.0,
+  "candidate_precision": 0.6733269467633776,
+  "final_predicted_errors": null,
+  "tp": 4426,
+  "fp": 1406,
+  "fn": 494,
+  "error_message": ""
+}

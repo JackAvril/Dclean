@@ -1,0 +1,124 @@
+{
+  "total_rows": 268,
+  "error_count": 122,
+  "correct_count": 146,
+  "error_ratio": 0.4552238805970149,
+  "label_source_counter": {
+    "outside_clean": 146,
+    "llm": 122
+  },
+  "outside_candidate_count": 146,
+  "inside_candidate_count": 122,
+  "column_counter_top20": {
+    "relationship": 135,
+    "sex": 130,
+    "age": 3
+  },
+  "column_label_source_distribution": [
+    {
+      "column": "age",
+      "label_source": "llm",
+      "count": 3
+    },
+    {
+      "column": "relationship",
+      "label_source": "llm",
+      "count": 59
+    },
+    {
+      "column": "relationship",
+      "label_source": "outside_clean",
+      "count": 76
+    },
+    {
+      "column": "sex",
+      "label_source": "llm",
+      "count": 60
+    },
+    {
+      "column": "sex",
+      "label_source": "outside_clean",
+      "count": 70
+    }
+  ],
+  "column_label_distribution": [
+    {
+      "column": "age",
+      "label": "error",
+      "count": 3
+    },
+    {
+      "column": "relationship",
+      "label": "correct",
+      "count": 76
+    },
+    {
+      "column": "relationship",
+      "label": "error",
+      "count": 59
+    },
+    {
+      "column": "sex",
+      "label": "correct",
+      "count": 70
+    },
+    {
+      "column": "sex",
+      "label": "error",
+      "count": 60
+    }
+  ],
+  "adult_v2_attribution_bucket_distribution": {
+    "outside_clean_primary_target": 146,
+    "sex_value_invalid": 60,
+    "relationship_sex_conflict": 24,
+    "relationship_marital_conflict": 20,
+    "relationship_v2_rule": 13,
+    "context_only_other": 3,
+    "relationship_age_conflict": 2
+  },
+  "config": {
+    "CLUSTER_PROP_MIN_CONF": 0.9,
+    "KNN_PROP_MIN_CONF": 0.92,
+    "MAX_PROPAGATED_TRAIN_ROWS": 700,
+    "MAX_PROPAGATED_PER_COLUMN": 80,
+    "ENABLE_OUTSIDE_CLEAN": true,
+    "OUTSIDE_CLEAN_PER_COLUMN": 80,
+    "MAX_OUTSIDE_CLEAN_TOTAL": 500,
+    "MAX_CORRECT_TO_ERROR_RATIO": 1.2,
+    "MIN_CORRECT_KEEP": 80,
+    "PRIMARY_TARGET_COLUMNS": [
+      "education",
+      "relationship",
+      "sex"
+    ],
+    "CONTEXT_ONLY_COLUMNS": [
+      "age",
+      "country",
+      "hoursperweek",
+      "income",
+      "maritalstatus",
+      "occupation",
+      "race",
+      "workclass"
+    ],
+    "OUTSIDE_CLEAN_ALLOWED_COLUMNS": [
+      "education",
+      "relationship",
+      "sex"
+    ],
+    "PROPAGATED_PER_COLUMN_V2": {
+      "relationship": 140,
+      "sex": 120,
+      "education": 50,
+      "age": 0,
+      "workclass": 0,
+      "maritalstatus": 0,
+      "occupation": 0,
+      "race": 0,
+      "hoursperweek": 0,
+      "country": 0,
+      "income": 0
+    }
+  }
+}

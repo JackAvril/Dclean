@@ -1,0 +1,53 @@
+{
+  "total_clustered_rows": 21339,
+  "total_labeled_or_propagated": 116,
+  "llm_count": 116,
+  "cluster_propagation_count": 0,
+  "knn_propagation_count": 0,
+  "unlabeled_count": 21223,
+  "coverage": 0.005436056047612353,
+  "label_source_distribution": {
+    "NaN": 21223,
+    "llm": 116
+  },
+  "final_label_distribution": {
+    "NaN": 21223,
+    "error": 114,
+    "correct": 2
+  },
+  "column_distribution": {
+    "sex": 60,
+    "relationship": 56
+  },
+  "column_source_distribution": [
+    {
+      "column": "relationship",
+      "label_source": "llm",
+      "count": 56
+    },
+    {
+      "column": "sex",
+      "label_source": "llm",
+      "count": 60
+    }
+  ],
+  "config": {
+    "dataset": "adult",
+    "MIN_LABELED_PER_CLUSTER": 3,
+    "CLUSTER_PROPAGATION_THRESHOLD": 0.9,
+    "CLUSTER_CENTER_DIST_QUANTILE": 0.55,
+    "MAX_CLUSTER_PROPAGATION_PER_CLUSTER": 20,
+    "ENABLE_KNN_PROPAGATION": true,
+    "KNN_K": 5,
+    "KNN_PROPAGATION_THRESHOLD": 0.88,
+    "KNN_MIN_MARGIN": 0.18,
+    "KNN_MAX_AVG_DISTANCE": 3.8,
+    "MIN_PROPAGATION_CONFIDENCE": 0.78,
+    "MAX_TOTAL_PROPAGATED": 800,
+    "DATASET_GATE": "adult"
+  },
+  "adult_v2_attribution_bucket_distribution": {
+    "primary_target_other": 60,
+    "relationship_v2_rule": 56
+  }
+}

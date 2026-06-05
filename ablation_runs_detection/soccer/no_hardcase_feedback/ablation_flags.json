@@ -1,0 +1,21 @@
+{
+  "dataset": "soccer",
+  "variant": "no_hardcase_feedback",
+  "variant_display_name": "w/o Hard-case Feedback",
+  "use_structured_evidence": true,
+  "use_multi_view_context": true,
+  "use_neighbor_evidence": true,
+  "use_bayesian_evidence": true,
+  "use_evidence_reliability_gate": true,
+  "use_precision_post_gate": true,
+  "use_teacher": true,
+  "use_deepseek_teacher": true,
+  "use_llm_labels": true,
+  "use_weak_rule_teacher": false,
+  "use_label_propagation": true,
+  "use_propagated_labels": true,
+  "use_hardcase_feedback": false,
+  "use_active_loop": false,
+  "max_active_iterations": 0,
+  "sampling_strategy": "cluster"
+}

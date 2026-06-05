@@ -1,0 +1,59 @@
+{
+  "dataset": "flights",
+  "total_rows": 1845,
+  "error_count": 1336,
+  "correct_count": 509,
+  "error_ratio": 0.7241192411924119,
+  "label_source_counter": {
+    "llm": 1166,
+    "outside_clean": 480,
+    "knn_propagation": 199
+  },
+  "outside_candidate_count": 480,
+  "inside_candidate_count": 1365,
+  "column_counter_top20": {
+    "act_arr_time": 604,
+    "sched_arr_time": 532,
+    "sched_dep_time": 421,
+    "act_dep_time": 288
+  },
+  "label_by_source": [
+    {
+      "label_source": "knn_propagation",
+      "label": "error",
+      "count": 199
+    },
+    {
+      "label_source": "llm",
+      "label": "correct",
+      "count": 29
+    },
+    {
+      "label_source": "llm",
+      "label": "error",
+      "count": 1137
+    },
+    {
+      "label_source": "outside_clean",
+      "label": "correct",
+      "count": 480
+    }
+  ],
+  "config": {
+    "input_table_csv": "/mnt/mydata/dq/projects/Splittree/flights/flights_dirty.csv",
+    "input_clustered_csv": "candidate_clustered_flights.csv",
+    "input_labeled_csv": "candidate_sampled_labeled_flights.csv",
+    "input_propagated_csv": "propagated_labels_flights.csv",
+    "cluster_prop_min_conf": 0.9,
+    "knn_prop_min_conf": 0.95,
+    "enable_outside_clean": true,
+    "outside_clean_per_column": 120,
+    "outside_clean_min_per_column": 20,
+    "enable_balance": true,
+    "max_correct_to_error_ratio": 1.5,
+    "min_correct_keep": null,
+    "dataset_gate": "generic",
+    "max_propagated_train_rows": null,
+    "max_outside_clean_total": null
+  }
+}

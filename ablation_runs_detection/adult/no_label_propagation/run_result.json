@@ -1,0 +1,19 @@
+{
+  "dataset": "adult",
+  "variant": "no_label_propagation",
+  "dataset_dir": "/mnt/mydata/dq/projects/Splittree/test/Error Detection Adult",
+  "run_dir": "/mnt/mydata/dq/projects/Splittree/test/ablation_runs_detection/adult/no_label_propagation",
+  "status": "success",
+  "elapsed_sec": 0.0013959407806396484,
+  "summary_path": "/mnt/mydata/dq/projects/Splittree/test/Error Detection Adult/eval_outputs_adult_v4_with_verifier/evaluation_summary.csv",
+  "precision": 0.9977814753189129,
+  "recall": 0.9988895058300944,
+  "f1": 0.9983351831298557,
+  "candidate_coverage": 0.9988895058300944,
+  "candidate_precision": 0.017301903305538723,
+  "final_predicted_errors": null,
+  "tp": 1799,
+  "fp": 4,
+  "fn": 2,
+  "error_message": ""
+}

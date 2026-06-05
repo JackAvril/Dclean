@@ -40,6 +40,45 @@ DETECTOR_SOURCE_DIR = "two_stage_model_output_adult_v4_with_verifier"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 RANDOM_STATE = 42
 
+# ============================================================
+# Adult v2 attribution features
+# ============================================================
+PRIMARY_TARGET_COLUMNS = {"sex", "relationship", "education"}
+CONTEXT_ONLY_COLUMNS = {
+    "age", "workclass", "maritalstatus", "occupation",
+    "race", "hoursperweek", "country", "income"
+}
+RELATIONSHIP_V2_RULE_TYPES = {
+    "relationship_marital_spouse_conflict",
+    "relationship_age_spouse_conflict",
+    "relationship_sex_spouse_conflict",
+    "relationship_context_dominant",
+}
+EDUCATION_V2_RULE_TYPES = {"education_age_extreme_conflict"}
+
+ADULT_V2_NUMERIC_FEATURES = [
+    "target_is_primary_column",
+    "target_is_context_only_column",
+    "is_relationship_spouse_value",
+    "relationship_marital_conflict",
+    "relationship_age_conflict",
+    "relationship_sex_conflict",
+    "sex_value_invalid",
+    "education_age_extreme_conflict",
+    "has_relationship_v2_rule",
+    "has_education_v2_rule",
+    "relationship_v2_conflict_count",
+    "has_relationship_v2_signal",
+    "has_education_v2_signal",
+    "is_context_only_weak_signal",
+    "adult_v2_signal_strength",
+    "adult_v2_primary_target_signal",
+]
+ADULT_V2_CATEGORICAL_FEATURES = [
+    "adult_v2_attribution_bucket",
+]
+
+
 LABEL_COL = "label_binary"
 WEIGHT_COL = "sample_weight"
 
@@ -149,7 +188,7 @@ STAGE1_NUMERIC_FEATURES = [
     "domain_invalid_flag", "adult_consistency_flag", "high_adult_consistency_score",
     "has_adult_domain_signal", "has_adult_format_signal", "has_adult_consistency_signal",
     "age_span", "hours_span", "is_minor_age_bucket", "is_high_hours_bucket",
-]
+] + ADULT_V2_NUMERIC_FEATURES
 
 STAGE1_CATEGORICAL_FEATURES = [
     "column", "semantic_type", "detected_type", "main_rule_type", "main_usage_role",
@@ -157,7 +196,7 @@ STAGE1_CATEGORICAL_FEATURES = [
     "adult_consistency_bucket", "age_sampling_bucket", "hours_sampling_bucket",
     "adult_value_bucket", "candidate_rule_dominant",
     "time_window_bucket", "time_value_bucket",
-]
+] + ADULT_V2_CATEGORICAL_FEATURES
 
 STAGE2_NUMERIC_FEATURES = [
     "raw_pred_error_prob", "raw_pred_label", "raw_margin_to_threshold",
@@ -264,6 +303,116 @@ def safe_str_series(df: pd.DataFrame, col: str, default="missing") -> pd.Series:
     if col in df.columns:
         return df[col].fillna(default).astype(str)
     return pd.Series([default] * len(df), index=df.index)
+
+
+def as_int01(x, default=0):
+    try:
+        if pd.isna(x):
+            return default
+    except Exception:
+        pass
+    if x is None:
+        return default
+    s = str(x).strip().lower()
+    if s in {"1", "true", "yes", "y"}:
+        return 1
+    if s in {"0", "false", "no", "n"}:
+        return 0
+    try:
+        return int(float(x))
+    except Exception:
+        return default
+
+
+def add_adult_v2_features(out: pd.DataFrame) -> pd.DataFrame:
+    col_series = safe_str_series(out, "column", "missing")
+    rule_series = safe_str_series(out, "main_rule_type", "missing")
+
+    # Base v2 fields, with fallback from column/rule_type if upstream old files are used.
+    for c in [
+        "target_is_primary_column", "target_is_context_only_column",
+        "is_relationship_spouse_value", "relationship_marital_conflict",
+        "relationship_age_conflict", "relationship_sex_conflict",
+        "sex_value_invalid", "education_age_extreme_conflict",
+        "has_relationship_v2_rule", "has_education_v2_rule",
+    ]:
+        out[c] = safe_num_series(out, c, 0).astype(int)
+
+    out["target_is_primary_column"] = np.where(
+        col_series.isin(PRIMARY_TARGET_COLUMNS), 1, out["target_is_primary_column"]
+    ).astype(int)
+    out["target_is_context_only_column"] = np.where(
+        col_series.isin(CONTEXT_ONLY_COLUMNS), 1, out["target_is_context_only_column"]
+    ).astype(int)
+
+    out["has_relationship_v2_rule"] = np.where(
+        rule_series.isin(RELATIONSHIP_V2_RULE_TYPES), 1, out["has_relationship_v2_rule"]
+    ).astype(int)
+    out["has_education_v2_rule"] = np.where(
+        rule_series.isin(EDUCATION_V2_RULE_TYPES), 1, out["has_education_v2_rule"]
+    ).astype(int)
+
+    out["relationship_v2_conflict_count"] = (
+        out["relationship_marital_conflict"].astype(int)
+        + out["relationship_age_conflict"].astype(int)
+        + out["relationship_sex_conflict"].astype(int)
+    )
+
+    out["has_relationship_v2_signal"] = (
+        (out["relationship_v2_conflict_count"] > 0)
+        | (out["has_relationship_v2_rule"].astype(int) > 0)
+        | rule_series.isin(RELATIONSHIP_V2_RULE_TYPES)
+    ).astype(int)
+
+    out["has_education_v2_signal"] = (
+        (out["education_age_extreme_conflict"].astype(int) > 0)
+        | (out["has_education_v2_rule"].astype(int) > 0)
+        | rule_series.isin(EDUCATION_V2_RULE_TYPES)
+    ).astype(int)
+
+    out["is_context_only_weak_signal"] = (
+        (out["target_is_context_only_column"].astype(int) == 1)
+        & (safe_num_series(out, "adult_domain_rule_count", 0.0) <= 0)
+        & (safe_num_series(out, "adult_format_rule_count", 0.0) <= 0)
+        & (safe_num_series(out, "adult_consistency_rule_count", 0.0) <= 0)
+        & (out["has_relationship_v2_signal"].astype(int) <= 0)
+        & (out["has_education_v2_signal"].astype(int) <= 0)
+        & (out["sex_value_invalid"].astype(int) <= 0)
+    ).astype(int)
+
+    out["adult_v2_signal_strength"] = (
+        2.5 * out["has_relationship_v2_signal"].astype(float)
+        + 2.0 * out["sex_value_invalid"].astype(float)
+        + 1.5 * out["has_education_v2_signal"].astype(float)
+        + 0.8 * out["target_is_primary_column"].astype(float)
+        - 1.2 * out["is_context_only_weak_signal"].astype(float)
+    )
+
+    out["adult_v2_primary_target_signal"] = (
+        (out["target_is_primary_column"].astype(int) == 1)
+        & (
+            (out["has_relationship_v2_signal"].astype(int) == 1)
+            | (out["sex_value_invalid"].astype(int) == 1)
+            | (out["has_education_v2_signal"].astype(int) == 1)
+            | (safe_num_series(out, "adult_domain_rule_count", 0.0) > 0)
+            | (safe_num_series(out, "adult_format_rule_count", 0.0) > 0)
+        )
+    ).astype(int)
+
+    if "adult_v2_attribution_bucket" not in out.columns:
+        out["adult_v2_attribution_bucket"] = "unknown_attribution"
+    out["adult_v2_attribution_bucket"] = out["adult_v2_attribution_bucket"].fillna("unknown_attribution").astype(str)
+    missing_bucket = out["adult_v2_attribution_bucket"].isin({"", "nan", "None", "missing"})
+    out.loc[missing_bucket & (out["relationship_marital_conflict"] == 1), "adult_v2_attribution_bucket"] = "relationship_marital_conflict"
+    out.loc[missing_bucket & (out["relationship_age_conflict"] == 1), "adult_v2_attribution_bucket"] = "relationship_age_conflict"
+    out.loc[missing_bucket & (out["relationship_sex_conflict"] == 1), "adult_v2_attribution_bucket"] = "relationship_sex_conflict"
+    out.loc[missing_bucket & (out["has_relationship_v2_rule"] == 1), "adult_v2_attribution_bucket"] = "relationship_v2_rule"
+    out.loc[missing_bucket & (out["sex_value_invalid"] == 1), "adult_v2_attribution_bucket"] = "sex_value_invalid"
+    out.loc[missing_bucket & (out["has_education_v2_rule"] == 1), "adult_v2_attribution_bucket"] = "education_age_extreme_conflict"
+    out.loc[missing_bucket & col_series.isin(PRIMARY_TARGET_COLUMNS), "adult_v2_attribution_bucket"] = "primary_target_other"
+    out.loc[missing_bucket & col_series.isin(CONTEXT_ONLY_COLUMNS), "adult_v2_attribution_bucket"] = "context_only_other"
+
+    return out
 
 
 def copy_detector_artifacts(src_dir: str, dst_dir: str):
@@ -445,6 +594,8 @@ def add_derived_features(df: pd.DataFrame) -> pd.DataFrame:
     out["is_minor_age_bucket"] = ((out["age_upper"] > 0) & (out["age_upper"] < 18)).astype(int)
     out["is_high_hours_bucket"] = (((out["hours_lower"] + out["hours_upper"]) / 2.0) > 60).astype(int)
 
+    out = add_adult_v2_features(out)
+
     for col in STAGE1_CATEGORICAL_FEATURES:
         if col not in out.columns:
             out[col] = "missing"
@@ -554,7 +705,7 @@ def choose_best_verifier_threshold(
 # ============================================================
 
 def load_training_data(path: str) -> pd.DataFrame:
-    df = pd.read_csv(path)
+    df = pd.read_csv(path, low_memory=False)
     if LABEL_COL not in df.columns:
         raise ValueError(f"输入文件缺少标签列: {LABEL_COL}")
 
@@ -924,9 +1075,17 @@ def make_stage2_training_df(df: pd.DataFrame) -> pd.DataFrame:
     domain_signal = (safe_num_series(out, "adult_domain_rule_count", 0) > 0) | (safe_str_series(out, "domain_bucket", "").eq("domain_invalid"))
     format_signal = safe_num_series(out, "adult_format_rule_count", 0) > 0
     consistency_signal = (safe_num_series(out, "adult_consistency_rule_count", 0) > 0) | (safe_num_series(out, "adult_consistency_score", 0) >= 1.0)
+    relationship_v2_signal = safe_num_series(out, "has_relationship_v2_signal", 0).astype(int) == 1
+    sex_invalid_signal = safe_num_series(out, "sex_value_invalid", 0).astype(int) == 1
+    education_v2_signal = safe_num_series(out, "has_education_v2_signal", 0).astype(int) == 1
+    context_only_weak = safe_num_series(out, "is_context_only_weak_signal", 0).astype(int) == 1
 
     weight_multiplier *= np.where(domain_signal | format_signal, STAGE2_DOMAIN_SIGNAL_WEIGHT_BOOST, 1.0)
     weight_multiplier *= np.where(consistency_signal, STAGE2_ADULT_CONSISTENCY_WEIGHT_BOOST, 1.0)
+    weight_multiplier *= np.where(relationship_v2_signal, 1.55, 1.0)
+    weight_multiplier *= np.where(sex_invalid_signal, 1.45, 1.0)
+    weight_multiplier *= np.where(education_v2_signal, 1.25, 1.0)
+    weight_multiplier *= np.where(context_only_weak, 0.75, 1.0)
 
     out[WEIGHT_COL] = out[WEIGHT_COL] * weight_multiplier
 
@@ -1019,6 +1178,10 @@ def build_verifier_weights(df: pd.DataFrame) -> np.ndarray:
     adult_domain = (safe_num_series(df, "adult_domain_rule_count", 0.0) > 0) | safe_str_series(df, "domain_bucket", "").eq("domain_invalid")
     adult_format = safe_num_series(df, "adult_format_rule_count", 0.0) > 0
     adult_cons = (safe_num_series(df, "adult_consistency_rule_count", 0.0) > 0) | (safe_num_series(df, "adult_consistency_score", 0.0) >= 1.0)
+    relationship_v2 = safe_num_series(df, "has_relationship_v2_signal", 0).astype(int) == 1
+    sex_invalid = safe_num_series(df, "sex_value_invalid", 0).astype(int) == 1
+    education_v2 = safe_num_series(df, "has_education_v2_signal", 0).astype(int) == 1
+    context_only_weak = safe_num_series(df, "is_context_only_weak_signal", 0).astype(int) == 1
 
     # y=0 是 verifier 要学会打回的 FP，y=1 是要保留的真错误
     weights *= np.where((y == 0), VERIFIER_FP_BASE_WEIGHT_BOOST, 1.0)
@@ -1031,6 +1194,12 @@ def build_verifier_weights(df: pd.DataFrame) -> np.ndarray:
     weights *= np.where((y == 1) & adult_domain, VERIFIER_DOMAIN_TRUE_ERROR_BOOST, 1.0)
     weights *= np.where((y == 1) & adult_format, VERIFIER_FORMAT_TRUE_ERROR_BOOST, 1.0)
     weights *= np.where((y == 1) & adult_cons, VERIFIER_CONSISTENCY_TRUE_ERROR_BOOST, 1.0)
+
+    # Adult v2：relationship/sex/education 强信号是真错误保护对象；context-only 弱信号多为 FP。
+    weights *= np.where((y == 1) & relationship_v2, 2.30, 1.0)
+    weights *= np.where((y == 1) & sex_invalid, 2.00, 1.0)
+    weights *= np.where((y == 1) & education_v2, 1.60, 1.0)
+    weights *= np.where((y == 0) & context_only_weak, 2.50, 1.0)
 
     return weights
 

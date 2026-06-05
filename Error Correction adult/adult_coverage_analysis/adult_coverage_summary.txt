@@ -1,0 +1,14 @@
+========== Adult 覆盖率统计 ==========
+total_cells: 994884
+total_rows: 90444
+total_columns: 11
+
+true_error_cells: 1801
+predicted_error_positions: 1803
+
+covered_true_errors: 1799
+missed_true_errors: 2
+false_positive_positions: 4
+
+Candidate Coverage / Recall: 0.998890
+Position Precision: 0.997781

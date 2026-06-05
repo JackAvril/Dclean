@@ -1,0 +1,156 @@
+{
+  "adult_v2_attribution_bucket=primary_target_other": {
+    "group_name": "adult_v2_attribution_bucket",
+    "key": "adult_v2_attribution_bucket=primary_target_other",
+    "n": 60,
+    "error_count": 60,
+    "correct_count": 0,
+    "estimated_precision": 0.9838709677419355,
+    "avg_confidence": 0.9997474166666669,
+    "threshold_delta": -0.06,
+    "action": "trust"
+  },
+  "adult_v2_attribution_bucket=relationship_v2_rule": {
+    "group_name": "adult_v2_attribution_bucket",
+    "key": "adult_v2_attribution_bucket=relationship_v2_rule",
+    "n": 56,
+    "error_count": 54,
+    "correct_count": 2,
+    "estimated_precision": 0.9482758620689655,
+    "avg_confidence": 0.9667636607142859,
+    "threshold_delta": -0.06,
+    "action": "trust"
+  },
+  "main_rule_type=relationship_age_spouse_conflict": {
+    "group_name": "main_rule_type",
+    "key": "main_rule_type=relationship_age_spouse_conflict",
+    "n": 2,
+    "error_count": 2,
+    "correct_count": 0,
+    "estimated_precision": 0.75,
+    "avg_confidence": 0.83,
+    "threshold_delta": 0.0,
+    "action": "insufficient"
+  },
+  "main_rule_type=relationship_context_dominant": {
+    "group_name": "main_rule_type",
+    "key": "main_rule_type=relationship_context_dominant",
+    "n": 31,
+    "error_count": 29,
+    "correct_count": 2,
+    "estimated_precision": 0.9090909090909091,
+    "avg_confidence": 0.9935085483870966,
+    "threshold_delta": -0.06,
+    "action": "trust"
+  },
+  "main_rule_type=relationship_marital_spouse_conflict": {
+    "group_name": "main_rule_type",
+    "key": "main_rule_type=relationship_marital_spouse_conflict",
+    "n": 16,
+    "error_count": 16,
+    "correct_count": 0,
+    "estimated_precision": 0.9444444444444444,
+    "avg_confidence": 0.99,
+    "threshold_delta": -0.06,
+    "action": "trust"
+  },
+  "main_rule_type=relationship_sex_spouse_conflict": {
+    "group_name": "main_rule_type",
+    "key": "main_rule_type=relationship_sex_spouse_conflict",
+    "n": 7,
+    "error_count": 7,
+    "correct_count": 0,
+    "estimated_precision": 0.8888888888888888,
+    "avg_confidence": 0.8342857142857143,
+    "threshold_delta": -0.06,
+    "action": "trust"
+  },
+  "main_rule_type=sex_domain": {
+    "group_name": "main_rule_type",
+    "key": "main_rule_type=sex_domain",
+    "n": 60,
+    "error_count": 60,
+    "correct_count": 0,
+    "estimated_precision": 0.9838709677419355,
+    "avg_confidence": 0.9997474166666669,
+    "threshold_delta": -0.06,
+    "action": "trust"
+  },
+  "column=relationship||main_rule_type=relationship_age_spouse_conflict": {
+    "group_name": "column__main_rule_type",
+    "key": "column=relationship||main_rule_type=relationship_age_spouse_conflict",
+    "n": 2,
+    "error_count": 2,
+    "correct_count": 0,
+    "estimated_precision": 0.75,
+    "avg_confidence": 0.83,
+    "threshold_delta": 0.0,
+    "action": "insufficient"
+  },
+  "column=relationship||main_rule_type=relationship_context_dominant": {
+    "group_name": "column__main_rule_type",
+    "key": "column=relationship||main_rule_type=relationship_context_dominant",
+    "n": 31,
+    "error_count": 29,
+    "correct_count": 2,
+    "estimated_precision": 0.9090909090909091,
+    "avg_confidence": 0.9935085483870966,
+    "threshold_delta": -0.06,
+    "action": "trust"
+  },
+  "column=relationship||main_rule_type=relationship_marital_spouse_conflict": {
+    "group_name": "column__main_rule_type",
+    "key": "column=relationship||main_rule_type=relationship_marital_spouse_conflict",
+    "n": 16,
+    "error_count": 16,
+    "correct_count": 0,
+    "estimated_precision": 0.9444444444444444,
+    "avg_confidence": 0.99,
+    "threshold_delta": -0.06,
+    "action": "trust"
+  },
+  "column=relationship||main_rule_type=relationship_sex_spouse_conflict": {
+    "group_name": "column__main_rule_type",
+    "key": "column=relationship||main_rule_type=relationship_sex_spouse_conflict",
+    "n": 7,
+    "error_count": 7,
+    "correct_count": 0,
+    "estimated_precision": 0.8888888888888888,
+    "avg_confidence": 0.8342857142857143,
+    "threshold_delta": -0.06,
+    "action": "trust"
+  },
+  "column=sex||main_rule_type=sex_domain": {
+    "group_name": "column__main_rule_type",
+    "key": "column=sex||main_rule_type=sex_domain",
+    "n": 60,
+    "error_count": 60,
+    "correct_count": 0,
+    "estimated_precision": 0.9838709677419355,
+    "avg_confidence": 0.9997474166666669,
+    "threshold_delta": -0.06,
+    "action": "trust"
+  },
+  "column=relationship||adult_v2_attribution_bucket=relationship_v2_rule": {
+    "group_name": "column__adult_v2_attribution_bucket",
+    "key": "column=relationship||adult_v2_attribution_bucket=relationship_v2_rule",
+    "n": 56,
+    "error_count": 54,
+    "correct_count": 2,
+    "estimated_precision": 0.9482758620689655,
+    "avg_confidence": 0.9667636607142859,
+    "threshold_delta": -0.06,
+    "action": "trust"
+  },
+  "column=sex||adult_v2_attribution_bucket=primary_target_other": {
+    "group_name": "column__adult_v2_attribution_bucket",
+    "key": "column=sex||adult_v2_attribution_bucket=primary_target_other",
+    "n": 60,
+    "error_count": 60,
+    "correct_count": 0,
+    "estimated_precision": 0.9838709677419355,
+    "avg_confidence": 0.9997474166666669,
+    "threshold_delta": -0.06,
+    "action": "trust"
+  }
+}

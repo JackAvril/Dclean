@@ -1,0 +1,59 @@
+[
+  {
+    "dataset": "soccer",
+    "dataset_dir": "/mnt/mydata/dq/projects/Splittree/test/Error Detection soccer",
+    "missing": [],
+    "stages": [
+      {
+        "stage": "build_rule_pool.py",
+        "exists": true,
+        "resolved_script": "build_rule_pool.py"
+      },
+      {
+        "stage": "shrink_search_space.py",
+        "exists": true,
+        "resolved_script": "shrink_search_space.py"
+      },
+      {
+        "stage": "summarize_full_contexts.py",
+        "exists": true,
+        "resolved_script": "summarize_full_contexts.py"
+      },
+      {
+        "stage": "cluster_and_sample_candidates.py",
+        "exists": true,
+        "resolved_script": "cluster_and_sample_candidates.py"
+      },
+      {
+        "stage": "annotate_with_deepseek.py",
+        "exists": true,
+        "resolved_script": "annotate_with_deepseek.py"
+      },
+      {
+        "stage": "label_propagation_for_candidates.py",
+        "exists": true,
+        "resolved_script": "label_propagation_for_candidates.py"
+      },
+      {
+        "stage": "build_final_training_set.py",
+        "exists": true,
+        "resolved_script": "build_final_training_set.py"
+      },
+      {
+        "stage": "build_loading_set.py",
+        "exists": true,
+        "resolved_script": "build_loading_set.py"
+      },
+      {
+        "stage": "control_iteration.py",
+        "exists": true,
+        "resolved_script": "control_iteration.py"
+      },
+      {
+        "stage": "evaluate.py",
+        "exists": true,
+        "resolved_script": "evaluate.py"
+      }
+    ]
+  }
+]

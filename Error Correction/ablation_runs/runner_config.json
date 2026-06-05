@@ -1,0 +1,14 @@
+{
+  "code_dir": "/mnt/mydata/dq/projects/Splittree/test/Error Correction",
+  "output_root": "/mnt/mydata/dq/projects/Splittree/test/Error Correction/ablation_runs",
+  "datasets": [
+    "soccer"
+  ],
+  "experiments": [
+    "no_candidate_constraints",
+    "no_pairwise_distillation"
+  ],
+  "max_llm_cells_per_dataset": 0,
+  "rule_score_min_margin": -999.0,
+  "rule_score_skip_same_as_dirty": 0
+}

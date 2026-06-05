@@ -64,6 +64,13 @@ RULE_TYPE_WEIGHT = {
     "workclass_occupation_consistency": 0.95,
     "education_occupation_consistency": 0.95,
     "hours_workclass_consistency": 0.85,
+
+    # adult v2 attribution-aware rules
+    "relationship_marital_spouse_conflict": 1.45,
+    "relationship_age_spouse_conflict": 1.40,
+    "relationship_sex_spouse_conflict": 1.25,
+    "relationship_context_dominant": 1.15,
+    "education_age_extreme_conflict": 1.10,
 }
 
 # ------------------------------------------------------------
@@ -147,6 +154,79 @@ EDUCATION_ORDER = {
 ENABLE_PRECISION_GUARD = True
 GLOBAL_DOMINANT_SKIP_COLUMNS = {"workclass", "country", "income", "race"}
 RARE_SKIP_COLUMNS = {"country", "occupation", "workclass"}
+
+# ------------------------------------------------------------
+# Adult v2 候选归因策略
+# ------------------------------------------------------------
+# 当前 Adult 评估显示：真实错误主要集中在 sex / relationship / 少量 education。
+# 因此：
+# 1) primary target 可以由强规则、domain/format、少量 attribution-aware 规则进入候选；
+# 2) context-only 列主要作为证据，不允许由 rare/global/context-dominant/soft-FD 等弱规则大规模进入候选；
+# 3) relationship 与 maritalstatus / age / sex 冲突时，优先把候选归因到 relationship。
+PRIMARY_TARGET_COLUMNS = {
+    "sex",
+    "relationship",
+    "education",
+}
+
+CONTEXT_ONLY_COLUMNS = {
+    "age",
+    "workclass",
+    "maritalstatus",
+    "occupation",
+    "race",
+    "hoursperweek",
+    "country",
+    "income",
+}
+
+RELATIONSHIP_SPOUSE_VALUES = {"Husband", "Wife"}
+NON_MARRIED_STATUS_FOR_SPOUSE = {"Never-married", "Divorced", "Separated", "Widowed"}
+VALID_SEX_BY_RELATIONSHIP = {"Husband": "Male", "Wife": "Female"}
+
+WEAK_RULE_TYPES_FOR_CONTEXT_ONLY = {
+    "not_null",
+    "high_risk_missing",
+    "paired_missing_consistency",
+    "rare_value",
+    "rare_pattern",
+    "global_dominant_value",
+    "dominant_value_by_context",
+    "dominant_value_by_context_pair",
+    "functional_dependency",
+    "soft_functional_dependency",
+    "age_education_consistency",
+    "age_relationship_consistency",
+    "marital_relationship_consistency",
+    "sex_relationship_consistency",
+    "workclass_occupation_consistency",
+    "education_occupation_consistency",
+    "hours_workclass_consistency",
+}
+
+ALLOWED_CONTEXT_ONLY_STRONG_RULE_TYPES = {
+    "age_bucket_format",
+    "hours_per_week_format_range",
+    "workclass_domain",
+    "maritalstatus_domain",
+    "occupation_domain",
+    "race_domain",
+    "country_domain",
+    "income_domain",
+    "income_canonical_format",
+}
+
+PRIMARY_RELATIONSHIP_RULE_TYPES = {
+    "relationship_marital_spouse_conflict",
+    "relationship_age_spouse_conflict",
+    "relationship_sex_spouse_conflict",
+    "relationship_context_dominant",
+}
+
+PRIMARY_EDUCATION_RULE_TYPES = {
+    "education_age_extreme_conflict",
+}
+
 
 
 # ============================================================
@@ -333,29 +413,61 @@ def rule_weight(rule):
 # 3. Precision guard
 # ============================================================
 
+def get_rule_target_column(rule: Dict[str, Any]) -> Optional[str]:
+    if rule.get("target_column"):
+        return rule.get("target_column")
+    if rule.get("column"):
+        return rule.get("column")
+    if rule.get("rhs"):
+        return rule.get("rhs")
+    return None
+
+
 def should_drop_rule_by_precision_guard(rule: Dict[str, Any]) -> bool:
+    """过滤容易制造海量 FP 的弱规则。
+
+    注意：这一步只是过滤规则本身；最终 add_violation 前还会做一次候选级别过滤。
+    """
     if not ENABLE_PRECISION_GUARD:
         return False
 
     rtype = rule.get("rule_type", "")
+    target_col = get_rule_target_column(rule)
 
+    # v2 新增的 relationship attribution rules 必须保留。
+    if rtype in PRIMARY_RELATIONSHIP_RULE_TYPES or rtype in PRIMARY_EDUCATION_RULE_TYPES:
+        return False
+
+    # context-only 列不允许被弱统计规则作为候选目标。
+    if target_col in CONTEXT_ONLY_COLUMNS and rtype in WEAK_RULE_TYPES_FOR_CONTEXT_ONLY:
+        return True
+
+    # 老版本 rule_pool 中可能仍有这些爆炸规则，这里强制删除。
     if rtype == "global_dominant_value":
-        col = rule.get("column")
-        if col in GLOBAL_DOMINANT_SKIP_COLUMNS:
-            return True
+        return True
 
     if rtype in {"rare_value", "rare_pattern"}:
-        col = rule.get("column")
-        if col in RARE_SKIP_COLUMNS:
+        return True
+
+    # 普通 context dominant 只允许指向 primary target；context-only 目标一律删除。
+    if rtype in {"dominant_value_by_context", "dominant_value_by_context_pair"}:
+        rhs = rule.get("rhs")
+        if rhs not in PRIMARY_TARGET_COLUMNS:
             return True
 
-    # adult 中 workclass/country/income 的 context dominant 很容易被多数类支配，
-    # 但不完全删除 FD/上下文规则，只删除最容易爆的单列 context dominant。
-    if rtype == "dominant_value_by_context":
+    # FD/soft-FD 只允许 RHS 是 primary target。
+    if rtype in {"functional_dependency", "soft_functional_dependency"}:
         rhs = rule.get("rhs")
-        lhs = rule.get("lhs", [])
-        if rhs in {"country", "income"} and len(lhs) == 1:
+        if rhs not in PRIMARY_TARGET_COLUMNS:
             return True
+
+    # high-risk missing / not_null 只允许 primary target，避免 age/income 等缺失被海量打候选。
+    if rtype in {"not_null", "high_risk_missing"} and target_col not in PRIMARY_TARGET_COLUMNS:
+        return True
+
+    # paired missing 旧规则噪声很大，除非显式指向 primary target，否则删除。
+    if rtype == "paired_missing_consistency":
+        return True
 
     return False
 
@@ -366,14 +478,38 @@ def filter_rules_with_precision_guard(rules: List[Dict[str, Any]]) -> List[Dict[
 
     kept = []
     removed = 0
+    removed_counter = Counter()
+
     for r in rules:
         if should_drop_rule_by_precision_guard(r):
             removed += 1
+            removed_counter[r.get("rule_type", "unknown")] += 1
             continue
         kept.append(r)
 
     print(f"[PrecisionGuard] rules before={len(rules)}, after={len(kept)}, removed={removed}")
+    if removed_counter:
+        print("[PrecisionGuard] removed by rule_type:")
+        for k, v in removed_counter.most_common(20):
+            print(f"  - {k}: {v}")
+
     return kept
+
+
+def should_accept_violation(violation: Dict[str, Any]) -> bool:
+    """候选级别二次过滤，防止旧规则或归因错误把上下文列打进候选。"""
+    col = violation.get("column")
+    rule = violation.get("rule", {})
+    rtype = rule.get("rule_type", "")
+
+    if col in PRIMARY_TARGET_COLUMNS:
+        return True
+
+    # context-only 列只有强 domain/format 非法值规则可以进入候选。
+    if col in CONTEXT_ONLY_COLUMNS:
+        return rtype in ALLOWED_CONTEXT_ONLY_STRONG_RULE_TYPES
+
+    return True
 
 
 # ============================================================
@@ -460,6 +596,27 @@ def prepare_pair_context_rule_runtime(rules):
     return out
 
 
+def prepare_relationship_context_rule_runtime(rules):
+    out = []
+    for rule in rules:
+        if rule.get("rule_type") != "relationship_context_dominant":
+            continue
+
+        mapping = {}
+        for key, info in rule.get("majority_map", {}).items():
+            mapping[key] = (
+                info.get("dominant_value"),
+                int(info.get("group_size", 0)),
+                float(info.get("ratio", 0.0)),
+            )
+
+        r = dict(rule)
+        r["_relationship_context_mapping"] = mapping
+        out.append(r)
+
+    return out
+
+
 def build_context_majority_mapping_from_df(df, lhs_cols: List[str], rhs_col: str, min_group_size: int = 2, min_ratio: float = 0.70):
     sub = df[lhs_cols + [rhs_col]].dropna()
     if len(sub) == 0:
@@ -518,6 +675,9 @@ def prepare_adult_consistency_rule_runtime(df, rules):
 # ============================================================
 
 def add_violation(cell_map, violation):
+    if not should_accept_violation(violation):
+        return
+
     row_id = int(violation["row_id"])
     column = violation["column"]
     key = (row_id, column)
@@ -946,6 +1106,172 @@ def check_income_canonical_rule(row_idx, row, rule):
     return None
 
 
+
+# ============================================================
+# 8. Adult v2 attribution-aware checks
+# ============================================================
+
+def check_relationship_marital_spouse_conflict_rule(row_idx, row, rule):
+    marital = row.get("maritalstatus")
+    rel = row.get("relationship")
+
+    if marital is None or rel is None:
+        return None
+
+    spouse_values = set(rule.get("spouse_values", [])) or RELATIONSHIP_SPOUSE_VALUES
+    conflicting_status = set(rule.get("conflicting_maritalstatus", [])) or NON_MARRIED_STATUS_FOR_SPOUSE
+
+    if rel in spouse_values and marital in conflicting_status:
+        return {
+            "row_id": row_idx,
+            "column": "relationship",
+            "value": rel,
+            "rule": rule,
+            "reason": (
+                f"relationship={rel} conflicts with maritalstatus={marital}; "
+                f"attribute suspicious value to relationship"
+            ),
+        }
+
+    return None
+
+
+def check_relationship_age_spouse_conflict_rule(row_idx, row, rule):
+    age = row.get("age")
+    rel = row.get("relationship")
+
+    if age is None or rel is None:
+        return None
+
+    spouse_values = set(rule.get("spouse_values", [])) or RELATIONSHIP_SPOUSE_VALUES
+    max_hi = int(rule.get("max_age_upper_for_conflict", 17))
+
+    lo, hi = parse_age_bucket(age)
+    if lo is None:
+        return None
+
+    if hi is not None and hi <= max_hi and rel in spouse_values:
+        return {
+            "row_id": row_idx,
+            "column": "relationship",
+            "value": rel,
+            "rule": rule,
+            "reason": (
+                f"age bucket {age} is very young but relationship={rel}; "
+                f"attribute suspicious value to relationship"
+            ),
+        }
+
+    return None
+
+
+def check_relationship_sex_spouse_conflict_rule(row_idx, row, rule):
+    sex = row.get("sex")
+    rel = row.get("relationship")
+
+    if sex is None or rel is None:
+        return None
+
+    expected_by_rel = rule.get("expected_by_relationship", {}) or VALID_SEX_BY_RELATIONSHIP
+    expected = expected_by_rel.get(rel)
+
+    if expected is None:
+        return None
+
+    # 如果 sex 本身是非法值，交给 sex_domain 规则；如果 sex 是合法值但和 Husband/Wife 冲突，
+    # Adult 当前错误模式更可能是 relationship 被替换，所以归因到 relationship。
+    if sex in VALID_SEX and sex != expected:
+        return {
+            "row_id": row_idx,
+            "column": "relationship",
+            "value": rel,
+            "rule": rule,
+            "reason": (
+                f"relationship={rel} expects sex={expected}, but observed valid sex={sex}; "
+                f"attribute suspicious value to relationship"
+            ),
+            "expected_value": f"non-{rel} relationship",
+        }
+
+    return None
+
+
+def check_relationship_context_dominant_rule(row_idx, row, rule):
+    lhs = rule.get("lhs", [])
+    rhs = rule.get("rhs", "relationship")
+    if rhs != "relationship" or not lhs:
+        return None
+
+    rel = row.get("relationship")
+    if rel is None:
+        return None
+
+    trigger_values = set(rule.get("only_trigger_observed_values", []))
+    if trigger_values and rel not in trigger_values:
+        return None
+
+    vals = []
+    for c in lhs:
+        v = row.get(c)
+        if v is None:
+            return None
+        vals.append(v)
+
+    key = "||".join(map(str, vals))
+    mapping = rule.get("_relationship_context_mapping", {})
+
+    if key not in mapping:
+        return None
+
+    dominant_val, support, ratio = mapping[key]
+
+    if rel != dominant_val:
+        return {
+            "row_id": row_idx,
+            "column": "relationship",
+            "value": rel,
+            "rule": rule,
+            "reason": (
+                f"relationship context dominant mismatch: lhs={lhs}={vals} "
+                f"suggests relationship={dominant_val}, observed={rel}, ratio={ratio:.3f}, support={support}"
+            ),
+            "expected_value": dominant_val,
+        }
+
+    return None
+
+
+def check_education_age_extreme_conflict_rule(row_idx, row, rule):
+    age = row.get("age")
+    edu = row.get("education")
+
+    if age is None or edu is None:
+        return None
+
+    lo, hi = parse_age_bucket(age)
+    edu_order = EDUCATION_ORDER.get(str(edu).strip())
+
+    if lo is None or hi is None or edu_order is None:
+        return None
+
+    max_hi = int(rule.get("max_age_upper_for_conflict", 17))
+    min_edu_order = int(rule.get("min_extreme_education_order", EDUCATION_ORDER["Bachelors"]))
+
+    if hi <= max_hi and edu_order >= min_edu_order:
+        return {
+            "row_id": row_idx,
+            "column": "education",
+            "value": edu,
+            "rule": rule,
+            "reason": (
+                f"age bucket {age} is very young but education={edu} is high-level; "
+                f"attribute suspicious value to education"
+            ),
+        }
+
+    return None
+
+
 # ============================================================
 # 8. Adult consistency checks
 # ============================================================
@@ -1052,51 +1378,52 @@ def check_age_relationship_consistency_rule(row_idx, row, rule):
 
 
 def check_marital_relationship_consistency_rule(row_idx, row, rule):
+    # 兼容旧 rule_type：旧版 marital_relationship_consistency 也按 v2 归因到 relationship。
     marital = row.get("maritalstatus")
     rel = row.get("relationship")
 
     if marital is None or rel is None:
         return None
 
-    # Wife/Husband 与 Never-married/Divorced/Separated/Widowed 通常不一致。
-    if rel in {"Husband", "Wife"} and marital in {"Never-married", "Divorced", "Separated", "Widowed"}:
+    if rel in RELATIONSHIP_SPOUSE_VALUES and marital in NON_MARRIED_STATUS_FOR_SPOUSE:
         return {
             "row_id": row_idx,
-            "column": "maritalstatus",
-            "value": marital,
+            "column": "relationship",
+            "value": rel,
             "rule": rule,
-            "reason": f"relationship={rel} but maritalstatus={marital} is inconsistent",
+            "reason": (
+                f"relationship={rel} but maritalstatus={marital} is inconsistent; "
+                f"attribute suspicious value to relationship"
+            ),
         }
 
-    # Married-civ-spouse 通常对应 Husband/Wife，但数据里也可能 Not-in-family 等，保守不强判。
     return None
 
 
 def check_sex_relationship_consistency_rule(row_idx, row, rule):
+    # 兼容旧 rule_type：如果 sex 合法但与 Husband/Wife 冲突，归因到 relationship；
+    # 如果 sex 非法，则由 sex_domain 规则处理 sex。
     sex = row.get("sex")
     rel = row.get("relationship")
 
     if sex is None or rel is None:
         return None
 
-    if rel == "Wife" and sex != "Female":
-        return {
-            "row_id": row_idx,
-            "column": "sex",
-            "value": sex,
-            "rule": rule,
-            "reason": f"relationship=Wife but sex={sex}, expected Female",
-            "expected_value": "Female",
-        }
+    expected = VALID_SEX_BY_RELATIONSHIP.get(rel)
+    if expected is None:
+        return None
 
-    if rel == "Husband" and sex != "Male":
+    if sex in VALID_SEX and sex != expected:
         return {
             "row_id": row_idx,
-            "column": "sex",
-            "value": sex,
+            "column": "relationship",
+            "value": rel,
             "rule": rule,
-            "reason": f"relationship=Husband but sex={sex}, expected Male",
-            "expected_value": "Male",
+            "reason": (
+                f"relationship={rel} expects sex={expected}, but observed valid sex={sex}; "
+                f"attribute suspicious value to relationship"
+            ),
+            "expected_value": f"non-{rel} relationship",
         }
 
     return None
@@ -1202,6 +1529,7 @@ def shrink_search_space(input_csv, rule_json, output_jsonl, output_csv):
 
     context_dominant_rules = prepare_context_dominant_rule_runtime(rules)
     pair_context_rules = prepare_pair_context_rule_runtime(rules)
+    relationship_context_rules = prepare_relationship_context_rule_runtime(rules)
     high_risk_missing_rules = [r for r in rules if r.get("rule_type") == "high_risk_missing"]
     paired_missing_rules = [r for r in rules if r.get("rule_type") == "paired_missing_consistency"]
 
@@ -1232,6 +1560,11 @@ def shrink_search_space(input_csv, rule_json, output_jsonl, output_csv):
     marital_relationship_rules = [r for r in rules if r.get("rule_type") == "marital_relationship_consistency"]
     sex_relationship_rules = [r for r in rules if r.get("rule_type") == "sex_relationship_consistency"]
 
+    relationship_marital_rules = [r for r in rules if r.get("rule_type") == "relationship_marital_spouse_conflict"]
+    relationship_age_rules = [r for r in rules if r.get("rule_type") == "relationship_age_spouse_conflict"]
+    relationship_sex_rules = [r for r in rules if r.get("rule_type") == "relationship_sex_spouse_conflict"]
+    education_age_extreme_rules = [r for r in rules if r.get("rule_type") == "education_age_extreme_conflict"]
+
     adult_context_runtime_rules = prepare_adult_consistency_rule_runtime(df, rules)
     workclass_occupation_rules = [r for r in adult_context_runtime_rules if r.get("rule_type") == "workclass_occupation_consistency"]
     education_occupation_rules = [r for r in adult_context_runtime_rules if r.get("rule_type") == "education_occupation_consistency"]
@@ -1249,6 +1582,7 @@ def shrink_search_space(input_csv, rule_json, output_jsonl, output_csv):
             (global_dominant_rules, check_global_dominant_rule),
             (context_dominant_rules, check_context_dominant_rule),
             (pair_context_rules, check_pair_context_rule),
+            (relationship_context_rules, check_relationship_context_dominant_rule),
             (high_risk_missing_rules, check_high_risk_missing_rule),
             (paired_missing_rules, check_paired_missing_consistency_rule),
 
@@ -1262,6 +1596,12 @@ def shrink_search_space(input_csv, rule_json, output_jsonl, output_csv):
             (age_relationship_rules, check_age_relationship_consistency_rule),
             (marital_relationship_rules, check_marital_relationship_consistency_rule),
             (sex_relationship_rules, check_sex_relationship_consistency_rule),
+
+            (relationship_marital_rules, check_relationship_marital_spouse_conflict_rule),
+            (relationship_age_rules, check_relationship_age_spouse_conflict_rule),
+            (relationship_sex_rules, check_relationship_sex_spouse_conflict_rule),
+            (education_age_extreme_rules, check_education_age_extreme_conflict_rule),
+
             (workclass_occupation_rules, check_workclass_occupation_consistency_rule),
             (education_occupation_rules, check_education_occupation_consistency_rule),
             (hours_workclass_rules, check_hours_workclass_consistency_rule),

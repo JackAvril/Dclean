@@ -1,0 +1,19 @@
+{
+  "dataset": "beers",
+  "variant": "no_label_propagation",
+  "dataset_dir": "/mnt/mydata/dq/projects/Splittree/test/Error Detection beers",
+  "run_dir": "/mnt/mydata/dq/projects/Splittree/test/ablation_runs_detection/beers/no_label_propagation",
+  "status": "success",
+  "elapsed_sec": 0.0011534690856933594,
+  "summary_path": "/mnt/mydata/dq/projects/Splittree/test/Error Detection beers/eval_outputs_beers_v4_with_verifier/evaluation_summary.csv",
+  "precision": 0.8969218307006885,
+  "recall": 1.0,
+  "f1": 0.9456602967865912,
+  "candidate_coverage": 1.0,
+  "candidate_precision": 0.8969218307006885,
+  "final_predicted_errors": null,
+  "tp": 4429,
+  "fp": 509,
+  "fn": 0,
+  "error_message": ""
+}

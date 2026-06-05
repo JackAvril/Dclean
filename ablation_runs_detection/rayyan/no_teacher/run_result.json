@@ -1,0 +1,19 @@
+{
+  "dataset": "rayyan",
+  "variant": "no_teacher",
+  "dataset_dir": "/mnt/mydata/dq/projects/Splittree/test/Error Detection rayyan",
+  "run_dir": "/mnt/mydata/dq/projects/Splittree/test/ablation_runs_detection/rayyan/no_teacher",
+  "status": "success",
+  "elapsed_sec": 0.003764629364013672,
+  "summary_path": "/mnt/mydata/dq/projects/Splittree/test/Error Detection rayyan/eval_outputs_rayyan_v4_with_verifier/evaluation_summary.csv",
+  "precision": 0.815981559738763,
+  "recall": 0.8313111545988259,
+  "f1": 0.8235750290810392,
+  "candidate_coverage": 0.9694716242661449,
+  "candidate_precision": 0.6508145034156595,
+  "final_predicted_errors": null,
+  "tp": 2124,
+  "fp": 479,
+  "fn": 431,
+  "error_message": ""
+}
