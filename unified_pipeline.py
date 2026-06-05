@@ -289,6 +289,225 @@ def detect_pattern(value: Any) -> str:
     return "".join(compact)[:80]
 
 
+def has_column(row: pd.Series, *names: str) -> str | None:
+    lower = {str(c).lower(): c for c in row.index}
+    for name in names:
+        if name in row.index:
+            return name
+        if name.lower() in lower:
+            return lower[name.lower()]
+    return None
+
+
+def parse_time_minutes(value: Any) -> int | None:
+    s = normalize_value(value)
+    if not s:
+        return None
+    digits = re.sub(r"\D", "", s)
+    if len(digits) in {3, 4}:
+        hour = int(digits[:-2])
+        minute = int(digits[-2:])
+        if 0 <= hour <= 23 and 0 <= minute <= 59:
+            return hour * 60 + minute
+    match = re.match(r"^(\d{1,2}):(\d{2})$", s)
+    if match:
+        hour, minute = int(match.group(1)), int(match.group(2))
+        if 0 <= hour <= 23 and 0 <= minute <= 59:
+            return hour * 60 + minute
+    return None
+
+
+def parse_percent(value: Any) -> float | None:
+    s = normalize_value(value).lower().replace("%", "").strip()
+    if not s:
+        return None
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+
+def parse_number(value: Any) -> float | None:
+    s = normalize_value(value)
+    if not s:
+        return None
+    s = re.sub(r"[^0-9.\-]", "", s)
+    if s in {"", ".", "-"}:
+        return None
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+
+def is_us_state(value: Any) -> bool:
+    return normalize_value(value).upper() in {
+        "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "IA", "ID", "IL",
+        "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND",
+        "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN",
+        "TX", "UT", "VA", "VT", "WA", "WI", "WV", "WY", "DC",
+    }
+
+
+def looks_like_issn(value: Any) -> bool:
+    return re.match(r"^\d{4}-?\d{3}[0-9Xx]$", normalize_value(value)) is not None
+
+
+def looks_like_date(value: Any) -> bool:
+    s = normalize_value(value)
+    return bool(re.match(r"^\d{4}[-/]\d{1,2}[-/]\d{1,2}$", s) or re.match(r"^\d{1,2}[-/]\d{1,2}[-/]\d{2,4}$", s))
+
+
+def looks_like_score(value: Any) -> bool:
+    s = normalize_value(value)
+    return bool(re.match(r"^\d+\s*[-:]\s*\d+$", s) or re.match(r"^\d+\s*–\s*\d+$", s))
+
+
+def add_domain_violation(violations: list[dict[str, Any]], rule_type: str, reason: str, confidence: float = 1.0, priority: str = "high", expected: Any = None) -> None:
+    item = {"rule_id": f"domain::{rule_type}", "rule_type": f"domain_{rule_type}", "reason": reason, "confidence": confidence, "priority": priority}
+    if expected is not None:
+        item["expected"] = expected
+    violations.append(item)
+
+
+def dataset_domain_violations(cfg: DatasetConfig, row: pd.Series, column: str, value: Any) -> list[dict[str, Any]]:
+    """Dataset-specific checks ported into the unified implementation.
+
+    These hooks preserve important legacy pipeline semantics without calling the
+    old per-dataset scripts. They are conservative and only add high-confidence
+    violations for clearly invalid domain values.
+    """
+
+    dataset = cfg.dataset.lower()
+    col = str(column).lower()
+    val = normalize_value(value)
+    violations: list[dict[str, Any]] = []
+
+    if dataset == "flights":
+        if "time" in col and val and parse_time_minutes(val) is None:
+            add_domain_violation(violations, "flight_time", "invalid flight time; expected HHMM or HH:MM")
+        if col in {"sched_elapsed_time", "actual_elapsed_time", "air_time", "distance"} and val and parse_number(val) is None:
+            add_domain_violation(violations, "flight_numeric", "flight duration/distance field should be numeric")
+
+    elif dataset == "beers":
+        if col == "state" and val and not is_us_state(val):
+            add_domain_violation(violations, "beer_state", "beer state should be a US state code")
+        if col == "abv":
+            pct = parse_percent(val)
+            if val and (pct is None or not 0 <= pct <= 100):
+                add_domain_violation(violations, "beer_abv", "ABV should be a percentage between 0 and 100")
+        if col == "ibu":
+            ibu = parse_number(val)
+            if val and (ibu is None or not 0 <= ibu <= 200):
+                add_domain_violation(violations, "beer_ibu", "IBU should be numeric and in a plausible range")
+        if col == "ounces":
+            ounces = parse_number(val)
+            if val and (ounces is None or not 0 < ounces <= 128):
+                add_domain_violation(violations, "beer_ounces", "ounces should be numeric and positive")
+
+    elif dataset == "hospital":
+        if col == "score":
+            score = parse_number(val)
+            if val and val.lower() not in {"not available", "not applicable"} and (score is None or not 0 <= score <= 100):
+                add_domain_violation(violations, "hospital_score", "hospital score should be 0-100 or a canonical not-available token")
+        if col in {"state", "provider state"} and val and not is_us_state(val):
+            add_domain_violation(violations, "hospital_state", "hospital state should be a US state code")
+        condition_col = has_column(row, "Condition")
+        measure_col = has_column(row, "MeasureCode", "Measure Code")
+        if condition_col and measure_col and column == measure_col:
+            condition = norm_key(row[condition_col])
+            measure = norm_key(value)
+            families = {"heart failure": "hf", "heart attack": "ami", "pneumonia": "pn", "surgical infection": "scip"}
+            expected_prefix = next((prefix for key, prefix in families.items() if key in condition), None)
+            if expected_prefix and measure and not measure.startswith(expected_prefix):
+                add_domain_violation(violations, "hospital_measure_family", "MeasureCode prefix does not match Condition", expected=expected_prefix)
+
+    elif dataset == "rayyan":
+        if "issn" in col and val and not looks_like_issn(val):
+            add_domain_violation(violations, "rayyan_issn", "ISSN should match ####-####")
+        if ("date" in col or "created" in col) and val and not looks_like_date(val):
+            add_domain_violation(violations, "rayyan_date", "article/journal date should look like a date")
+        if "language" in col and val and len(val) > 30:
+            add_domain_violation(violations, "rayyan_language", "language field should be a short canonical language value")
+
+    elif dataset == "adult":
+        if col == "age":
+            age = parse_number(val)
+            if val and (age is None or not 0 <= age <= 120):
+                add_domain_violation(violations, "adult_age", "age should be numeric and plausible")
+        if "hours" in col:
+            hours = parse_number(val)
+            if val and (hours is None or not 0 <= hours <= 120):
+                add_domain_violation(violations, "adult_hours", "hours-per-week should be numeric and plausible")
+        if "income" in col:
+            canonical = val.replace(" ", "").lower()
+            if val and canonical not in {"<=50k", "<50k", "lessthan50k", ">50k", "morethan50k"}:
+                add_domain_violation(violations, "adult_income", "income should use canonical <=50K/>50K style labels")
+
+    elif dataset == "soccer":
+        if col in {"score", "result", "final_score", "ft"} and val and not looks_like_score(val):
+            add_domain_violation(violations, "soccer_score", "soccer score should look like N-N")
+        if "date" in col and val and not looks_like_date(val):
+            add_domain_violation(violations, "soccer_date", "match date should look like a date")
+        if col in {"home_team", "away_team", "team", "club"} and not val:
+            add_domain_violation(violations, "soccer_team", "team fields should not be empty")
+
+    return violations
+
+
+def dataset_repair_candidates(cfg: DatasetConfig, row: pd.Series, column: str, dirty_value: str) -> dict[str, tuple[float, str]]:
+    """Dataset-specific candidate hooks ported into the unified implementation."""
+
+    dataset = cfg.dataset.lower()
+    col = str(column).lower()
+    candidates: dict[str, tuple[float, str]] = {}
+
+    def add(value: Any, score: float, source: str) -> None:
+        value = normalize_value(value)
+        if value and value != dirty_value:
+            old = candidates.get(value)
+            if old is None or score > old[0]:
+                candidates[value] = (score, source)
+
+    if dataset in {"beers", "hospital"} and col in {"state", "provider state"}:
+        for value in ["CA", "NY", "TX", "FL", "WA", "CO", "PA", "IL", "OH", "MI"]:
+            add(value, 40.0, f"{dataset}_state_domain")
+
+    if dataset == "beers":
+        if col == "abv":
+            pct = parse_percent(dirty_value)
+            if pct is not None:
+                add(f"{pct:.1f}%", 35.0, "beers_abv_normalize")
+        if col == "ounces":
+            ounces = parse_number(dirty_value)
+            if ounces is not None:
+                add(f"{ounces:g}", 35.0, "beers_ounces_normalize")
+
+    if dataset == "flights" and "time" in col:
+        minutes = parse_time_minutes(dirty_value)
+        if minutes is not None:
+            add(f"{minutes // 60:02d}{minutes % 60:02d}", 50.0, "flights_time_canonical")
+
+    if dataset == "adult" and "income" in col:
+        normalized = dirty_value.replace(" ", "").lower()
+        if normalized in {"<=50k", "<50k", "lessthan50k"}:
+            add("LessThan50K", 50.0, "adult_income_canonical")
+        elif normalized in {">50k", "morethan50k"}:
+            add("MoreThan50K", 50.0, "adult_income_canonical")
+
+    if dataset == "rayyan" and "issn" in col:
+        raw = re.sub(r"[^0-9Xx]", "", dirty_value)
+        if len(raw) == 8:
+            add(f"{raw[:4]}-{raw[4:].upper()}", 50.0, "rayyan_issn_canonical")
+
+    if dataset == "soccer" and col in {"score", "result", "final_score", "ft"}:
+        nums = re.findall(r"\d+", dirty_value)
+        if len(nums) >= 2:
+            add(f"{int(nums[0])}-{int(nums[1])}", 50.0, "soccer_score_canonical")
+
+    return candidates
+
+
 def read_table(path: str | Path) -> pd.DataFrame:
     require_pandas()
     path = Path(path)
@@ -458,6 +677,8 @@ def build_rule_pool_stage(cfg: DatasetConfig) -> None:
         "schema_rules": schema_rules,
         "value_rules": value_rules,
         "fd_rules": build_fd_rules(df, profiles, cfg),
+        "domain_rule_family": cfg.dataset,
+        "domain_rule_note": "dataset-specific domain checks are implemented in dataset_domain_violations()",
     }
     write_json(out_path(cfg, "detection", "rule_pool", "rule_pool.json"), rule_pool)
 
@@ -515,6 +736,10 @@ def shrink_search_space_stage(cfg: DatasetConfig) -> None:
             expected = rule.get("mapping", {}).get(lval)
             if lval and rval and expected and rval != expected:
                 add_violation(cell_map, idx, rhs, rval, {**rule, "expected": expected, "reason": f"expected {rhs}={expected} from {lhs[0]}={lval}"})
+        for col in df.columns:
+            value = normalize_value(row[col])
+            for violation in dataset_domain_violations(cfg, row, col, value):
+                add_violation(cell_map, idx, col, value, violation)
 
     candidates = list(cell_map.values())
     for item in candidates:
@@ -761,7 +986,7 @@ def revise_candidates_stage(cfg: DatasetConfig) -> None:
         if col not in dirty.columns or row_id >= len(dirty):
             continue
         dirty_value = normalize_value(dirty.at[row_id, col])
-        candidates: dict[str, tuple[float, str]] = {}
+        candidates: dict[str, tuple[float, str]] = dataset_repair_candidates(cfg, dirty.iloc[row_id], col, dirty_value)
         for item in pool.get("profiles", {}).get(col, {}).get("top_values", [])[:20]:
             value = normalize_value(item.get("value"))
             if value and value != dirty_value:

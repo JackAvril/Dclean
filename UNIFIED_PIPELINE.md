@@ -83,12 +83,34 @@ previous pipeline while eliminating duplicated control flow:
   `candidate_cells_*.csv`, `candidate_llm_contexts_flat_*.csv`,
   `final_train_dataset_*.csv`, `repair_candidate_features_v2.csv`, and
   `inference_top1_repairs.csv`.
-- Dataset-specific differences live in `DatasetConfig`: paths, thresholds,
-  output names, and disabled optional stages.
-- The same algorithmic functions are used for all six datasets; only the config
-  changes.
+- Dataset-specific differences live in `DatasetConfig` and the two in-code
+  domain hooks: paths, thresholds, output names, disabled optional stages,
+  validation rules, and repair candidate normalization.
+- The same pipeline/stage functions are used for all six datasets; dataset hooks
+  are called from those shared functions rather than by dispatching to old
+  scripts.
 - Optional stages that previously did not exist for a dataset can be disabled so
   the unified flow does not create extra outputs.
+
+## Preserved dataset-specific logic
+
+The unified code does not merely preserve output filenames.  It also carries
+forward important per-dataset semantics through in-code hooks:
+
+- `flights`: time-format validation/canonicalization and numeric duration or
+  distance checks.
+- `beers`: US state checks, ABV/IBU/ounces plausibility, and beer-field
+  normalization candidates.
+- `hospital`: state and score validity plus MeasureCode/Condition family
+  consistency.
+- `rayyan`: ISSN, date, and language-field consistency.
+- `adult`: age, hours-per-week, and income-label canonicalization.
+- `soccer`: score/date/team-field validation and score canonicalization.
+
+These hooks are implemented inside `unified_pipeline.py` as
+`dataset_domain_violations()` and `dataset_repair_candidates()`, so the six
+datasets still run through one codebase while retaining the high-value logic that
+made their original pipelines dataset-aware.
 
 ## Runtime dependencies
 
